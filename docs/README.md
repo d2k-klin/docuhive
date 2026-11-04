@@ -39,3 +39,9 @@
 ## Extending this index
 
 Add one topic per document and link new guides here. Keep private data outside the repository.
+
+## Developer QA
+
+- [QA track](Developer-QA/README.md), [execution plan](Developer-QA/EXECUTION_PLAN.md), [status](Developer-QA/STATUS.md)
+- [Traceability](Developer-QA/traceability.md), [manual checks](Developer-QA/manual-checks.md), [defect register](Developer-QA/bugs.md)
+- [Verification reports](Developer-QA/reports/README.md)

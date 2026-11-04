@@ -55,6 +55,9 @@ def fingerprint(root: Path = ROOT) -> str:
             ]
             for filename in files:
                 path = Path(directory) / filename
+                # Next rewrites this generated import path during dev/build; the lockfile pins it.
+                if path.name == "next-env.d.ts":
+                    continue
                 if (
                     path.suffix in {".py", ".ts", ".tsx", ".yaml", ".yml", ".json", ".css", ".sql"}
                     or path.name == "Dockerfile"

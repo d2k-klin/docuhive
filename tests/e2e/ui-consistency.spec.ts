@@ -1,9 +1,40 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-for (const route of ["/login", "/dev/ui"]) {
+const routes = [
+  "/login",
+  "/",
+  "/review",
+  "/ask",
+  "/analyses",
+  "/sources",
+  "/reminders",
+  "/settings/ai",
+  "/settings/notifications",
+];
+
+test("Development UI is unavailable in production @smoke @NFR-02", async ({
+  page,
+}) => {
+  const login = await page.request.post("/api/auth/login", {
+    headers: { "X-DocuHive-CSRF": "1" },
+    data: { username: "alice", password: "synthetic qa password 2026" },
+  });
+  expect(login.status()).toBe(204);
+  expect((await page.request.get("/dev/ui")).status()).toBe(404);
+});
+
+for (const route of routes) {
   test(`UI ${route} @WEB-03 @WEB-04`, async ({ page }, info) => {
+    if (route !== "/login") {
+      const login = await page.request.post("/api/auth/login", {
+        headers: { "X-DocuHive-CSRF": "1" },
+        data: { username: "alice", password: "synthetic qa password 2026" },
+      });
+      expect(login.status()).toBe(204);
+    }
     await page.goto(route);
+    await expect.poll(() => new URL(page.url()).pathname).toBe(route);
     await page.evaluate(() => document.fonts.ready);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     const measurements = await page.evaluate(() => {
@@ -14,15 +45,20 @@ for (const route of ["/login", "/dev/ui"]) {
       )
         .filter((el) => el.getBoundingClientRect().height > 0)
         .map((el) => ({
-          name: el.getAttribute("aria-label") ?? el.id ?? el.tagName,
+          name:
+            el.getAttribute("aria-label") ||
+            el.id ||
+            el.textContent?.trim() ||
+            el.tagName,
           height: el.getBoundingClientRect().height,
           expected: ["checkbox", "radio"].includes(
             (el as HTMLInputElement).type,
           )
             ? 16
-            : el.dataset.size === "sm"
+            : el.dataset.size === "sm" || el.classList.contains("h-control-sm")
               ? 32
-              : el.dataset.size === "lg"
+              : el.dataset.size === "lg" ||
+                  el.classList.contains("h-control-lg")
                 ? 40
                 : 36,
         }));

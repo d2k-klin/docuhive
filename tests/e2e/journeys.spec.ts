@@ -15,7 +15,7 @@ test("Login, member boundary and logout @smoke @AUTH-01 @AUTH-04", async ({
   );
   await page.getByRole("button", { name: "Sign in" }).click();
   const response = await login;
-  expect(response.status(), await response.text()).toBe(204);
+  expect(response.status()).toBe(204);
   await expect(
     page.getByRole("navigation", { name: "Main navigation" }),
   ).toBeVisible();

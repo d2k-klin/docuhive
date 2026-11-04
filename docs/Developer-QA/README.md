@@ -58,6 +58,9 @@ DocuHive is a self-hosted, open-source, AI-first document hub. Documents arrive 
 [`lessons-learned`](../../.agents/skills/lessons-learned/SKILL.md) (always), [`repo-structure`](../../.agents/skills/repo-structure/SKILL.md) (your new folders and workflows), and the feature skills listed above when verifying that area. See the working agreement §13.
 # Running the current harness
 
+The current [execution plan](EXECUTION_PLAN.md) separates runnable verification from
+dependency-bound acceptance. All QA-M0…M5 tasks remain governed by the numbered plans.
+
 Use `make qa-check qa-corpus qa-up qa-contracts qa-system qa-e2e qa-trace`.
 `make qa-down` removes only the `docuhive-qa` stack and its volumes. The QA
 contract database is separate from the seeded system database.
@@ -67,3 +70,11 @@ violations without hiding them in an allow-list.
 
 Implementation evidence and remaining work live in [STATUS.md](STATUS.md),
 [bugs.md](bugs.md), [manual-checks.md](manual-checks.md) and [reports](reports/README.md).
+
+`qa-up` creates a disposable localhost TLS key under ignored `tmp/qa/tls`, used
+only for this test stack. Python verifies that certificate; Playwright accepts it
+only within the QA configuration. `qa-provider-smoke` checks real Strands/HTTP and
+`ai_runs`. `qa-audit` enforces overall and critical coverage; `qa-bundle` scans
+the built browser assets. `qa-nightly` attempts all available suites even if one
+fails. Ollama/cloud, IMAP/SMTP, full security/mutation and all recovery drills
+are still pending and are not silently reported green.

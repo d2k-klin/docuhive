@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from datetime import date
 from pathlib import Path
 
 from qa_plugin import RESULTS, ROOT, fingerprint
@@ -47,6 +48,18 @@ def manual_entries(text: str) -> list[dict]:
     return entries
 
 
+def signed_manual(entry: dict) -> bool:
+    try:
+        date.fromisoformat(entry["date"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    return (
+        entry.get("result") == "passed"
+        and entry.get("environment") not in {None, "", "pending"}
+        and entry.get("person") not in {None, "", "pending"}
+    )
+
+
 def render(
     ids: set[str], collected: list[dict], manual: list[dict], evidence: dict
 ) -> tuple[str, list[str]]:
@@ -64,18 +77,20 @@ def render(
         tests = [t for t in collected if req in t["requirements"]]
         checks = [m for m in manual if req in ID.findall(m["requirements"])]
         outcomes = [evidence.get(t["nodeid"], {}) for t in tests]
-        signed = any(
-            m["result"] == "passed"
-            and re.fullmatch(r"\d{4}-\d{2}-\d{2}", m["date"])
-            and m["environment"] not in {"", "pending"}
-            and m["person"] not in {"", "pending"}
-            for m in checks
-        )
+        signed = any(signed_manual(entry) for entry in checks)
         failing = any(o.get("outcome") in {"failed", "error"} for o in outcomes)
         accepted = not failing and (
             signed or bool(tests) and all(o.get("outcome") == "passed" for o in outcomes)
         )
-        status = "passed" if accepted else "pending" if tests or checks else "uncovered"
+        status = (
+            "failed"
+            if failing
+            else "passed"
+            if accepted
+            else "pending"
+            if tests or checks
+            else "uncovered"
+        )
         if not accepted:
             uncovered.append(req)
         links = [f"`{t['nodeid']}`" for t in tests] + [

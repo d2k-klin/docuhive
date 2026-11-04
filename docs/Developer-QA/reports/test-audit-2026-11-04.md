@@ -9,6 +9,11 @@ metadata mutation 98%. QA is adding independent SQL predicate checks to cover
 the administrator/owner/shared/trash combinations. Real vault and dedupe code is
 still absent; exercising stubs does not satisfy their critical coverage gate.
 
+The final default suite has 309 passes and 85.34% overall lines. Independent QA
+checks bring validators to 100%, fact aggregation to 98.31% and permissions to
+100%. Privacy remains 95.83% and metadata mutation 98.25%. The vault implementation
+is absent, so the critical gate still correctly rejects complete acceptance.
+
 `make qa-audit` records current coverage and then enforces the 95% critical floor.
 Mutation testing and its 80% kill threshold have not run. No mutation success is claimed.
 

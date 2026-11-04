@@ -114,7 +114,8 @@ qa-perf:
 qa-drills:
 	$(QA_RUN) python tests/system/tools/release.py --drills
 
-qa-nightly: qa-check qa-corpus qa-system qa-contracts qa-e2e qa-perf qa-drills
+qa-nightly:
+	$(MAKE) -k qa-check qa-corpus qa-system qa-contracts qa-e2e qa-provider-smoke qa-bundle qa-audit qa-perf qa-drills
 
 qa-release:
 	$(QA_RUN) python tests/system/tools/trace.py --strict

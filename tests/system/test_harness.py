@@ -9,7 +9,7 @@ from trace import manual_entries, render, requirement_ids
 import pytest
 from fastapi.testclient import TestClient
 from pytest_socket import SocketBlockedError
-from qa_plugin import ROOT
+from qa_plugin import ROOT, fingerprint
 
 
 def load_file(name, path):
@@ -17,6 +17,20 @@ def load_file(name, path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_evidence_fingerprint_tracks_source_but_ignores_generated_next_types(tmp_path):
+    app = tmp_path / "apps/web"
+    app.mkdir(parents=True)
+    page = app / "page.tsx"
+    page.write_text("original application source")
+    generated = app / "next-env.d.ts"
+    generated.write_text("generated dev type imports")
+    before = fingerprint(tmp_path)
+    generated.write_text("generated build type imports")
+    assert fingerprint(tmp_path) == before
+    page.write_text("changed application source")
+    assert fingerprint(tmp_path) != before
 
 
 @pytest.mark.req("QAR-TR-01", "QAR-TR-02", "QAR-TR-03")
@@ -42,11 +56,15 @@ def test_trace_gate_distinguishes_intent_from_evidence():
     assert render({"STO-01"}, [], manual, {})[1] == ["STO-01"]
     manual[0].update(date="2026-11-04", environment="reference host", person="owner")
     assert render({"STO-01"}, [], manual, {})[1] == []
+    manual[0]["date"] = "2026-99-99"
+    assert render({"STO-01"}, [], manual, {})[1] == ["STO-01"]
+    matrix, _ = render({"STO-01"}, tests, [], {"test::case": {"outcome": "failed"}})
+    assert "| failed |" in matrix
 
 
 @pytest.mark.req("QAR-TQ-01")
 def test_default_suite_blocks_inet_sockets():
-    with pytest.raises(SocketBlockedError):
+    with pytest.warns(UserWarning, match="socket.socket"), pytest.raises(SocketBlockedError):
         socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
@@ -59,7 +77,12 @@ def test_corpus_same_seed_same_hashes_and_valid_formats(tmp_path):
     assert left == right
     doc = left["documents"][0]
     assert len(doc["files"]) == 10
-    assert doc["facts"]["amount"]["value"] == "84.20"
+    assert doc["facts"]["amount_total"]["value"] == "84.20"
+    import yaml
+
+    taxonomy = yaml.safe_load((ROOT / "config/defaults/taxonomy.yaml").read_text())
+    invoice = next(t for t in taxonomy["document_types"] if t["id"] == doc["document_type"])
+    assert set(doc["facts"]) <= {field["name"] for field in invoice["facts"]}
     assert Image.open(tmp_path / "left/case-001-phone.jpg").getexif()[274] == 6
     for kind in ("docx", "xlsx"):
         with zipfile.ZipFile(tmp_path / f"left/case-001.{kind}") as archive:

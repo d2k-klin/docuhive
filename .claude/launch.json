@@ -1,0 +1,27 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": [
+        "UV_PROJECT_ENVIRONMENT=.venv-review",
+        "DOCUHIVE_ENV=dev",
+        "DOCUHIVE_AUTH_DISABLED=true",
+        "uv", "run", "docuhive", "api", "--reload"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": [
+        "DOCUHIVE_ENV=dev",
+        "DOCUHIVE_AUTH_DISABLED=true",
+        "DOCUHIVE_API_URL=http://127.0.0.1:8000",
+        "npm", "run", "dev", "--workspace", "apps/web"
+      ],
+      "port": 3000
+    }
+  ]
+}

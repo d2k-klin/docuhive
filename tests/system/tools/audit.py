@@ -26,9 +26,15 @@ def main() -> None:
         print(f"{module}: {percent:.2f}% (required 95%)")
         if percent < 95:
             gaps.append(module)
-    # Missing production modules cannot earn coverage by exercising their stubs.
-    if not (ROOT / "services/docuhive/src/docuhive/vault").is_dir():
+    vault = ROOT / "services/docuhive/src/docuhive/vault"
+    modules = [path for path in vault.rglob("*.py") if path.name != "__init__.py"]
+    if not modules:
         gaps.append("vault implementation absent")
+    for path in modules:
+        filename = path.relative_to(ROOT).as_posix()
+        percent = data["files"].get(filename, {}).get("summary", {}).get("percent_covered", 0)
+        if percent < 95:
+            gaps.append(f"{filename}: {percent:.2f}%")
     if gaps:
         sys.exit("Critical coverage gate pending: " + ", ".join(gaps))
 

@@ -56,7 +56,7 @@ def missing_evidence(data: dict, required: set[str], candidate: str, root: Path)
         path = (root / record.get("artifact", "")).resolve()
         if (
             record.get("result") != "passed"
-            or not record.get("runner")
+            or record.get("runner") in {None, "", "pending"}
             or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", record.get("date", ""))
             or not path.is_relative_to((root / "tmp/qa").resolve())
             or not path.is_file()
@@ -76,16 +76,10 @@ def main() -> None:
     required = DRILLS if args.drills else REQUIRED | DRILLS
     missing = missing_evidence(data, required, fingerprint(), ROOT)
     if not args.drills:
-        from trace import manual_entries
+        from trace import manual_entries, signed_manual
 
         manual = manual_entries((ROOT / "docs/Developer-QA/manual-checks.md").read_text())
-        missing += [
-            entry["id"]
-            for entry in manual
-            if entry["result"] != "passed"
-            or entry["person"] in {"", "pending"}
-            or entry["date"] == "pending"
-        ]
+        missing += [entry["id"] for entry in manual if not signed_manual(entry)]
         bugs = (ROOT / "docs/Developer-QA/bugs.md").read_text()
         if re.search(r"^S[12] .* · open", bugs, re.M):
             missing.append("open S1/S2 defects")

@@ -62,32 +62,30 @@ integration checks fail when their environment is missing.
 
 ## QA-007
 
-S2 · `bug:cl` · open · GUIDE-05, QAR-NF-09.
+S2 · `bug:cl` · verified (guides now resolve) · GUIDE-05, QAR-NF-09.
 
-The real `/api/ai/setup-status`, `/api/sources/setup-status` and
-`/api/notifications/setup-status` return help documents that do not exist:
+The initial real setup-status checks returned help documents that did not exist:
 `docs/setup/ai-providers.md`, `docs/setup/mail-accounts.md`, and
 `docs/setup/notifications.md`. Reproduce with
 `tests/system/test_routes.py::test_setup_checks_have_actionable_states`.
-All three HTTP responses are 200; the referenced local files are absent.
-The owner must ship the guides or point the checks at existing valid guides.
-QA retains the failing assertions and has not created placeholder help pages.
+All three responses were 200 but their referenced local files were absent. On the
+final run all three guides exist and the checks pass. QA retained the original
+assertions and did not write placeholder guides in another track's area.
 
 ## QA-008
 
-S2 · `bug:cl` · open · QAR-TQ-02.
+S2 · `bug:cl` · verified (coverage fixed by QA tests) · QAR-TQ-02.
 
-The first coverage audit reports validators at 94% and fact aggregation at 90%,
-below the 95% floor for critical logic. Reproduce with `make qa-audit`; the JSON
-report is retained in `tmp/qa/coverage.json`. Mutation results are also still absent.
-
-## Triage workflow
+The first audit found validators at 94% and fact aggregation at 90%. Independent
+QA malformed-value and real SQL aggregation tests now bring these to 100% and
+98.31%. `make qa-audit` still correctly refuses vault acceptance because that
+implementation is absent (QA-001). Mutation testing remains a separate pending gate.
 
 ## QA-009
 
 S3 · `bug:oa` · open · WEB-04, QAR-NF-05.
 
-The production login and kitchen-sink pages render Times despite the configured
+The nine implemented static production pages render Times despite the configured
 Inter token. Reproduce with `make qa-e2e`; the UI test attaches computed measurements.
 On the 1280-light login page: expected family `inter`, actual family `Times`;
 controls measured 36 px and heading 20 px / 600, with no horizontal overflow.

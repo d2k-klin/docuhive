@@ -173,7 +173,7 @@ def generate(root: Path, seed: int = 42, cases: int = 15) -> dict:
                 "language": language,
                 "restricted": restricted,
                 "tags": ["private"] if index == 13 else [],
-                "facts": {"amount": {"type": "money", "value": amount, "currency": "EUR"}},
+                "facts": {"amount_total": {"type": "money", "value": amount, "currency": "EUR"}},
                 "files": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
             }
         )
