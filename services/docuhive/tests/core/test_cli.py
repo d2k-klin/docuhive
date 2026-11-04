@@ -36,7 +36,8 @@ def test_db_upgrade_dispatch_and_production_downgrade_guard(monkeypatch):
     cli.main()
     assert calls == [("upgrade", None)]
     monkeypatch.setenv("DOCUHIVE_ENV", "prod")
-    monkeypatch.setenv("DOCUHIVE_SECRET_KEY", "synthetic-test-secret-with-at-least-32-bytes")
+    synthetic_secret = "synthetic-test-secret-with-at-least-32-bytes"  # gitleaks:allow
+    monkeypatch.setenv("DOCUHIVE_SECRET_KEY", synthetic_secret)
     config.reload()
     monkeypatch.setattr(sys, "argv", ["docuhive", "db", "downgrade"])
     with pytest.raises(SystemExit) as error:

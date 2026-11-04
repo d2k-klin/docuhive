@@ -1,0 +1,2 @@
+# Reviewed false positives only (synthetic test values). Format: <commit>:<file>:<rule>:<line>
+634df7b176c5ecfa14578749d4ec86a239869aca:services/docuhive/tests/core/test_cli.py:generic-api-key:39
