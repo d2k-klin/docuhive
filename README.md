@@ -50,7 +50,7 @@ DocuHive is also a worked example of building a real AI product. The code, the [
 - **Evals:** golden sets, per-field scoring and a gate before automation is switched on
 - **Retrieval:** chunking, embeddings, full-text plus vector search, answers with citations and SQL-computed numbers
 
-Every AI result in the app has a *How was this made?* view showing the model, prompt version, tools used, tokens and cost.
+Every model call is recorded with its model, prompt version, tools, tokens and cost. The AI settings page shows routing, privacy and usage today; a per-result *How was this made?* view is in progress.
 
 ## Quick start
 
@@ -59,10 +59,13 @@ Requirements: Python 3.12 with [uv](https://docs.astral.sh/uv/), Node 22, and Do
 ```bash
 git clone https://github.com/d2k-klin/docuhive && cd docuhive
 make setup
+docker compose -f deploy/compose.dev.yml up -d --wait
+make db-upgrade
+uv run docuhive user create admin --admin
 make dev
 ```
 
-Open <http://localhost:3000>. The setup wizard walks you through storage, AI providers, email and notifications. For details, see [Development setup](docs/setup/development.md).
+Open <http://localhost:3000> and sign in with the account you just created. Storage, AI providers, email and notifications are configured with the guides below; a guided setup wizard is planned. For details, see [Development setup](docs/setup/development.md).
 
 ## Documentation
 
