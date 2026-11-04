@@ -16,6 +16,7 @@
 
 | Doc | Read it for |
 | --- | --- |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | How DocuHive works, from the big picture down to each component, user action and hosting option |
 | [REQUIREMENTS.md](REQUIREMENTS.md) | What DocuHive must do, with requirement IDs used across tests and plans |
 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | The architecture: vault, ingest pipeline, AI layer, search and web app |
 | [decisions/](decisions/README.md) | Decisions with their evidence, such as the [OCR quality gate](decisions/0001-ocr-gate.md) |
