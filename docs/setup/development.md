@@ -42,6 +42,13 @@ for OA commands so dependency synchronization does not replace another track's
 environment. Local sandbox users can set `UV_CACHE_DIR` and `npm_config_cache`
 to writable temporary directories. Do not commit machine-specific paths.
 
+## OCR in the worker image
+
+Unit tests replace ocrmypdf with a fake, so they cannot catch a broken OCR toolchain.
+`make ocr-smoke` builds the worker image and runs DocuHive's real OCR on a synthetic
+scan inside it. CI runs the same check on main and on pull requests that touch the image,
+the dependencies or the ingest code.
+
 ## Private OCR gate
 
 After creating the private sample corpus, run:

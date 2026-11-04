@@ -8,6 +8,7 @@
 | --- | --- |
 | [`check_licenses.py`](check_licenses.py) | Fail on AGPL Python distributions; subprocess tools are listed separately |
 | [`dev.py`](dev.py) | Run the three development processes and shut down the entire process groups together |
+| [`ocr_smoke.py`](ocr_smoke.py) | Run DocuHive's real OCR on a synthetic scan inside the worker image; used by `make ocr-smoke` |
 | [`generate_ocr_fixtures.py`](generate_ocr_fixtures.py) | Generate a small public, synthetic corpus for smoke checks; it cannot pass the real OCR gate |
 
 ## Extending

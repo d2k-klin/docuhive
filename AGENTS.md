@@ -38,7 +38,8 @@ Instructions for coding agents (Claude Code, Codex, Copilot) working on DocuHive
 - `services/docuhive/migrations/core`: OA migrations. Intel's independent migration
   environment is bootstrapped by OA and then owned by CL.
 - Use `make setup`, `make dev`, `make test`, `make lint`, `make test-integration`,
-  `make db-upgrade`, `make gen-api` and `make spike-ocr DIR=...`.
+  `make db-upgrade`, `make gen-api`, `make ocr-smoke` (real OCR in the worker image; run it
+  after changing the Dockerfile, OCR dependencies or ingest code) and `make spike-ocr DIR=...`.
   `make` supersedes the older planning references to `just`.
 - Python 3.12, type hints for application functions, Pydantic I/O, Ruff defaults
   with 100-character lines. TypeScript strict; server components by default.

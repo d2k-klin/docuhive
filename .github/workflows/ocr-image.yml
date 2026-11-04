@@ -1,0 +1,25 @@
+name: OCR in the worker image
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - services/docuhive/Dockerfile
+      - services/docuhive/pyproject.toml
+      - services/docuhive/src/docuhive/ingest/**
+      - uv.lock
+      - deploy/scripts/ocr_smoke.py
+      - .github/workflows/ocr-image.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ocr-image-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ocr-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: make ocr-smoke

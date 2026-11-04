@@ -86,6 +86,7 @@ docuhive/
 | `db-upgrade`, `gen-api`, `openapi` | migrations and the API client |
 | `eval`, `eval-baseline` | evals (CL), and refreshing the committed baseline |
 | `spike-ocr DIR=…` | the OCR spike (OA) |
+| `ocr-smoke` | build the worker image and run real OCR in it (unit tests mock ocrmypdf) |
 | `up`, `down`, `logs`, `backup` | production compose helpers |
 | `learn` | list and run the examples in `examples/learn/` |
 

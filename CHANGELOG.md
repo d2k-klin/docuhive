@@ -9,6 +9,10 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - TypeScript 7 for the web app's typecheck and build, ocrmypdf 17, uvicorn 0.54 and psycopg 3.3.
 - The worker image moves to Debian trixie (Ghostscript 10.05).
 
+### Added
+
+- `make ocr-smoke` and a workflow that run real OCR inside the worker image, because unit tests mock ocrmypdf.
+
 ### Fixed
 
 - OCR in the container: ocrmypdf refused the bookworm image's Ghostscript 10.0.0 whenever existing text was skipped, so every scan failed.

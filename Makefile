@@ -4,7 +4,7 @@ DIR ?=
 OUT ?= tmp/ocr-spike
 EX ?=
 
-.PHONY: setup dev test test-ui test-integration lint fmt db-upgrade openapi gen-api spike-ocr up down logs backup learn license-check
+.PHONY: setup dev test test-ui test-integration lint fmt db-upgrade openapi gen-api spike-ocr ocr-smoke up down logs backup learn license-check
 
 setup:
 	$(UV) sync --all-packages --all-extras --dev
@@ -54,6 +54,11 @@ gen-api:
 spike-ocr:
 	test -n "$(DIR)" || (echo 'Set DIR to the private sample folder'; exit 1)
 	$(UV) run docuhive spike ingest "$(DIR)" --out "$(OUT)"
+
+# Real OCR inside the worker image (unit tests mock ocrmypdf).
+ocr-smoke:
+	docker build -f services/docuhive/Dockerfile -t docuhive-worker:ocr-smoke .
+	docker run --rm -i --entrypoint python docuhive-worker:ocr-smoke - < deploy/scripts/ocr_smoke.py
 
 up down logs backup:
 	@echo 'Production deployment is pending the OCR gate and OA-M7. See docs/Developer-OA/STATUS.md.'
