@@ -4,7 +4,7 @@ overlay/
 *.local.*
 data/
 tmp/
-runs/
+/runs/
 evals/reports/
 node_modules/
 .venv/

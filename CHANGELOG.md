@@ -26,6 +26,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Fixed
 
+- The "How was this made?" page (`/settings/ai/runs/{id}`) exists now: model, prompt, privacy, tokens, cost, output and retries for one AI run. Links from Ask, Review, AI settings and document badges led to a missing page before.
 - Clearing a field on the document page now empties it (`clear_fields` in `MetadataPatch`) instead of silently keeping the old value.
 - Shared readers no longer see edit, trash or unlock controls on other members' documents; history and lock badges no longer attribute other people's changes to you.
 - Quarantine reasons are plain language everywhere (upload, detail, quarantine), including OCR and conversion failures.
