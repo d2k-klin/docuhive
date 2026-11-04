@@ -119,3 +119,19 @@ def test_valid_date_fact_and_title_boundary(store, document):
         store.apply_metadata(document.id, MetadataPatch(title="a" * 121), actor="user:1")
     with pytest.raises(ValueError):
         store.apply_metadata(document.id, MetadataPatch(title="Changed"), actor="unknown")
+
+
+def test_clear_fields_empties_and_locks(store, document):
+    store.apply_metadata(document.id, MetadataPatch(category="x/y"), actor="system")
+    result = store.apply_metadata(
+        document.id, MetadataPatch(clear_fields=["category"]), actor="user:1"
+    )
+    assert result.applied == ["category"]
+    assert store.get(document.id).category is None
+    assert "category" in store.get(document.id).manual_fields
+    with pytest.raises(ValueError):
+        store.apply_metadata(
+            document.id, MetadataPatch(title="t", clear_fields=["title"]), actor="user:1"
+        )
+    with pytest.raises(ValueError):
+        store.apply_metadata(document.id, MetadataPatch(clear_fields=["tags"]), actor="user:1")

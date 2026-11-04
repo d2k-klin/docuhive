@@ -21,25 +21,36 @@ import { DocumentTable } from "./documents";
 type Pending = components["schemas"]["PendingDocument"];
 type Row = components["schemas"]["DocumentRow"];
 
+const RETRY =
+  " Retry it; if it fails again, an administrator can check the logs.";
 const REASONS: Record<string, string> = {
   encrypted:
     "The PDF is password-protected. Remove the password and upload it again.",
   empty_file: "The file is empty.",
+  empty_pdf: "The PDF has no pages.",
   too_many_pages: "The document has more than 500 pages.",
   image_too_large: "The image is too large to read.",
-  input_missing: "The staged file is missing.",
-  step_timeout: "Reading took too long.",
-  converter_timeout: "Converting took too long.",
+  invalid_archive: "The archive file is damaged.",
+  archive_expansion_limit: "The archive unpacks to too much data.",
+  input_missing: "The staged file is missing. Upload it again.",
+  step_timeout: "Reading took too long." + RETRY,
+  converter_timeout: "Converting took too long." + RETRY,
+  step_crashed: "Reading stopped unexpectedly." + RETRY,
+  ocr_fallbacks_exhausted: "No text could be read from it." + RETRY,
 };
+const FAMILIES: [string, string][] = [
+  ["unsupported_type", "This file type is not supported."],
+  ["processing_failed", "Reading failed several times." + RETRY],
+  ["ocr_exit", "Text recognition failed." + RETRY],
+  ["conversion_http_", "The file could not be converted to PDF." + RETRY],
+  ["converter_http_", "The file could not be converted to PDF." + RETRY],
+];
 
+/** Plain-language reason with a next step; never shows an internal code. */
 export function reasonText(reason: string | null | undefined): string {
-  if (!reason) return "Unknown reason.";
-  if (REASONS[reason]) return REASONS[reason];
-  if (reason.startsWith("unsupported_type"))
-    return "This file type is not supported.";
-  if (reason.startsWith("processing_failed"))
-    return "Reading failed several times.";
-  return reason;
+  if (reason && REASONS[reason]) return REASONS[reason];
+  const family = FAMILIES.find(([prefix]) => reason?.startsWith(prefix));
+  return family ? family[1] : "It could not be read." + RETRY;
 }
 
 /** Documents that could not be read; the original is always kept, so a retry is safe. */
@@ -145,7 +156,7 @@ export function TrashPage() {
         <Empty icon={Trash2} text="The trash is empty." />
       ) : (
         <div className="space-y-3">
-          <DocumentTable items={list.data} />
+          <DocumentTable items={list.data} link={false} />
           <div className="flex flex-wrap gap-2">
             {list.data.map((doc) => (
               <Button

@@ -46,6 +46,12 @@ export function LoginForm() {
   }
   return (
     <form onSubmit={submit} className="space-y-4">
+      {search.get("changed") && (
+        <p role="status" className="text-sm text-success">
+          Password changed. Sign in with the new password; your API tokens
+          were revoked, so create new ones under Settings.
+        </p>
+      )}
       <div>
         <label htmlFor="username" className="mb-1.5 block text-sm font-medium">
           {en.username}

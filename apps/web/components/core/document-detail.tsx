@@ -32,6 +32,7 @@ import {
   Skeleton,
   useApi,
 } from "@/components/intel/common";
+import { reasonText } from "./document-queues";
 import { labelsOf } from "./documents";
 
 type Detail = components["schemas"]["DocumentDetail"];
@@ -62,47 +63,76 @@ function draftOf(doc: Detail): Draft {
   };
 }
 
-/** Who set a field: you (locked against the AI), the AI, or nobody yet. */
+type Run = { confidence?: number | null; ai_run_id?: number | null };
+
+/** Who set a field: a person (locked against the AI), the AI, or nobody yet. */
 function Provenance({
   doc,
   field,
+  owner,
   onUnlock,
 }: {
   doc: Detail;
   field: string;
+  owner: boolean;
   onUnlock: (field: string) => void;
 }) {
   if (doc.manual_fields.includes(field)) {
+    // manual_fields records that a person locked it, not which household member.
     return (
       <span className="inline-flex items-center gap-1">
         <Badge tone="ok" icon={Lock}>
-          Set by you
+          Set manually
         </Badge>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Let the AI manage ${fieldLabel(field).toLowerCase()} again`}
-          title="Let the AI manage this again"
-          onClick={() => onUnlock(field)}
-        >
-          <LockOpen />
-        </Button>
+        {owner && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Let the AI manage ${fieldLabel(field).toLowerCase()} again`}
+            title="Let the AI manage this again"
+            onClick={() => onUnlock(field)}
+          >
+            <LockOpen />
+          </Button>
+        )}
       </span>
     );
   }
-  const task = field.startsWith("facts.") ? "extract" : "classify";
-  const run = (
-    doc.provenance as Record<string, { model?: string; confidence?: number }>
-  )[task];
-  return run ? (
+  const fact = field.startsWith("facts.") ? doc.facts[field.slice(6)] : null;
+  const run = (doc.provenance as Record<string, Run>)[
+    fact ? "extract" : "classify"
+  ];
+  if (!run) return null;
+  // Classification stores the category's confidence only; facts carry their own.
+  const confidence = fact
+    ? fact.confidence
+    : field === "category"
+      ? run.confidence
+      : null;
+  const badge = (
     <Badge tone="info" icon={Sparkles}>
-      AI
-      {run.confidence != null ? ` · ${Math.round(run.confidence * 100)}%` : ""}
+      AI{confidence != null ? ` · ${Math.round(confidence * 100)}%` : ""}
     </Badge>
-  ) : null;
+  );
+  return run.ai_run_id ? (
+    <Link
+      href={`/settings/ai/runs/${run.ai_run_id}`}
+      aria-label={`AI-set ${fieldLabel(field).toLowerCase()}: how was this made?`}
+    >
+      {badge}
+    </Link>
+  ) : (
+    badge
+  );
 }
 
-export function DocumentDetailView({ id }: { id: string }) {
+export function DocumentDetailView({
+  id,
+  viewerId,
+}: {
+  id: string;
+  viewerId: number;
+}) {
   const router = useRouter();
   const doc = useApi<Detail>(`/api/documents/${id}`);
   const history = useApi<HistoryEntry[]>(`/api/documents/${id}/history`);
@@ -141,6 +171,7 @@ export function DocumentDetailView({ id }: { id: string }) {
       tags_add: tags.filter((t) => !current.tags.includes(t)),
       tags_remove: current.tags.filter((t) => !tags.includes(t)),
     };
+    const clear: string[] = [];
     for (const key of [
       "title",
       "document_date",
@@ -148,9 +179,11 @@ export function DocumentDetailView({ id }: { id: string }) {
       "document_type",
       "correspondent",
     ] as const) {
-      if (value[key] && value[key] !== (current[key] || ""))
-        patch[key] = value[key];
+      if (value[key] === (current[key] || "")) continue;
+      if (value[key]) patch[key] = value[key];
+      else clear.push(key);
     }
+    if (clear.length) patch.clear_fields = clear;
     if (value.shared !== current.shared) patch.shared = value.shared;
     void save(patch, "Saved. Your changes are locked against the AI.");
   }
@@ -187,6 +220,8 @@ export function DocumentDetailView({ id }: { id: string }) {
   const d = doc.data;
   const labels = labelsOf(taxonomy.data);
   const editing = draft !== null;
+  // Editing, sharing, unlocking and trash are the owner's; shared readers only read.
+  const owner = d.owner_id === viewerId;
   const set = (key: keyof Draft) => (event: { target: { value: string } }) =>
     setDraft({ ...(draft as Draft), [key]: event.target.value });
   const unlock = (field: string) =>
@@ -223,17 +258,18 @@ export function DocumentDetailView({ id }: { id: string }) {
                 </a>
               </Button>
             )}
-            {d.deleted_at ? (
-              <Button variant="secondary" onClick={() => void trash(true)}>
-                <RotateCcw aria-hidden="true" />
-                Restore
-              </Button>
-            ) : (
-              <Button variant="danger" onClick={() => void trash(false)}>
-                <Trash2 aria-hidden="true" />
-                Move to trash
-              </Button>
-            )}
+            {owner &&
+              (d.deleted_at ? (
+                <Button variant="secondary" onClick={() => void trash(true)}>
+                  <RotateCcw aria-hidden="true" />
+                  Restore
+                </Button>
+              ) : (
+                <Button variant="danger" onClick={() => void trash(false)}>
+                  <Trash2 aria-hidden="true" />
+                  Move to trash
+                </Button>
+              ))}
           </>
         }
       />
@@ -245,7 +281,7 @@ export function DocumentDetailView({ id }: { id: string }) {
           <Badge tone="error" icon={ShieldAlert}>
             Could not be read
           </Badge>
-          {d.quarantine_reason}. The original is kept.
+          {reasonText(d.quarantine_reason)} The original is kept.
           <Link href="/quarantine" className="text-primary hover:underline">
             Open quarantine
           </Link>
@@ -288,6 +324,7 @@ export function DocumentDetailView({ id }: { id: string }) {
           <Card
             title="Details"
             actions={
+              owner &&
               !editing && (
                 <Button
                   variant="secondary"
@@ -414,12 +451,19 @@ export function DocumentDetailView({ id }: { id: string }) {
                       </dt>
                       <dd className="break-words">{value || "—"}</dd>
                     </div>
-                    <Provenance doc={d} field={field} onUnlock={unlock} />
+                    <Provenance
+                      doc={d}
+                      field={field}
+                      owner={owner}
+                      onUnlock={unlock}
+                    />
                   </div>
                 ))}
                 <div>
                   <dt className="text-sm text-text-muted">Shared</dt>
-                  <dd>{d.shared ? "Visible to the household" : "Only you"}</dd>
+                  <dd>
+                    {d.shared ? "Visible to the household" : "Only the owner"}
+                  </dd>
                 </div>
               </dl>
             )}
@@ -447,6 +491,7 @@ export function DocumentDetailView({ id }: { id: string }) {
                     <Provenance
                       doc={d}
                       field={`facts.${key}`}
+                      owner={owner}
                       onUnlock={unlock}
                     />
                   </div>
@@ -472,7 +517,7 @@ export function DocumentDetailView({ id }: { id: string }) {
                       <span className="tabular text-text-muted">
                         {formatDate(entry.at)}
                       </span>{" "}
-                      {describe(entry)}
+                      {describe(entry, viewerId)}
                     </span>
                   </li>
                 ))}
@@ -487,12 +532,15 @@ export function DocumentDetailView({ id }: { id: string }) {
   );
 }
 
-function describe(entry: HistoryEntry): string {
-  const who = entry.actor.startsWith("user:")
-    ? "You"
-    : entry.actor.startsWith("ai:")
-      ? "The AI"
-      : "DocuHive";
+function describe(entry: HistoryEntry, viewerId: number): string {
+  const who =
+    entry.actor === `user:${viewerId}`
+      ? "You"
+      : entry.actor.startsWith("user:")
+        ? "A household member"
+        : entry.actor.startsWith("ai:")
+          ? "The AI"
+          : "DocuHive";
   const fields = Object.keys(entry.after || {})
     .filter((f) => f !== "unlocked")
     .map(fieldLabel);

@@ -89,6 +89,7 @@ class MetadataPatch(BaseModel):
     tags_remove: list[str] = []
     facts: dict[str, FactValue | None] | None = None
     unlock_fields: list[str] = []        # user only: remove from manual_fields ("let AI manage again")
+    clear_fields: list[str] = []        # empty these scalar fields (None above means "leave unchanged")
 
 
 class Provenance(BaseModel):
@@ -316,8 +317,9 @@ class NotFound(Exception): ...
 4. Tags missing from the `tags` table are created. The correspondent is found by normalised name (casefold, trimmed, collapsed spaces) or created.
 5. Writes `doc_facts`, updates the FTS vector, inserts an `audit_log` row (before/after), and re-renders `meta.json` in the vault (with `provenance` stored under `ai.<task>`).
 6. `unlock_fields` (only with `actor="user:*"`) are removed from `manual_fields`, and listed as `unlocked` in the event payload so CL re-runs AI for them.
-7. Enqueues `document.metadata_changed`.
-8. **Category and document-type ids are not validated by OA.** CL validates against the taxonomy before calling.
+7. `clear_fields` empties scalar fields (`title`, `document_date`, `language`, `category`, `document_type`, `correspondent`); naming a field there and setting it in the same patch is an error. A user clearing a field locks it like any other edit.
+8. Enqueues `document.metadata_changed`.
+9. **Category and document-type ids are not validated by OA.** CL validates against the taxonomy before calling.
 
 ### 2.6 Auth — `docuhive.auth`
 ```python

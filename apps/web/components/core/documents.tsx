@@ -25,6 +25,8 @@ type DocumentPage = components["schemas"]["DocumentPage"];
 type Pending = components["schemas"]["PendingDocument"];
 type Taxonomy = components["schemas"]["Taxonomy"];
 
+const MAX_BULK = 500; // BulkEdit.ids limit in the API
+
 export type ListFilters = {
   category: string;
   document_type: string;
@@ -134,11 +136,14 @@ export function DocumentTable({
   selected,
   onSelect,
   labels = {},
+  link = true,
 }: {
   items: DocumentPage["items"];
   selected?: Set<string>;
   onSelect?: (ids: Set<string>) => void;
   labels?: Record<string, string>;
+  /** Trashed documents have no detail page until they are restored. */
+  link?: boolean;
 }) {
   const toggle = (id: string) => {
     if (!selected || !onSelect) return;
@@ -201,9 +206,16 @@ export function DocumentTable({
                 </td>
               )}
               <td className="max-w-80 break-words px-3">
-                <Link href={`/documents/${doc.id}`} className="hover:underline">
-                  {doc.title || "Untitled document"}
-                </Link>
+                {link ? (
+                  <Link
+                    href={`/documents/${doc.id}`}
+                    className="hover:underline"
+                  >
+                    {doc.title || "Untitled document"}
+                  </Link>
+                ) : (
+                  doc.title || "Untitled document"
+                )}
               </td>
               <td className="whitespace-nowrap px-3 tabular">
                 {doc.document_date ? formatDate(doc.document_date) : "No date"}
@@ -223,6 +235,14 @@ export function DocumentTable({
   );
 }
 
+function PendingTitle({ title }: { title: string | null }) {
+  return (
+    <span className="min-w-0 max-w-48 truncate" title={title || undefined}>
+      {title || "Untitled"}
+    </span>
+  );
+}
+
 function PendingStrip({ items }: { items: Pending[] }) {
   if (!items.length) return null;
   return (
@@ -232,16 +252,26 @@ function PendingStrip({ items }: { items: Pending[] }) {
     >
       {items.slice(0, 8).map((doc) =>
         doc.status === "quarantined" ? (
-          <Link key={doc.id} href="/quarantine">
+          <Link
+            key={doc.id}
+            href="/quarantine"
+            className="flex min-w-0 max-w-full items-center gap-2 text-sm"
+          >
+            <PendingTitle title={doc.title} />
             <Badge tone="error" icon={ShieldAlert}>
-              {doc.title || "Untitled"}: needs attention
+              Needs attention
             </Badge>
           </Link>
         ) : (
-          <Badge key={doc.id} tone="info" icon={LoaderCircle}>
-            {doc.title || "Untitled"}:{" "}
-            {doc.status === "processing" ? "Reading text…" : "Waiting…"}
-          </Badge>
+          <span
+            key={doc.id}
+            className="flex min-w-0 max-w-full items-center gap-2 text-sm"
+          >
+            <PendingTitle title={doc.title} />
+            <Badge tone="info" icon={LoaderCircle}>
+              {doc.status === "processing" ? "Reading text…" : "Waiting…"}
+            </Badge>
+          </span>
         ),
       )}
     </section>
@@ -266,25 +296,28 @@ function BulkEdit({
     setBusy(true);
     setError("");
     try {
-      const result = await api<{ updated: number; skipped: string[] }>(
-        "/api/documents/bulk",
-        {
-          method: "POST",
-          json: {
-            ids,
-            patch: {
-              category: category || null,
-              tags_add: tagAdd.trim() ? [tagAdd.trim()] : [],
-              tags_remove: tagRemove.trim() ? [tagRemove.trim()] : [],
-            },
+      const patch = {
+        category: category || null,
+        tags_add: tagAdd.trim() ? [tagAdd.trim()] : [],
+        tags_remove: tagRemove.trim() ? [tagRemove.trim()] : [],
+      };
+      let updated = 0;
+      let skipped = 0;
+      // The API takes at most MAX_BULK ids per request.
+      for (let start = 0; start < ids.length; start += MAX_BULK) {
+        const result = await api<{ updated: number; skipped: string[] }>(
+          "/api/documents/bulk",
+          {
+            method: "POST",
+            json: { ids: ids.slice(start, start + MAX_BULK), patch },
           },
-        },
-      );
+        );
+        updated += result.updated;
+        skipped += result.skipped.length;
+      }
       onDone(
-        `Updated ${result.updated} documents` +
-          (result.skipped.length
-            ? `; ${result.skipped.length} are not yours to change`
-            : ""),
+        `Updated ${updated} documents` +
+          (skipped ? `; ${skipped} are not yours to change` : ""),
       );
     } catch (e) {
       setError((e as ApiError).message);

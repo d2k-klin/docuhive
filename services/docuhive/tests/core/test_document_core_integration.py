@@ -83,6 +83,13 @@ def test_text_file_is_converted_stored_and_searchable(owner):
         ).all()
     assert hits == [doc_id]
 
+    documents.apply_metadata(
+        doc_id, MetadataPatch(clear_fields=["correspondent"]), actor=f"user:{owner}"
+    )
+    assert documents.get(doc_id).correspondent is None
+    assert "correspondent" in documents.get(doc_id).manual_fields
+    assert json.loads((folder / "meta.json").read_text())["correspondent"] is None
+
 
 @pytest.mark.req("ING-03")
 def test_photo_is_read_by_ocr(owner, tmp_path):

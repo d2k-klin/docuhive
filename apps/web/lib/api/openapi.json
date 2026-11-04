@@ -6118,6 +6118,14 @@
             "title": "Unlock Fields",
             "default": []
           },
+          "clear_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Clear Fields",
+            "default": []
+          },
           "shared": {
             "anyOf": [
               {

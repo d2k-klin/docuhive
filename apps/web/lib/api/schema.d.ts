@@ -1935,6 +1935,11 @@ export interface components {
              * @default []
              */
             unlock_fields: string[];
+            /**
+             * Clear Fields
+             * @default []
+             */
+            clear_fields: string[];
             /** Shared */
             shared?: boolean | null;
         };

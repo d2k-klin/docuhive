@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AlertTriangle, Lock, MessageSquarePlus, Send, Square, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -156,7 +157,8 @@ export default function AskPage() {
   const tax = useApi<{ categories: { id: string; label: string }[] }>("/api/taxonomy");
   const [active, setActive] = React.useState<Session | null>(null);
   const [messages, setMessages] = React.useState<Message[]>([]);
-  const [input, setInput] = React.useState("");
+  // Search's "Ask instead" passes its words as ?q=; they become the draft, not a sent message.
+  const [input, setInput] = React.useState(useSearchParams().get("q") ?? "");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<ApiError | null>(null);
   const abort = React.useRef<AbortController | null>(null);

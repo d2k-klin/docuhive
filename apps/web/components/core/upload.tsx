@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { checkbox, control } from "@/lib/ui/control";
 import { errorMessage } from "@/lib/i18n/errors";
+import { reasonText } from "./document-queues";
 import {
   api,
   Badge,
@@ -114,7 +115,7 @@ export function UploadPage() {
         if (doc?.status === "quarantined")
           update(item.key, {
             state: "quarantined",
-            detail: doc.quarantine_reason || "",
+            detail: reasonText(doc.quarantine_reason),
           });
       }
       setPoll((n) => n + 1);

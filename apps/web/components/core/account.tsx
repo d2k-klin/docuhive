@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,26 +21,23 @@ export function AccountPage({
   username: string;
   role: string;
 }) {
+  const router = useRouter();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [repeat, setRepeat] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const mismatch = repeat.length > 0 && repeat !== next;
   async function change() {
     setBusy(true);
     setError("");
-    setMessage("");
     try {
       await api("/api/auth/password", {
         method: "POST",
         json: { current_password: current, new_password: next },
       });
-      setMessage("Password changed. Other devices are signed out.");
-      setCurrent("");
-      setNext("");
-      setRepeat("");
+      // The API ends every session, this one included, and revokes all API tokens.
+      router.replace("/login?changed=1");
     } catch (e) {
       setError((e as ApiError).message);
     } finally {
@@ -54,6 +52,11 @@ export function AccountPage({
       />
       <div className="space-y-6">
         <Card title="Password">
+          <p className="mb-4 text-sm text-text-muted">
+            Changing it signs you out everywhere, this browser included, and
+            revokes all your API tokens. Sign in again with the new password and
+            create new tokens.
+          </p>
           <form
             className="space-y-4"
             onSubmit={(event) => {
@@ -97,15 +100,12 @@ export function AccountPage({
                 {error}
               </p>
             )}
-            {message && (
-              <p role="status" className="text-sm text-success">
-                {message}
-              </p>
-            )}
             <div className="flex justify-end">
               <Button
                 type="submit"
-                disabled={busy || !current || next.length < 12 || mismatch}
+                disabled={
+                  busy || !current || next.length < 12 || repeat !== next
+                }
               >
                 {busy ? "Changing…" : "Change password"}
               </Button>

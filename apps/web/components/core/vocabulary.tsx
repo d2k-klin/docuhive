@@ -21,6 +21,54 @@ import {
 type Item = components["schemas"]["VocabularyItem"];
 type Kind = "tags" | "correspondents";
 
+/** The destination has its own lookup, independent of the list filter above. */
+function MergeTarget({
+  kind,
+  source,
+  value,
+  onChange,
+}: {
+  kind: Kind;
+  source: Item;
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [find, setFind] = useState("");
+  const options = useApi<Item[]>(
+    `/api/vocabulary/${kind}?q=${encodeURIComponent(find)}`,
+  );
+  return (
+    <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+      <label className="min-w-40 flex-1">
+        <span className="sr-only">Find where to merge {source.name}</span>
+        <Input
+          placeholder="Find destination"
+          value={find}
+          onChange={(e) => setFind(e.target.value)}
+          autoFocus
+        />
+      </label>
+      <label className="min-w-40 flex-1">
+        <span className="sr-only">Merge {source.name} into</span>
+        <select
+          className={control}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          <option value="">Merge {source.name} into…</option>
+          {options.data
+            ?.filter((other) => other.id !== source.id)
+            .map((other) => (
+              <option key={other.id} value={other.id}>
+                {other.name}
+              </option>
+            ))}
+        </select>
+      </label>
+    </div>
+  );
+}
+
 function VocabularyList({
   kind,
   title,
@@ -142,23 +190,12 @@ function VocabularyList({
                       );
                     }}
                   >
-                    <label className="min-w-0 flex-1">
-                      <span className="sr-only">Merge {item.name} into</span>
-                      <select
-                        className={control}
-                        value={target}
-                        onChange={(e) => setTarget(e.target.value)}
-                      >
-                        <option value="">Merge {item.name} into…</option>
-                        {list.data
-                          ?.filter((other) => other.id !== item.id)
-                          .map((other) => (
-                            <option key={other.id} value={other.id}>
-                              {other.name}
-                            </option>
-                          ))}
-                      </select>
-                    </label>
+                    <MergeTarget
+                      kind={kind}
+                      source={item}
+                      value={target}
+                      onChange={setTarget}
+                    />
                     <Button
                       type="button"
                       variant="secondary"

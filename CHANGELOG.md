@@ -26,6 +26,10 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Fixed
 
+- Clearing a field on the document page now empties it (`clear_fields` in `MetadataPatch`) instead of silently keeping the old value.
+- Shared readers no longer see edit, trash or unlock controls on other members' documents; history and lock badges no longer attribute other people's changes to you.
+- Quarantine reasons are plain language everywhere (upload, detail, quarantine), including OCR and conversion failures.
+- Changing your password now explains that every session and API token ends and takes you to sign-in; the confirmation must match.
 - Search no longer fails when the embedding model is unreachable; it falls back to word search.
 - The document preview may frame the archive PDF from DocuHive's own origin; every other page still refuses framing.
 - The capture page's service worker, queue script and manifest load without a session; before, the sign-in redirect stopped the service worker from installing.
