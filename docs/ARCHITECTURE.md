@@ -122,7 +122,7 @@ These rules decide most trade-offs in the code.
 | API client | `openapi-fetch` with types generated from the API's OpenAPI schema by `openapi-typescript` (`make gen-api`) |
 | Tests | Vitest (unit), Playwright + axe (browser journeys, accessibility, control heights) |
 
-**Pages today:** dashboard `/`, `/login`, `/review`, `/ask`, `/analyses`, `/reminders`, `/sources`, `/settings/ai`, `/settings/ai/runs/[id]`, `/settings/notifications`, and `/dev/ui` (a control gallery used by the height test). Document pages, search, upload and phone capture are part of the platform track's web milestone.
+**Pages today:** dashboard `/`, `/login`, `/review`, `/ask`, `/analyses`, `/reminders`, `/sources`, `/settings/ai`, `/settings/ai/runs/[id]`, `/settings/notifications`, and `/dev/ui` (a control gallery used by the height test). The archive screens (documents, search, upload, quarantine, trash, vocabulary, account) and phone capture come from the platform track.
 
 **The proxy.** `app/api/[...path]/route.ts` forwards every method to `DOCUHIVE_API_URL`, including server-sent events for streamed chat answers. Because the browser only sees one origin, the session cookie stays first-party and there is no CORS configuration.
 
