@@ -78,10 +78,10 @@ Each row is a user action, the screen where it happens, and what the system does
 | Switch light/dark theme | header icon | Stored in the browser; the class on `<html>` switches colour tokens | works |
 | Connect a mailbox | `/sources` | OAuth for Gmail or Microsoft, or IMAP credentials; tokens encrypted with `DOCUHIVE_MAIL_TOKEN_KEY`; `mail.sync.all` syncs every 15 minutes | works (connectors) |
 | Import years of old mail | `/sources` → backfill | `mail.backfill.page` jobs page through the date range and resume after a crash | works (connectors) |
-| Upload a file, photograph a letter, drop a scan in a folder | upload, phone capture, scanner folder | All go to `ingest.submit`: detect type → convert → OCR → write the vault → index | works via the API, phone capture and scanner folder; upload page pending |
+| Upload a file, photograph a letter, drop a scan in a folder | upload, phone capture, scanner folder | All go to `ingest.submit`: detect type → convert → OCR → write the vault → index | works via the upload page, the API, phone capture and the scanner folder |
 | Review AI suggestions | `/review` | Each field the AI was unsure about shows the suggestion and its confidence; accept or reject per field or per document | works |
-| Correct a title or category | document page / review | `documents.apply_metadata` writes the database and `meta.json`, and locks the field so AI never overwrites it | API and review edits work; document page pending |
-| Search | search box | Full-text (German/English stemming, accents, typos) and meaning-based search, fused into one ranking; only documents you may see | search engine works; search page pending |
+| Correct a title or category | document page / review | `documents.apply_metadata` writes the database and `meta.json`, and locks the field so AI never overwrites it | works on the document page and in review |
+| Search | search box | Full-text (German/English stemming, accents, typos) and meaning-based search, fused into one ranking; only documents you may see | works, on the search page; falls back to word search if the embedding model is down |
 | Ask a question | `/ask` | The Ask agent searches, reads documents, computes Decimal totals from SQL facts, and streams an answer with citations | works against test doubles; real archive integration pending |
 | Save and re-run an analysis | `/analyses` | A saved prompt + filters + model, re-run as an `analyses.run` job | works |
 | See reminders | `/reminders`, calendar | Due dates and notice periods from extracted facts; a hourly scan; an `.ics` calendar feed | works |
@@ -544,7 +544,7 @@ It costs more and has more moving parts. It is not needed for personal use.
 | OCR, conversion, text and thumbnails | modules work; real OCR checked in the image |
 | Document intake into the vault (`ingest.submit`), the documents API and the scanner folder | works, tested on PostgreSQL with real OCR; synthetic files only |
 | Phone capture page | works |
-| Document, search and upload pages | pending |
+| Document, search, upload, quarantine, trash, vocabulary and account pages; dashboard setup checklist | works, checked in the browser against the real API, worker and OCR |
 | Production compose and backups | in progress: `deploy/compose.yml`, backup and upgrade scripts and a backup timer exist; drills on the target hardware pending |
 | Knowledge-base scopes, CRUD, suggestions, indexing status and `/knowledge` management UI | implemented and verified against the real API; archive ingest remains gated |
 | Knowledge-base retrieve/Ask HTTP APIs, MCP server and optional reranker | planned ([plan](shared/knowledge-bases.md)) |

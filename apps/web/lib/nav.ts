@@ -13,6 +13,7 @@ import {
   Copy,
   HardDrive,
   ListPlus,
+  Trash2,
 } from "lucide-react";
 import {
   BarChart3,
@@ -75,8 +76,8 @@ export const nav: NavItem[] = [
     label: "Quarantine",
     icon: ShieldAlert,
     section: "core",
-    adminOnly: true,
   },
+  { href: "/trash", label: "Trash", icon: Trash2, section: "core" },
   { href: "/vocabulary", label: "Vocabulary", icon: Tags, section: "core" },
   {
     href: "/settings/account",

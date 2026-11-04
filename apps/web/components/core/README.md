@@ -19,6 +19,14 @@
 | [`view-documents.tsx`](view-documents.tsx) | The documents a saved view matches, with paging and export |
 | [capture.tsx](capture.tsx) | Phone capture with page ordering, rotation and persistent offline uploads |
 | [operations-status.tsx](operations-status.tsx) | Live storage and backup warning banner |
+| [`documents.tsx`](documents.tsx) | Documents list: filters, processing strip, selection and bulk edit; shared filter bar and table |
+| [`document-detail.tsx`](document-detail.tsx) | One document: PDF preview, editing with AI/user provenance and unlock, facts, history, download, trash |
+| [`search.tsx`](search.tsx) | Search with highlighted snippets and the list filters |
+| [`upload.tsx`](upload.tsx) | Drag-and-drop upload with category and tags, following each file until it is stored |
+| [`document-queues.tsx`](document-queues.tsx) | Quarantine with plain-language reasons and retry; trash with restore |
+| [`vocabulary.tsx`](vocabulary.tsx) | Tags and senders; rename and merge for administrators |
+| [`account.tsx`](account.tsx) | Password change and links to the other personal settings |
+| [`setup-checklist.tsx`](setup-checklist.tsx) | Every area's setup checks on the dashboard, with the next action for each |
 
 ## Extending
 

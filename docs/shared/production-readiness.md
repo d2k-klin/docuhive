@@ -38,6 +38,8 @@ Progress (2026-11-04): done. Also built: `docuhive vault rebuild` and `vault mig
 
 Documents list with filters, document detail (preview, metadata editing with AI/user provenance, history), search, drag-and-drop upload, quarantine with retry, vocabulary merge, trash, account settings, and the setup wizard with `/api/system/setup-status` and the dashboard checklist (QA-002).
 
+Progress (2026-11-04): built and checked in the browser against the real API, worker and OCR: documents list with filters and bulk edit, detail with PDF preview, editing, lock badges and unlock, facts and history, search (`/api/search`, falling back to word search when the embedding model is down), upload with live status, quarantine, trash, vocabulary, account settings and the dashboard setup checklist. Still open: undo for edits, notes, a compact navigation on phones.
+
 ### 3. Capture
 
 The installable phone capture page (photos, reorder, upload as one document), the polling scanner folder, and API upload with personal tokens (QA-003).

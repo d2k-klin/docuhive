@@ -149,3 +149,23 @@ def test_chunk_typo_fallback_preserves_rank_and_filters(monkeypatch):
     assert (
         "documents.owner_id" in session.sql[1] and "documents.deleted_at IS NULL" in session.sql[1]
     )
+
+
+def test_hybrid_falls_back_to_words_when_the_embedding_model_is_down(monkeypatch):
+    from docuhive import search
+    from docuhive.contracts import CurrentUser, SearchFilters
+    from docuhive.search import fts
+
+    def down(*args):
+        raise ConnectionError("embedding model unreachable")
+
+    monkeypatch.setattr(search, "_semantic", down)
+    monkeypatch.setattr(fts, "documents", lambda *args: ["01JCAAAAAAAAAAAAAAAAAAAAAA"])
+    monkeypatch.setattr(fts, "headlines", lambda ids, q: {ids[0]: ("Title", "snippet")})
+    user = CurrentUser(id=1, username="u", role="member")
+    hits = search.hybrid(user, "invoice", SearchFilters())
+    assert [h.document_id for h in hits] == ["01JCAAAAAAAAAAAAAAAAAAAAAA"]
+    import pytest
+
+    with pytest.raises(ConnectionError):
+        search.hybrid(user, "invoice", SearchFilters(), mode="semantic")

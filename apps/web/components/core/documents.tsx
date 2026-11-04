@@ -2,12 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import {
-  FileText,
-  LoaderCircle,
-  ShieldAlert,
-  Upload,
-} from "lucide-react";
+import { FileText, LoaderCircle, ShieldAlert, Upload } from "lucide-react";
 import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,13 +57,22 @@ export function FilterBar({
   taxonomy: Taxonomy | null;
   onChange: (value: ListFilters) => void;
 }) {
-  const set = (key: keyof ListFilters) => (event: { target: { value: string } }) =>
-    onChange({ ...value, [key]: event.target.value });
+  const set =
+    (key: keyof ListFilters) => (event: { target: { value: string } }) =>
+      onChange({ ...value, [key]: event.target.value });
   return (
-    <div className="flex flex-wrap items-end gap-2" role="group" aria-label="Filters">
+    <div
+      className="flex flex-wrap items-end gap-2"
+      role="group"
+      aria-label="Filters"
+    >
       <label className="w-full sm:w-52">
         <span className="sr-only">Category</span>
-        <select className={control} value={value.category} onChange={set("category")}>
+        <select
+          className={control}
+          value={value.category}
+          onChange={set("category")}
+        >
           <option value="">All categories</option>
           {taxonomy?.categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -98,7 +102,11 @@ export function FilterBar({
       </label>
       <label className="w-full sm:w-40">
         <span className="sr-only">From date</span>
-        <Input type="date" value={value.date_from} onChange={set("date_from")} />
+        <Input
+          type="date"
+          value={value.date_from}
+          onChange={set("date_from")}
+        />
       </label>
       <label className="w-full sm:w-40">
         <span className="sr-only">To date</span>
@@ -113,14 +121,24 @@ export function FilterBar({
   );
 }
 
+/** Category and type ids to their labels, e.g. "utilities/electricity" -> "Electricity". */
+export function labelsOf(taxonomy: Taxonomy | null): Record<string, string> {
+  const labels: Record<string, string> = {};
+  for (const c of taxonomy?.categories || []) labels[c.id] = c.label;
+  for (const t of taxonomy?.document_types || []) labels[t.id] = t.label;
+  return labels;
+}
+
 export function DocumentTable({
   items,
   selected,
   onSelect,
+  labels = {},
 }: {
   items: DocumentPage["items"];
   selected?: Set<string>;
   onSelect?: (ids: Set<string>) => void;
+  labels?: Record<string, string>;
 }) {
   const toggle = (id: string) => {
     if (!selected || !onSelect) return;
@@ -140,9 +158,15 @@ export function DocumentTable({
                   type="checkbox"
                   className={checkbox}
                   aria-label="Select all on this page"
-                  checked={items.length > 0 && items.every((d) => selected?.has(d.id))}
+                  checked={
+                    items.length > 0 && items.every((d) => selected?.has(d.id))
+                  }
                   onChange={(event) =>
-                    onSelect(new Set(event.target.checked ? items.map((d) => d.id) : []))
+                    onSelect(
+                      new Set(
+                        event.target.checked ? items.map((d) => d.id) : [],
+                      ),
+                    )
                   }
                 />
               </th>
@@ -160,7 +184,9 @@ export function DocumentTable({
               key={doc.id}
               className={
                 "h-11 border-b border-border last:border-0 hover:bg-surface-2" +
-                (selected?.has(doc.id) ? " shadow-[inset_2px_0_0_var(--primary)]" : "")
+                (selected?.has(doc.id)
+                  ? " shadow-[inset_2px_0_0_var(--primary)]"
+                  : "")
               }
             >
               {onSelect && (
@@ -183,7 +209,9 @@ export function DocumentTable({
                 {doc.document_date ? formatDate(doc.document_date) : "No date"}
               </td>
               <td className="break-words px-3">{doc.correspondent || "—"}</td>
-              <td className="break-words px-3">{doc.category || "—"}</td>
+              <td className="break-words px-3">
+                {doc.category ? labels[doc.category] || doc.category : "—"}
+              </td>
               <td className="break-words px-3 text-sm text-text-muted">
                 {doc.tags.join(", ") || "—"}
               </td>
@@ -198,7 +226,10 @@ export function DocumentTable({
 function PendingStrip({ items }: { items: Pending[] }) {
   if (!items.length) return null;
   return (
-    <section aria-label="Documents being processed" className="flex flex-wrap gap-2">
+    <section
+      aria-label="Documents being processed"
+      className="flex flex-wrap gap-2"
+    >
       {items.slice(0, 8).map((doc) =>
         doc.status === "quarantined" ? (
           <Link key={doc.id} href="/quarantine">
@@ -208,7 +239,8 @@ function PendingStrip({ items }: { items: Pending[] }) {
           </Link>
         ) : (
           <Badge key={doc.id} tone="info" icon={LoaderCircle}>
-            {doc.title || "Untitled"}: {doc.status === "processing" ? "Reading text…" : "Waiting…"}
+            {doc.title || "Untitled"}:{" "}
+            {doc.status === "processing" ? "Reading text…" : "Waiting…"}
           </Badge>
         ),
       )}
@@ -234,20 +266,25 @@ function BulkEdit({
     setBusy(true);
     setError("");
     try {
-      const result = await api<{ updated: number; skipped: string[] }>("/api/documents/bulk", {
-        method: "POST",
-        json: {
-          ids,
-          patch: {
-            category: category || null,
-            tags_add: tagAdd.trim() ? [tagAdd.trim()] : [],
-            tags_remove: tagRemove.trim() ? [tagRemove.trim()] : [],
+      const result = await api<{ updated: number; skipped: string[] }>(
+        "/api/documents/bulk",
+        {
+          method: "POST",
+          json: {
+            ids,
+            patch: {
+              category: category || null,
+              tags_add: tagAdd.trim() ? [tagAdd.trim()] : [],
+              tags_remove: tagRemove.trim() ? [tagRemove.trim()] : [],
+            },
           },
         },
-      });
+      );
       onDone(
         `Updated ${result.updated} documents` +
-          (result.skipped.length ? `; ${result.skipped.length} are not yours to change` : ""),
+          (result.skipped.length
+            ? `; ${result.skipped.length} are not yours to change`
+            : ""),
       );
     } catch (e) {
       setError((e as ApiError).message);
@@ -260,10 +297,16 @@ function BulkEdit({
       aria-label="Edit selected documents"
       className="flex flex-wrap items-end gap-2 rounded-card border border-border bg-surface p-4"
     >
-      <p className="w-full text-sm font-medium">Change {ids.length} selected documents</p>
+      <p className="w-full text-sm font-medium">
+        Change {ids.length} selected documents
+      </p>
       <label className="w-full sm:w-52">
         <span className="sr-only">Category</span>
-        <select className={control} value={category} onChange={(e) => setCategory(e.target.value)}>
+        <select
+          className={control}
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        >
           <option value="">Keep category</option>
           {taxonomy?.categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -274,7 +317,11 @@ function BulkEdit({
       </label>
       <label className="w-full sm:w-40">
         <span className="sr-only">Add tag</span>
-        <Input placeholder="Add tag" value={tagAdd} onChange={(e) => setTagAdd(e.target.value)} />
+        <Input
+          placeholder="Add tag"
+          value={tagAdd}
+          onChange={(e) => setTagAdd(e.target.value)}
+        />
       </label>
       <label className="w-full sm:w-40">
         <span className="sr-only">Remove tag</span>
@@ -310,7 +357,9 @@ export function Documents() {
   const page = useApi<DocumentPage>(`/api/documents?${query}`);
   const pending = useApi<Pending[]>("/api/documents/pending");
   const taxonomy = useApi<Taxonomy>("/api/taxonomy");
-  const items = offset ? [...extra, ...(page.data?.items || [])] : page.data?.items || [];
+  const items = offset
+    ? [...extra, ...(page.data?.items || [])]
+    : page.data?.items || [];
   const filtered = Object.values(filters).some(Boolean);
   function changeFilters(next: ListFilters) {
     setFilters(next);
@@ -322,7 +371,11 @@ export function Documents() {
     <Page>
       <PageHeader
         title="Documents"
-        description={page.data ? `${page.data.total} documents in your archive` : "Your archive"}
+        description={
+          page.data
+            ? `${page.data.total} documents in your archive`
+            : "Your archive"
+        }
         actions={
           <Button asChild>
             <Link href="/upload">
@@ -334,7 +387,11 @@ export function Documents() {
       />
       <div className="space-y-4">
         <PendingStrip items={pending.data || []} />
-        <FilterBar value={filters} taxonomy={taxonomy.data} onChange={changeFilters} />
+        <FilterBar
+          value={filters}
+          taxonomy={taxonomy.data}
+          onChange={changeFilters}
+        />
         {notice && (
           <p role="status" className="text-sm text-success">
             {notice}
@@ -367,7 +424,10 @@ export function Documents() {
             }
             action={
               filtered ? (
-                <Button variant="secondary" onClick={() => changeFilters(noFilters)}>
+                <Button
+                  variant="secondary"
+                  onClick={() => changeFilters(noFilters)}
+                >
                   Clear filters
                 </Button>
               ) : (
@@ -378,7 +438,12 @@ export function Documents() {
             }
           />
         ) : (
-          <DocumentTable items={items} selected={selected} onSelect={setSelected} />
+          <DocumentTable
+            items={items}
+            selected={selected}
+            onSelect={setSelected}
+            labels={labelsOf(taxonomy.data)}
+          />
         )}
         {page.data?.next_offset != null && (
           <Button
