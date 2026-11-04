@@ -15,9 +15,9 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.0",
     "@radix-ui/react-slot": "^1.5.0",
-    "lucide-react": "^0.468.0",
+    "lucide-react": "^1.66.0",
     "next": "^16.4.5",
-    "openapi-fetch": "^0.14.0",
+    "openapi-fetch": "^0.17.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -28,7 +28,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
-    "eslint": "^9.0.0",
+    "eslint": "^10.14.0",
     "eslint-config-next": "^16.4.5",
     "openapi-typescript": "^7.6.0",
     "postcss": "^8.5.0",

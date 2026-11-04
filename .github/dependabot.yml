@@ -1,6 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: pip
+  - package-ecosystem: uv
     directory: /
     schedule: { interval: weekly }
     commit-message: { prefix: deps }
@@ -10,6 +10,13 @@ updates:
     schedule: { interval: weekly }
     commit-message: { prefix: deps }
     labels: [dependencies]
+    ignore:
+      # Tailwind 4 is a config and class migration; do it as its own change.
+      - dependency-name: tailwindcss
+        update-types: [version-update:semver-major]
+      # Types follow the Node runtime (22), not the newest Node.
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly }

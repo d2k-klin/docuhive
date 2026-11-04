@@ -124,7 +124,7 @@ Never in a README: internal plan IDs (`OA-M3`, `CL-01 §1.6`), track names as ow
   - UI changed → `make test-ui` and screenshots in light and dark
   - a "Notes for reviewers" section: never paste tokens or real documents
 - **Issue templates:** `bug_report.yml`, `feature_request.yml`, and `config.yml` with `blank_issues_enabled: false` plus a security advisory contact link.
-- `dependabot.yml`: weekly updates for `pip`, `npm` and `github-actions`, with commit prefixes `deps`/`ci` and labels.
+- `dependabot.yml`: weekly updates for `uv` (it updates `uv.lock`; `pip` would not), `npm` and `github-actions`, with commit prefixes `deps`/`ci` and labels. Majors that need a migration (Tailwind) or must follow the runtime (`@types/node`) are ignored and done by hand.
 - **Workflows:**
   - Pin third-party actions to a full commit SHA with the version in a comment.
   - Default to `permissions: contents: read` and widen only per job.
