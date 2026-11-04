@@ -31,7 +31,9 @@ The KB work starts after OA-M4 (hybrid search) and CL-M6 (ask). Like the rest of
   - full-text candidates: `websearch_to_tsquery`, `ts_rank_cd`, with `pg_trgm` on titles and senders for typos
   - vector candidates: `register_semantic` (I8), top 50
   - fusion: reciprocal rank fusion, `score = Σ 1 / (60 + rank)`, then grouped so one document cannot fill the result
-- `search.hybrid` (documents) becomes a thin wrapper that groups `retrieve` hits by document, so search and knowledge bases share one ranking.
+- `search.hybrid` (documents) and `retrieve` share rank fusion and the filter builder.
+  Document search keeps document-level full-text candidates so documents without
+  embeddings remain searchable; chunk retrieval covers the indexed portion of the archive.
 - `ChunkHit` (new contract model): `document_id`, `chunk_no`, `text`, `score`, `title`, `document_date`, `category`, `page` (when known), `url`.
 - **Done when:** unit tests cover RRF ordering and grouping; an integration test on the test stack shows a German stemmed term, a typo and a paraphrase each finding the right synthetic document.
 

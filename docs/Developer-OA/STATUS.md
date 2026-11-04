@@ -5,7 +5,7 @@ Update this file whenever a milestone or a contract item changes state (working 
 | Milestone | State | Updated | Notes |
 |-----------|-------|---------|-------|
 | OA-M0 Repo skeleton + contract stubs + CI | in progress | 2026-11-03 | Workspaces, exact contract models, stubs, CLI, health, CI and contributor tooling implemented; local build/checks passing, CI publication unverified. |
-| OA-M1 OCR spike + gate | in progress | 2026-11-03 | Isolated spike, conversion/OCR primitives, synthetic generator and CER tool implemented. Private corpus and target-host measurements unavailable; gate pending. |
+| OA-M1 OCR spike + gate | in progress | 2026-11-04 | Spike, conversion/OCR, synthetic generator and CER tool implemented; current trixie worker passes real synthetic OCR. Private corpus and target-host measurements unavailable; gate pending. |
 | OA-M2 Platform (settings, overlay, DB, jobs, worker) | complete | 2026-11-04 | Settings/overlay/plugins, schema/migrations and jobs/worker/scheduler implemented; PostgreSQL concurrency, scheduler leadership and killed-worker lease recovery verified. |
 | OA-M3 Ingest pipeline, vault, documents service | not started | 2026-11-03 | |
 | OA-M4 Auth, API, FTS + hybrid search | in progress | 2026-11-04 | Auth, scoped tokens, visibility, document/chunk FTS, typo fallback and hybrid fusion implemented. Real search checks pass. Document API and 20k-document latency acceptance remain pending. |
