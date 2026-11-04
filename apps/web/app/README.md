@@ -12,6 +12,8 @@
 | [`dev/`](dev/) | Design kitchen sink (development only) |
 | [`globals.css`](globals.css) | Design tokens: font, type scale, control sizes, colours for light and dark |
 | [`layout.tsx`](layout.tsx) | Root layout: fonts, theme and metadata |
+| [capture/](capture/) | Public, offline-capable phone capture shell |
+| [manifest.ts](manifest.ts) | Installable capture app metadata and icons |
 
 ## Extending
 

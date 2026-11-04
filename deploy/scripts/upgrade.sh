@@ -12,7 +12,6 @@ new() { docker compose --env-file "$new_env" -f "$compose_file" "$@"; }
 old config --quiet
 new config --quiet
 new build api web
-old stop -t 90 api worker worker-ocr web
 stage=backup
 recover() {
   code=$?
@@ -27,6 +26,7 @@ recover() {
   exit "$code"
 }
 trap recover EXIT
+old stop -t 90 api worker worker-ocr web
 "$script_dir/backup.sh"
 stage=migrate
 new run --rm migrate

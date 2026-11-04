@@ -10,8 +10,8 @@ Update this file whenever a milestone or a contract item changes state (working 
 | OA-M3 Ingest pipeline, vault, documents service | complete | 2026-11-04 | `vault init`, availability check, verified atomic writes, `meta.json`, `ingest.submit`, `ingest.process` (convert, OCR, thumbnail, vault, quarantine, retry), documents service and events implemented; real parity tests and a Tesseract + Gotenberg pipeline test pass on PostgreSQL. `vault rebuild` (drill: tables wiped, rebuilt document identical and searchable), `vault migrate`, `meta.schema.json`, tag and sender rename/merge implemented. |
 | OA-M4 Auth, API, FTS + hybrid search | in progress | 2026-11-04 | Auth, scoped tokens, visibility, document/chunk FTS, typo fallback and hybrid fusion implemented. Real search checks pass. Document API (list, detail, files, history, edit, bulk edit, trash/restore, upload, quarantine retry) implemented. 20k-document latency acceptance remains pending. |
 | OA-M5 Web shell + document UI | in progress | 2026-11-04 | Shell, login, BFF, generated types, knowledge-base management and token settings implemented and browser-tested. Archive workflows and setup wizard remain pending. |
-| OA-M6 PWA capture + consume folder | not started | 2026-11-03 | |
-| OA-M7 Ops: compose, NAS, backups, drills | not started | 2026-11-03 | |
+| OA-M6 PWA capture + consume folder | in progress | 2026-11-04 | Capture PWA/offline queue, token upload adapter and scanner polling implemented; production browser and PostgreSQL checks pass. Real intake/phone/NAS journeys pending. |
+| OA-M7 Ops: compose, NAS, backups, drills | in progress | 2026-11-04 | Production images/Compose, library, backup timer and restore/upgrade tooling implemented and tested locally. NAS/host drills and three nightly backups pending. |
 | OA-M8 Hardening + cloud profile | not started | 2026-11-03 | |
 
 ## Contract items provided (CL swaps fallbacks for these)
@@ -108,3 +108,42 @@ Plan: [archive tools](../shared/archive-tools.md). Core revision `0003_archive_t
   a real export through the web proxy and the decision buttons.
 - Pending, because document intake (OA-M3) is not built: no real document has been checked,
   deduplicated or exported yet; the near-duplicate thresholds are untuned on real data.
+
+## Production readiness phases 3 and 4 (2026-11-04)
+
+- Capture: installable public shell, EXIF-aware 2400px image preparation, rotation/order,
+  combined photos, persistent IndexedDB uploads, account isolation, cross-tab leases,
+  backoff and retained rejected files. Only the capture shell/static assets are cached.
+  The bounded multipart API authenticates personal upload tokens, guards against an
+  account switch, and calls the shared ingest contract. Scanner polling persists its
+  stability ledger and keeps source files until the stored original matches its checksum.
+- Operations: pinned production Compose, standalone web Dockerfile, non-root/read-only
+  services, loopback-only ingress, mount/HTTPS guides, managed library hardlinks with
+  crash recovery, quiesced database/vault/staging backups, nightly timer, backup evidence
+  and warnings, recovery drills, byte comparison and an upgrade helper.
+- Real disposable PostgreSQL: **4 passed** for release upgrade, scanner retention/rejection
+  and library hardlinks. The v0.1.0 schema upgrades twice with metadata, facts, password
+  hashes and token scopes preserved. A separate DB avoided the concurrently used core DB.
+- Browser: **30 capture checks passed**, across 375/768/1280 in light/dark, covering axe,
+  order/rotation/combining, offline reopening/reconnect, queue leases, account isolation
+  and rejected-byte retention. Production assets are required for offline hydration; the
+  dedicated capture configuration tests those. Screenshots were inspected.
+- Real restic 0.18.1 backup/restore passed on synthetic files. Writers restarted; restored
+  document bytes, metadata, ownership, facts and staged input matched. See the
+  [verification record](../decisions/0003-operations-verification.md).
+- Final network-free suite: **357 passed**, **59 integration tests deselected**,
+  **1 expected failure**, **87.44% coverage**. Existing shell/control-height browser
+  checks also pass (**12**).
+- Final source production build, TypeScript/ESLint, web unit tests (**8**), Ruff, mypy,
+  ShellCheck and documentation links pass. The updated worker image passes real German
+  OCR as UID 1000 with a read-only root and network disabled (PDF/A-2, no missing words).
+- Initial backend/web production images built and ran. The backend rebuilt after fixes;
+  a final web image rebuild stalled resolving its pinned Docker base and was stopped.
+  Final web source was built and checked locally instead. This is not a published image.
+- `make` is blocked by the host's unaccepted Xcode licence; direct equivalent commands
+  supplied the evidence. The macOS/Colima database check used UID-owned tmpfs; Linux
+  bind-mount ownership and actual NAS behaviour remain unverified.
+- Pending: integrate the separately built phase-1 core (the current checkout still has
+  intake/document stubs), physical phone/scanner/NAS journeys, vault-only rebuild and
+  host-loss drills, NAS share ACLs and three consecutive successful nightly backups.
+  No production data, real provider/mailbox or release GO is claimed.

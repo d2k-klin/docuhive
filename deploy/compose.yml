@@ -130,9 +130,10 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
       HOSTNAME: 0.0.0.0
     ports: ["127.0.0.1:3000:3000"]
-    networks: [backend]
+    networks: [backend, entry]
     depends_on:
       api: {condition: service_healthy}
 networks:
   backend: {internal: true}
   outbound: {}
+  entry: {}

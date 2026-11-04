@@ -21,7 +21,13 @@ const problems: Record<Kind, string> = {
   orphan_folder: "A folder that no document points to",
 };
 
-export function VaultHealth({ initial }: { initial: Report | null }) {
+export function VaultHealth({
+  initial,
+  backup,
+}: {
+  initial: Report | null;
+  backup?: components["schemas"]["BackupStatus"] | null;
+}) {
   const [queued, setQueued] = useState(false);
   const [error, setError] = useState("");
   async function run(full: boolean) {
@@ -52,6 +58,43 @@ export function VaultHealth({ initial }: { initial: Report | null }) {
           <Button onClick={() => void run(true)}>Full check</Button>
         </div>
       </header>
+      <section
+        aria-label="Backup status"
+        className="space-y-2 rounded-card border border-border bg-surface p-4"
+      >
+        <h2 className="flex items-center gap-2 text-md font-semibold">
+          {backup?.ok && !backup.stale ? (
+            <CircleCheck className="size-5 text-success" aria-hidden="true" />
+          ) : (
+            <TriangleAlert className="size-5" aria-hidden="true" />
+          )}
+          Backups
+        </h2>
+        <p className="text-sm">
+          {backup?.ok && !backup.stale
+            ? "Your latest backup completed."
+            : "A recent successful backup could not be confirmed. Check the nightly backup service."}
+        </p>
+        {backup?.last_success && (
+          <p className="text-xs text-text-muted">
+            Last successful backup:{" "}
+            <time dateTime={backup.last_success}>
+              {new Date(backup.last_success)
+                .toISOString()
+                .replace("T", " ")
+                .replace("Z", " UTC")}
+            </time>
+          </p>
+        )}
+        <a
+          href="https://github.com/d2k-klin/docuhive/blob/main/docs/setup/operations.md#nightly-backups"
+          className="text-sm text-primary underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Set up or check backups
+        </a>
+      </section>
       <p className="max-w-prose text-sm text-text-muted">
         A full check also reads every original to confirm it is unchanged, so it
         takes longer. It runs on its own once a week.

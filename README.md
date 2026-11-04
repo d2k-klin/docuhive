@@ -79,6 +79,8 @@ Open <http://localhost:3000> and sign in with the account you just created. Stor
 | [AI providers](docs/setup/ai-providers.md) | Local (Ollama) and cloud models, which model does what, privacy and budgets |
 | [Email accounts](docs/setup/mail-accounts.md) | Connecting Gmail, Outlook and IMAP; importing old mail |
 | [Notifications](docs/setup/notifications.md) | Push and email alerts, reminders, the calendar feed |
+| [Capture guide](docs/setup/mobile.md) | Phone capture, offline uploads, scanner folders and tokens |
+| [Operations guide](docs/setup/operations.md) | Production containers, backups, recovery and upgrades |
 | [Development setup](docs/setup/development.md) | Running DocuHive locally and running the checks |
 | [Learning path](docs/learn/README.md) | Strands, the agent harness, evals and retrieval, step by step |
 | [Requirements](docs/REQUIREMENTS.md) | What DocuHive must do, and why |
@@ -96,6 +98,8 @@ DocuHive is in early development and not ready for real documents yet.
 | AI layer, classification, review queue, email connectors, chat | working against test doubles; real-provider runs pending |
 | Document intake and archive (OCR, vault) | waiting on the [OCR quality gate](docs/decisions/0001-ocr-gate.md) |
 | Web app | pages for review, chat, sources and settings; document pages in progress |
+| Phone, scanner and token capture | implemented; offline/browser and PostgreSQL checks pass, full archive integration pending |
+| Deployment and recovery | production stack and real synthetic backup/restore tested locally; target hardware and nightly-run acceptance pending |
 
 Progress is tracked in the [team plans](docs/shared/README.md).
 

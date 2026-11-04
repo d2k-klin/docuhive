@@ -10,6 +10,10 @@
 | [`development.md`](development.md) | Development setup |
 | [`knowledge-bases.md`](knowledge-bases.md) | Save document scopes, inspect indexing and issue scoped tokens |
 | [`mail-accounts.md`](mail-accounts.md) | Email accounts |
+| [`mobile.md`](mobile.md) | Phone capture, offline queue, scanner folder and token upload |
+| [`operations.md`](operations.md) | Production deployment, backup timer and upgrade path |
+| [`nas-wd-ex2-ultra.md`](nas-wd-ex2-ultra.md) | Mount and protect NAS storage and the library view |
+| [`remote-access.md`](remote-access.md) | Private HTTPS through Tailscale |
 | [`notifications.md`](notifications.md) | Notifications and reminders |
 
 ## Extending

@@ -19,7 +19,7 @@ States:
 | Web upload | Built | Upload one or more files, with category and tags set at upload time; the API works, the browser screen comes with the document screens. |
 | Phone capture | Built | An installable web app that takes photos, lets you reorder the pages and uploads them as one document. |
 | Scanner folder | Built | Picks up files from a NAS folder by polling, because network mounts don't support change notifications. |
-| API upload | Works | Personal API tokens let scripts and iOS Shortcuts upload documents. |
+| API upload | Built | Personal API tokens let scripts and iOS Shortcuts upload documents. |
 
 ## Reading and storing
 
@@ -84,6 +84,14 @@ States:
 | User accounts | Works | Local accounts with hashed passwords and secure sessions. |
 | Household sharing | Works | Each document has an owner and can be shared with the household, enforced inside every database query. |
 | Scoped API tokens | Works | Personal tokens limited to reading or asking knowledge bases, with an explicit flag for local-only consumers. |
+
+## Operations
+
+| Feature | State | What it does |
+| --- | --- | --- |
+| Production containers | Built | Runs isolated internal services and a loopback web entry point with pinned images, non-root users and read-only roots. |
+| Nightly backups | Built | Pauses writers, dumps the database, backs up the vault and staging with restic, and reports failures or stale backups. |
+| Recovery and upgrades | Built | Provides recovery drills, snapshot comparison and an upgrade helper with a backup and migration boundary; target-host acceptance is pending. |
 
 ## Not planned for the first version
 

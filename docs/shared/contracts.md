@@ -497,6 +497,13 @@ The base path is `/api`. There is one FastAPI app. Routers are listed in `docuhi
 
 ---
 
+`POST /api/upload` accepts multipart `files` (up to 50), with query parameters
+`combine`, `source` (`upload`, `mobile`, `api`) and `shared`. It returns `202` with
+`IngestResult`; duplicates are successful intake. The optional `expected_owner_id`
+rejects a changed browser account before reading files. Bearer uploads always use
+the authenticated token owner and source `api`; browser sessions require CSRF.
+The configured upload limit applies to the aggregate file bytes, including chunked requests.
+
 ## 7. Web ownership (`apps/web`)
 
 OA owns `/knowledge` (saved scopes and indexing status); CL owns its retrieval test

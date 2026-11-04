@@ -6,6 +6,10 @@
 
 | Path | What it is |
 | --- | --- |
+| [`backup.sh`](backup.sh) | Entry point for the host backup timer |
+| [`backup.py`](backup.py) | Quiesced database/vault/staging backup with retention and status |
+| [`upgrade.sh`](upgrade.sh) | Build a release, back up, migrate and start with a recovery boundary |
+| [`restore.md`](restore.md) | Full, database-only and single-document recovery |
 | [`check_licenses.py`](check_licenses.py) | Fail on AGPL Python distributions; subprocess tools are listed separately |
 | [`dev.py`](dev.py) | Run the three development processes and shut down the entire process groups together |
 | [`ocr_smoke.py`](ocr_smoke.py) | Run DocuHive's real OCR on a synthetic scan inside the worker image; used by `make ocr-smoke` |

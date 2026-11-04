@@ -8,5 +8,8 @@ export default async function StoragePage() {
   if (!data) redirect("/login");
   if (data.role !== "admin") redirect("/");
   const report = await api.GET("/api/system/vault/health").catch(() => null);
-  return <VaultHealth initial={report?.data || null} />;
+  const backup = await api.GET("/api/system/backup").catch(() => null);
+  return (
+    <VaultHealth initial={report?.data || null} backup={backup?.data || null} />
+  );
 }
