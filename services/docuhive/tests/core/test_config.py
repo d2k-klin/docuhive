@@ -73,7 +73,7 @@ def test_plugin_load_failure_is_skipped(monkeypatch):
         {"env": "prod", "secret_key": "short"},
         {"env": "test", "auth_disabled": True},
         {"env": "prod", "auth_disabled": True, "secret_key": "x" * 32},
-        {"staging_dir": "data/vault/staging"},
+        {"vault_dir": "data/vault", "staging_dir": "data/vault/staging"},
         {"max_upload_mb": 0},
     ],
 )

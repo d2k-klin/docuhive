@@ -49,11 +49,6 @@ def test_token_scope_and_revocation(alice):
 
 
 @pytest.mark.req("ING-01", "ING-05", "CAP-04")
-@pytest.mark.xfail(
-    strict=True,
-    raises=MissingArchiveEndpoint,
-    reason="OA-M3 upload route absent: docs/Developer-QA/bugs.md#qa-001",
-)
 def test_upload_deduplication(alice, corpus):
     root, _ = corpus
     results = []

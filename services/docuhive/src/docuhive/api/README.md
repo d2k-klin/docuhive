@@ -10,6 +10,7 @@
 | [`app.py`](app.py) | FastAPI factory with fail-fast settings and optional intelligence startup |
 | [`auth.py`](auth.py) | Browser login, sessions and personal access tokens |
 | [`duplicates.py`](duplicates.py) | Possible duplicate pairs the caller can see both sides of, and decisions on them |
+| [`documents.py`](documents.py) | Documents: list, detail, files, history, edit, bulk edit, trash, upload and quarantine retry |
 | [`export.py`](export.py) | ZIP export of archive PDFs plus a CSV of details, for a filter, saved view or knowledge base |
 | [`fields.py`](fields.py) | Custom fields: everyone reads them, administrators define them |
 | [`knowledge.py`](knowledge.py) | Knowledge-base CRUD, filter choices, suggestions and caller-visible indexing status |

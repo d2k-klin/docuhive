@@ -14,6 +14,7 @@ setup:
 dev:
 	docker compose -f deploy/compose.dev.yml up -d --wait
 	$(UV) run docuhive db upgrade
+	$(UV) run docuhive vault init
 	$(UV) run python deploy/scripts/dev.py
 
 test:

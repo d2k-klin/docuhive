@@ -13,14 +13,7 @@ from ulid import ULID
         "fake",
         pytest.param(
             "real",
-            marks=[
-                pytest.mark.integration,
-                pytest.mark.xfail(
-                    strict=True,
-                    raises=NotImplementedError,
-                    reason="I4/OA-M3: docs/Developer-QA/bugs.md#qa-001",
-                ),
-            ],
+            marks=pytest.mark.integration,
         ),
     ]
 )

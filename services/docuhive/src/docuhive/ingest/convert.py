@@ -91,3 +91,19 @@ def to_pdf(path: Path, detected: Detected) -> Path:
             output.unlink(missing_ok=True)
             raise Quarantine("too_many_pages")
     return output
+
+
+def combine(pdfs: list[Path], output: Path) -> Path:
+    """Several photographed pages, in order, as one PDF."""
+    with pikepdf.new() as merged:
+        sources = [pikepdf.open(path) for path in pdfs]
+        try:
+            for source in sources:
+                merged.pages.extend(source.pages)
+            if len(merged.pages) > MAX_PAGES:
+                raise Quarantine("too_many_pages")
+            merged.save(output)
+        finally:
+            for source in sources:
+                source.close()
+    return output

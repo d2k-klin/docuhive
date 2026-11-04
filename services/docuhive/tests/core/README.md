@@ -9,6 +9,8 @@
 | [`__init__.py`](__init__.py) | Package marker |
 | [`test_archive_tools.py`](test_archive_tools.py) | Vault health, custom fields, saved views, near-duplicates and export without network |
 | [`test_archive_tools_integration.py`](test_archive_tools_integration.py) | The same archive-tool scenarios on the real migrated PostgreSQL schema |
+| [`test_document_core.py`](test_document_core.py) | Upload, processing, vault outage, quarantine and retry, crash recovery, edits and trash without network |
+| [`test_document_core_integration.py`](test_document_core_integration.py) | The real pipeline: Gotenberg, Tesseract, vault and search vector on PostgreSQL |
 | [`test_auth.py`](test_auth.py) | Password, request and login throttling behavior without a database |
 | [`test_auth_integration.py`](test_auth_integration.py) | Real storage tests for session lifecycle, scoped tokens and visibility SQL |
 | [`test_auth_memory.py`](test_auth_memory.py) | Run the same auth acceptance scenarios against a network-free test database |

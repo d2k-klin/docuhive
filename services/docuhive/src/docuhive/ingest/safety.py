@@ -14,6 +14,11 @@ MAX_PAGES = 500
 MAX_IMAGE_PIXELS = 200_000_000
 
 
+class StepFailed(Exception):
+    """A step raised an error that is not about the document (a bug, missing OCR data):
+    worth retrying, unlike a Quarantine reason."""
+
+
 def _child(connection: Connection, fn: Callable, args: tuple) -> None:
     if os.name == "posix":
         os.setsid()
@@ -23,7 +28,7 @@ def _child(connection: Connection, fn: Callable, args: tuple) -> None:
         connection.send((False, str(error)))
     except BaseException as error:
         traceback.print_exc()
-        connection.send((False, f"{type(error).__name__}: processing failed"))
+        connection.send((None, type(error).__name__))
     finally:
         connection.close()
 
@@ -41,6 +46,8 @@ def isolated(fn: Callable, *args: Any, timeout_s: float = 1800) -> Any:
             ok, result = parent.recv()
         except EOFError as error:
             raise Quarantine("step_crashed") from error
+        if ok is None:
+            raise StepFailed(result)
         if not ok:
             raise Quarantine(result)
         return result

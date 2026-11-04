@@ -16,6 +16,7 @@ from sqlalchemy import select
 from docuhive import db, jobs
 from docuhive.config.settings import get_settings
 from docuhive.db.models import Document, Setting
+from docuhive.vault import sha256
 
 KEY = "vault.health"
 MAX_PROBLEMS = 200
@@ -52,12 +53,12 @@ class VaultReport(BaseModel):
         return self.problem_count == 0
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for block in iter(lambda: handle.read(1 << 20), b""):
-            digest.update(block)
-    return digest.hexdigest()
+def original_sha256(originals: list[Path], folder: Path) -> str:
+    """A combined photo upload is identified by the hash of its pages' hashes, in order."""
+    pages = sorted(folder.glob("original-*.*"), key=lambda p: int(p.stem.split("-")[1]))
+    if pages:
+        return hashlib.sha256("".join(sha256(p) for p in pages).encode()).hexdigest()
+    return sha256(originals[0])
 
 
 def folder_of(vault: Path, vault_path: str) -> Path:
@@ -95,7 +96,7 @@ def scan(full: bool = False) -> VaultReport:
             report("original_missing", doc_id, folder / "original.*")
         elif full:
             hashed += 1
-            if sha256(originals[0]) != expected:
+            if original_sha256(originals, folder) != expected:
                 report("checksum_mismatch", doc_id, originals[0])
         if not (folder / "archive.pdf").is_file():
             report("archive_missing", doc_id, folder / "archive.pdf")
