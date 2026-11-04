@@ -8,6 +8,7 @@
 | --- | --- |
 | [`0000-template.md`](0000-template.md) | Decision: title |
 | [`0001-ocr-gate.md`](0001-ocr-gate.md) | OCR gate — pending measurements |
+| [`0002-knowledge-bases.md`](0002-knowledge-bases.md) | Knowledge bases inside DocuHive instead of a separate KB platform — proposed |
 
 ## Extending
 

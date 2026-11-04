@@ -207,6 +207,17 @@ Paperless-ngx, Docspell, Papra, Paperwise and Mayan EDMS were reviewed. These ar
 - **GUIDE-05** Settings and fields that need domain knowledge have a one-line description and an optional help popover linking to `docs/setup/` or `docs/learn/`. Jargon is explained on first use.
 - **GUIDE-06** Long-running work (backfill, OCR, embedding, re-classification) shows progress, what is happening now, and what happens next. It can be paused or cancelled where safe.
 
+### 5.16 Knowledge bases (KB)
+Bedrock-style knowledge bases over the same index, for chat and for other agents. Decision: [0002](decisions/0002-knowledge-bases.md); plan: [shared/knowledge-bases.md](shared/knowledge-bases.md).
+- **KB-01** A **knowledge base** is a named, saved scope (categories, types, senders, tags, dates, sources) with a description. It never copies documents. Users can own or share knowledge bases.
+- **KB-02** **Hybrid chunk retrieval**: full-text (German/English stemming, accents, typos) and semantic results fused into one ranking, with permissions applied first.
+- **KB-03** A **retrieve API** returns ranked chunks with scores, document links and metadata; an **ask API** returns an answer with citations. Both are scoped to one knowledge base and can only narrow it.
+- **KB-04** An **MCP server** exposes list, retrieve, ask and read-document tools to other agents, with the same permissions.
+- **KB-05** **Privacy across the API**: restricted documents are excluded from API and MCP results unless the token is explicitly marked as a local-only consumer. Responses report how many were excluded, never their content.
+- **KB-06** Each knowledge base shows its **status**: documents in scope, indexed, pending, failed and stale, and the embedding model.
+- **KB-07** A **test panel** shows what retrieval returns for a query (chunks, scores, mode) before an agent relies on it.
+- **KB-08** **Retrieval quality is evaluated** (recall@k, MRR on a synthetic set; a private golden set in the overlay). Chunking, fusion and reranking change only with an eval result.
+
 ## 6. Non-functional requirements
 
 | ID | Requirement |
