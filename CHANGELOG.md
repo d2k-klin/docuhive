@@ -4,6 +4,11 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Changed
+
+- TypeScript 7 for the web app's typecheck and build, uvicorn 0.54 and psycopg 3.3.
+- ocrmypdf stays on 16: version 17 refuses the base image's Ghostscript 10.0.0, so it waits for a newer base image.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added
