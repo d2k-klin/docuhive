@@ -7,7 +7,10 @@
 | Path | What it is |
 | --- | --- |
 | [`__init__.py`](__init__.py) | The documents service: read, apply metadata with locks, audit, search vector and events, trash |
+<<<<<<< HEAD
 | [`vocabulary.py`](vocabulary.py) | Renaming and merging tags and senders, with audit, `meta.json` refresh and events |
+=======
+>>>>>>> origin/main
 | [`metadata.py`](metadata.py) | Pure metadata changes used to keep the fake and eventual backend semantics aligned |
 
 ## Extending

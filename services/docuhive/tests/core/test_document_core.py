@@ -9,7 +9,10 @@ import json
 import logging
 import shutil
 
+<<<<<<< HEAD
 import pikepdf
+=======
+>>>>>>> origin/main
 import pytest
 from docuhive import db, vault
 from docuhive.db.models import AuditLog, Document, Job, Setting
@@ -23,6 +26,7 @@ from sqlalchemy import select
 from .test_archive_tools import client, tools  # noqa: F401
 from .test_auth_integration import CSRF
 
+<<<<<<< HEAD
 
 def blank_pdf() -> bytes:
     out = io.BytesIO()
@@ -33,6 +37,9 @@ def blank_pdf() -> bytes:
 
 
 PDF = blank_pdf()  # a real PDF: the rebuild reads text from the archive copy
+=======
+PDF = b"%PDF-1.4\nsynthetic QA-DOC:core-001\n%%EOF\n"
+>>>>>>> origin/main
 
 
 def fake_build(work, files):
@@ -366,6 +373,7 @@ def test_library_view_links_stored_documents(core):
     assert not list((vault.root() / "library").rglob("*.pdf"))
 
 
+<<<<<<< HEAD
 def snapshot(doc_id: str) -> dict:
     from docuhive import documents
 
@@ -499,6 +507,8 @@ def test_merged_tags_and_senders_move_documents_and_stay_resolved(core):
     assert kinds().count("vault.repair_meta") >= 1
 
 
+=======
+>>>>>>> origin/main
 def test_html_originals_download_converter_outages_wait_and_junk_is_ignored(core, monkeypatch):
     from docuhive import ingest
     from docuhive.ingest.errors import Transient

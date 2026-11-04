@@ -9,7 +9,11 @@
 | Platform: settings, database, jobs, worker, sign-in, tokens | Done and verified on PostgreSQL |
 | Search, knowledge bases, archive tools (0.2.0) | Done; tested only with synthetic data |
 | AI layer, classification, review, mail, Ask, reminders | Built against test doubles; never run with a real provider or mailbox |
+<<<<<<< HEAD
 | Document intake, vault writes, document service and API | Built in phase 1, including rebuilding the database from the vault; tested with synthetic files on PostgreSQL, Tesseract and Gotenberg |
+=======
+| Document intake, vault writes, document service and API | Built in phase 1; tested with synthetic files on PostgreSQL, Tesseract and Gotenberg. Vault rebuild still to come |
+>>>>>>> origin/main
 | Document screens: list, detail, search, upload, quarantine, vocabulary, setup wizard | Not built (QA-002) |
 | Phone capture and scanner folder | Not built (QA-003) |
 | Production deployment, backups, restore drills | Not built: only dev and test compose files exist |
@@ -32,7 +36,11 @@ The vault (`init`, the availability check, atomic writes with checksum verificat
 
 Done when the contract parity tests run against the real implementation instead of `xfail` (QA-001), and a file uploaded through the API ends `stored` with a searchable PDF/A in the vault.
 
+<<<<<<< HEAD
 Progress (2026-11-04): done. Also built: `docuhive vault rebuild` and `vault migrate`, the published `meta.schema.json`, and renaming and merging tags and senders.
+=======
+Progress (2026-11-04): both done. Still open in this phase: `docuhive vault rebuild` and `vault migrate`, the published `meta.schema.json`, and tag and sender merging.
+>>>>>>> origin/main
 
 ### 2. Document screens
 
