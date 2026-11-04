@@ -32,7 +32,7 @@ States:
 | Vault on your storage | Works | Stores each document as a plain folder (original, archive PDF, metadata file) on your NAS or disk, readable without DocuHive. |
 | Duplicate detection | Works | Recognises a file you already have and reports it instead of importing it again. |
 | Near-duplicate detection | Built | Flags the same document arriving twice in different forms, such as an email PDF and a paper scan, by comparing sender, amounts, dates and meaning. |
-| Rebuildable index | Planned | Rebuilds the database from the vault's metadata files alone. |
+| Rebuildable index | Works | Rebuilds the database from the vault's metadata files alone. |
 | Vault health check | Built | A weekly, read-only check that every document's files exist, match their checksums and agree with the database, and that no folder is orphaned. |
 | Library view | Built | An optional, read-only folder tree sorted by category, year, date and title. |
 | Parallel processing | Works | A job queue lets several workers process documents at once and recovers jobs from a crashed worker. |
@@ -47,7 +47,7 @@ States:
 | Custom fields | Built | Lets you define your own typed fields (such as a licence plate) that the AI fills in like the built-in details, with optional reminders for dates. |
 | Provenance and locks | Built | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
 | Bulk edit with undo | Planned | Edits many documents at once, records every change and lets you undo it. |
-| Vocabulary management | Planned | Manages senders, tags, types and categories, including merging duplicates. |
+| Vocabulary management | Built | Renames and merges senders and tags; the API works, the screen comes with the document screens. |
 | Trash | Built | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
 
 ## Finding and asking

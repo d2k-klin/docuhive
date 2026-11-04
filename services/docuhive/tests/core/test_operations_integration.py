@@ -2,6 +2,7 @@
 
 import pytest
 from alembic import command
+from alembic.script import ScriptDirectory
 from docuhive import db
 from docuhive.db.migrations import migrate, migration_config
 from sqlalchemy import text
@@ -61,7 +62,5 @@ def test_release_010_to_current_preserves_documents_and_credentials(postgres):
         assert session.execute(
             text("SELECT scopes, local_consumer FROM api_tokens WHERE user_id=10")
         ).one() == (["upload"], False)
-        assert (
-            session.scalar(text("SELECT version_num FROM alembic_version_core"))
-            == "0003_archive_tools"
-        )
+        head = ScriptDirectory.from_config(migration_config("core")).get_current_head()
+        assert session.scalar(text("SELECT version_num FROM alembic_version_core")) == head

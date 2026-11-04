@@ -6,9 +6,10 @@ the text (which `archive.pdf` carries).
 
 import json
 from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -16,7 +17,8 @@ from docuhive import db, jobs, vault
 from docuhive.contracts import FactValue, SourceInfo
 from docuhive.db.models import Document, Note, User
 
-SCHEMA = 1
+from .migrate import CURRENT as SCHEMA
+from .migrate import upgrade
 
 
 class NoteV1(BaseModel):
@@ -26,7 +28,8 @@ class NoteV1(BaseModel):
 
 
 class MetaV1(BaseModel):
-    schema_: int = SCHEMA
+    model_config = ConfigDict(populate_by_name=True)
+    schema_: int = Field(default=SCHEMA, alias="schema")
     id: str
     sha256: str
     original_filename: str
@@ -50,9 +53,18 @@ class MetaV1(BaseModel):
     deleted_at: datetime | None
 
     def dump(self) -> bytes:
-        data = self.model_dump(mode="json")
-        data = {"schema": data.pop("schema_"), **data}
+        data = self.model_dump(mode="json", by_alias=True)
         return (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode()
+
+
+def load(path: Path) -> MetaV1:
+    """Read a `meta.json`, upgrading older schema versions in memory."""
+    return MetaV1.model_validate(upgrade(json.loads(path.read_text(encoding="utf-8"))))
+
+
+def json_schema() -> bytes:
+    schema = MetaV1.model_json_schema(by_alias=True)
+    return (json.dumps(schema, indent=2) + "\n").encode()
 
 
 def render(doc_id: str) -> MetaV1:

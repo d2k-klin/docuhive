@@ -98,7 +98,7 @@ Each row is a user action, the screen where it happens, and what the system does
 
 These rules decide most trade-offs in the code.
 
-1. **The vault preserves documents and metadata.** Metadata changes are intended to reach both the database and the document's `meta.json`. A planned vault rebuild restores document records; re-embedding restores vectors. Accounts, mail state and chat history require a database backup.
+1. **The vault preserves documents and metadata.** Metadata changes are intended to reach both the database and the document's `meta.json`. `docuhive vault rebuild` restores document records from the vault; re-embedding restores vectors. Accounts, mail state and chat history require a database backup.
 2. **One database does the platform work.** Jobs, full-text search, fuzzy matching, vectors and the audit trail all live in PostgreSQL. This means one backup, and "document saved" and "job queued" happen in one transaction. ([Why not a vector database or a search engine?](decisions/0002-knowledge-bases.md))
 3. **Background work uses the worker.** OCR, conversion, document AI and saved analyses use jobs. Interactive Ask runs through the shared harness in the API process and streams its response.
 4. **The web app holds no business logic.** It is a "backend for frontend": every `/api/*` request is proxied to the Python API on the same origin, so the browser never talks to the API directly.
@@ -234,9 +234,12 @@ vault/
 - **`meta.json`** is rendered from the database after every change, with the document row locked from render to rename, and a re-render job is committed with the change itself.
 - **Without DocuHive:** the archive is still a tidy set of folders with PDFs and readable JSON.
 
-**Recovery boundary:** vault writes and rebuild remain planned. Rebuild is intended to restore
-documents and their metadata, not users, sessions, mail cursors or chat history. Keep a
-PostgreSQL backup as well as the file archive.
+**Recovery boundary:** `docuhive vault rebuild [--dry-run]` restores documents and their
+metadata (owner, sender, tags, facts, source, notes, AI provenance) from `meta.json` and re-reads
+the text from `archive.pdf`; owners missing from the database come back disabled. It does not
+restore passwords, sessions, mail cursors or chat history, so keep a PostgreSQL backup as well
+as the file archive. `meta.json` carries a schema version: older files are upgraded when read,
+`docuhive vault migrate` rewrites them, and `meta.schema.json` in the vault describes the format.
 
 ### 5.6 Database (PostgreSQL 16)
 

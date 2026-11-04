@@ -29,7 +29,8 @@ def parser() -> argparse.ArgumentParser:
     user.add_argument("username")
     user.add_argument("--admin", action="store_true")
     vault = subs.add_parser("vault", help="Create, check or arrange the vault")
-    vault.add_argument("action", choices=["init", "check", "library-sync"])
+    vault.add_argument("action", choices=["init", "check", "rebuild", "migrate", "library-sync"])
+    vault.add_argument("--dry-run", action="store_true", help="rebuild: only validate meta.json")
     vault.add_argument("--full", action="store_true", help="Also verify every original's SHA-256")
     ingest = subs.add_parser("ingest", help="Add files to the archive, like an upload")
     ingest.add_argument("files", nargs="+")
@@ -81,6 +82,19 @@ def main() -> None:
             from docuhive import vault
 
             print(f"Vault ready at {vault.root()} (id {vault.init()})")
+        elif args.command == "vault" and args.action in {"rebuild", "migrate"}:
+            from docuhive.vault import rebuild
+
+            if args.action == "migrate":
+                outcome = rebuild.migrate_files()
+                print(json.dumps(outcome, indent=2))
+                failed = bool(outcome["errors"])
+            else:
+                summary = rebuild.rebuild(dry_run=args.dry_run)
+                print(summary.model_dump_json(indent=2))
+                failed = bool(summary.errors)
+            if failed:
+                raise SystemExit(1)
         elif args.command == "ingest":
             ingest_files(args)
         elif args.command == "vault":

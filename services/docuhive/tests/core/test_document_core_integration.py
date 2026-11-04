@@ -107,3 +107,43 @@ def test_encrypted_pdf_is_quarantined_with_its_input_kept(owner, tmp_path):
     assert (ingest.staging_dir() / doc_id / "input-0.pdf").exists()
     with db.session() as session:
         assert session.scalar(select(Document.vault_path).where(Document.id == doc_id)) is None
+
+
+@pytest.mark.req("STO-03")
+def test_database_rebuilt_from_vault_matches_and_is_searchable(owner):
+    from docuhive.contracts import FactValue
+    from docuhive.vault import rebuild
+
+    doc_id = ingest_file(owner, "synthetic-bill.txt", b"Synthetic water bill 42.10 EUR")
+    documents.apply_metadata(
+        doc_id,
+        MetadataPatch(
+            title="Water bill",
+            correspondent="Stadtwerke Muster",
+            tags_add=["property"],
+            facts={"amount": FactValue(type="money", value="42.10", currency="EUR")},
+        ),
+        actor=f"user:{owner}",
+    )
+    before = documents.get(doc_id)
+    with db.session() as session:
+        session.execute(
+            text(
+                "TRUNCATE document_tags, doc_facts, doc_sources, notes, duplicate_pairs, "
+                "documents, tags, correspondents CASCADE"
+            )
+        )
+    report = rebuild.rebuild()
+    assert (report.documents, report.created, report.errors) == (1, 1, [])
+    after = documents.get(doc_id)
+    assert after.model_dump(exclude={"added_at"}) == before.model_dump(exclude={"added_at"})
+    assert after.added_at == before.added_at
+    assert "42.10 EUR" in documents.get_content(doc_id)
+    with db.session() as session:
+        hits = session.scalars(
+            text(
+                "SELECT id FROM documents WHERE content_tsv @@ "
+                "to_tsquery('dh_simple', 'stadtwerke & water')"
+            )
+        ).all()
+    assert hits == [doc_id]
