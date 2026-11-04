@@ -97,7 +97,7 @@ Same structure as the other Hive repos (ReelHive, SentryHive, CostHive):
 2. **Badges:** CI, License Apache-2.0, "runs locally", and the project status.
 3. **What DocuHive does**, in plain language with no tool names: the numbered flow (capture → read → sort → keep → find and ask → remind).
 4. **What you'll learn**: Strands agents, the agent harness, evals, retrieval (link `docs/learn/README.md`).
-5. **Quick start**: `git clone`, `make setup`, `make dev`, then open the setup wizard.
+5. **Quick start**: commands that work on a fresh clone, copied from `docs/setup/development.md` (including creating the first user). Describe only screens that exist; mark planned ones as planned.
 6. **Documentation**: a table of the main guides, plus "All documentation" → `docs/README.md`.
 7. **Project status**: an honest table of what works and what doesn't yet. No overclaiming.
 8. **Contributing** (`CONTRIBUTING.md`, `SECURITY.md`, the skills), then **License**: the code licence, plus the note that the Mr.D name and artwork are not covered by it (`assets/brand/LICENSE.md`).
