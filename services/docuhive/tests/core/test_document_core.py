@@ -12,7 +12,7 @@ import shutil
 import pikepdf
 import pytest
 from docuhive import db, vault
-from docuhive.db.models import AuditLog, Document, Job
+from docuhive.db.models import AuditLog, Document, Job, Setting
 from docuhive.ingest import process as pipeline
 from docuhive.ingest.errors import Quarantine
 from docuhive.jobs import JobContext, _Deferred
@@ -55,7 +55,7 @@ def fake_build(work, files):
 @pytest.fixture
 def core(tools, monkeypatch):  # noqa: F811
     monkeypatch.setattr(pipeline, "build", fake_build)
-    vault._checked.clear()
+    vault._probed.clear()
     vault.init()
     return tools
 
@@ -179,7 +179,7 @@ def test_rejected_uploads_leave_nothing_behind(core, monkeypatch):
 def test_vault_outage_defers_and_keeps_the_upload(core):
     doc_id = upload(core).json()["document_id"]
     (vault.root() / "_system" / "VAULT_ID").rename(vault.root() / "_system" / "VAULT_ID.off")
-    vault._checked.clear()
+    vault._probed.clear()
     with pytest.raises(_Deferred, match="vault unavailable"):
         run(doc_id)
     assert status(doc_id) == "staged"
@@ -226,21 +226,62 @@ def test_unexpected_errors_retry_then_quarantine(core, monkeypatch):
 
 
 def test_crash_after_commit_finishes_without_storing_twice(core):
-    doc_id = upload(core).json()["document_id"]
+    from docuhive import ingest
+    from docuhive.contracts import IngestRequest, SourceInfo, SourceKind
+
+    path = ingest.incoming_dir() / "mail.pdf"
+    path.write_bytes(PDF)
+    doc_id = ingest.submit(
+        [path],
+        IngestRequest(
+            owner_id=1,
+            source=SourceInfo(kind=SourceKind.email, original_filename="mail.pdf"),
+            hints={"doc_hint": "invoice"},
+        ),
+    ).document_id
     staging = vault.root().parent / "staging" / doc_id
     run(doc_id)
-    staging.mkdir()
-    (staging / "hints.json").write_text(json.dumps({"doc_hint": "invoice"}))
-    with db.session() as session:
-        session.query(Job).filter(Job.kind == "document.stored").delete()
+    staging.mkdir()  # as if the worker died after the commit, before tidying up
     run(doc_id)
     assert not staging.exists()
     with db.session() as session:
-        payload = session.scalar(select(Job.payload).where(Job.kind == "document.stored"))
+        payloads = session.scalars(select(Job.payload).where(Job.kind == "document.stored")).all()
         stored = session.scalars(
             select(AuditLog.action).where(AuditLog.action == "ingest.stored")
         ).all()
-    assert payload["hints"] == {"doc_hint": "invoice"} and len(stored) == 1
+    assert [p["hints"] for p in payloads] == [{"doc_hint": "invoice"}] and len(stored) == 1
+
+
+def test_failed_submit_returns_files_and_reconcile_recovers_a_crash(core, monkeypatch):
+    from docuhive import ingest
+    from docuhive.contracts import IngestRequest, SourceInfo, SourceKind
+
+    request = IngestRequest(
+        owner_id=1, source=SourceInfo(kind=SourceKind.upload, original_filename="a.pdf")
+    )
+    path = ingest.incoming_dir() / "a.pdf"
+    path.write_bytes(PDF)
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("synthetic database failure")
+
+    with monkeypatch.context() as patched, pytest.raises(RuntimeError):
+        patched.setattr(ingest.jobs, "enqueue", broken)
+        ingest.submit([path], request)
+    assert path.read_bytes() == PDF  # the caller still owns its file
+    staging = vault.root().parent / "staging"
+    assert [p.name for p in staging.iterdir()] == ["incoming"]
+
+    # A process that died between moving the files and committing leaves only this behind.
+    orphan = staging / "01JCAAAAAAAAAAAAAAAAAAAAAA"
+    orphan.mkdir()
+    shutil.move(path, orphan / "input-0.pdf")
+    (orphan / "request.json").write_text(request.model_dump_json())
+    monkeypatch.setattr(ingest, "ORPHAN_AFTER", ingest.timedelta(0))
+    ingest.reconcile({}, JobContext(1, 1, logging.getLogger("t")))
+    assert not orphan.exists()
+    with db.session() as session:
+        assert session.scalar(select(Document.status)) == "staged"
 
 
 def test_photos_combine_into_one_document(core):
@@ -270,9 +311,21 @@ def test_vault_init_refuses_a_foreign_folder_and_write_is_verified(core, tmp_pat
     from docuhive import config
 
     config.reload()
+    # This database already belongs to the vault set up by the fixture.
+    with pytest.raises(ValueError, match="not mounted"):
+        vault.init()
+    with db.session() as session:
+        session.query(Setting).delete()
     with pytest.raises(ValueError, match="not empty"):
         vault.init()
-    assert vault.check().reason == "not_initialised"
+    (foreign / "holiday.jpg").unlink()
+    (foreign / "_system").mkdir()  # an empty skeleton is a fresh mount point: allowed
+    assert vault.init() and vault.check().ok
+    monkeypatch.setenv("DOCUHIVE_VAULT_DIR", str(tmp_path / "vault"))
+    config.reload()
+    with pytest.raises(ValueError, match="different vault"):
+        vault.init()
+    assert vault.check().reason == "id_mismatch"
     target = tmp_path / "out" / "file.bin"
     assert vault.write_atomic(target, b"abc") == vault.sha256(target)
     assert [p.name for p in target.parent.iterdir()] == ["file.bin"]
@@ -444,3 +497,29 @@ def test_merged_tags_and_senders_move_documents_and_stay_resolved(core):
     )
     assert clash.json()["error"]["code"] == "vocabulary_conflict"
     assert kinds().count("vault.repair_meta") >= 1
+
+
+def test_html_originals_download_converter_outages_wait_and_junk_is_ignored(core, monkeypatch):
+    from docuhive import ingest
+    from docuhive.ingest.errors import Transient
+
+    html = b"<!doctype html><html><body><script>alert(1)</script>Synthetic</body></html>"
+    doc_id = upload(core, data=html, name="receipt.html").json()["document_id"]
+    staging = vault.root().parent / "staging" / doc_id
+    (staging / "input-0.html.converted.pdf").write_bytes(PDF)  # left by an earlier attempt
+    (staging / "input-1.png.tmp-abc").write_bytes(b"partial")
+    assert [p.name for p in ingest.inputs(staging)] == ["input-0.html"]
+
+    def away(work, files):
+        raise Transient("converter_unavailable")
+
+    monkeypatch.setattr(pipeline, "build", away)
+    with pytest.raises(_Deferred, match="converter_unavailable"):
+        run(doc_id)
+    assert status(doc_id) == "staged"
+    monkeypatch.setattr(pipeline, "build", fake_build)
+    run(doc_id)
+    original = core.get(f"/api/documents/{doc_id}/file?kind=original")
+    assert original.headers["content-disposition"].startswith("attachment")
+    archive = core.get(f"/api/documents/{doc_id}/file?kind=archive")
+    assert archive.headers["content-disposition"].startswith("inline")

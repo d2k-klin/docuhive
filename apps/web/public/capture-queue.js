@@ -57,7 +57,7 @@ export async function flush(onProgress = () => {}, onResult = () => {}) {
     try {
       const form = new FormData();
       for (const file of entry.blobs) form.append("files", file, file.name || "capture.jpg");
-      const query = new URLSearchParams({ combine: String(entry.combine), source: "mobile" });
+      const query = new URLSearchParams({ combine: String(entry.combine), source: "mobile", expected_owner_id: String(entry.ownerId) });
       onProgress("Uploading…");
       const result = await fetch(`/api/upload?${query}`, {
         method: "POST", body: form, headers: { "X-DocuHive-CSRF": "1" },

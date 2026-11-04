@@ -2,6 +2,7 @@
 
 import hashlib
 import os
+import re
 import time
 import uuid
 from pathlib import Path
@@ -16,6 +17,9 @@ from docuhive.db.models import Setting
 FORMAT = "1"
 ID_KEY = "vault.id"
 CHECK_TTL_S = 30
+# Canonical names only: a killed atomic write leaves `<name>.tmp-<uuid>` behind.
+ORIGINAL = re.compile(r"^original\.[a-z0-9]+$")
+PAGE = re.compile(r"^original-(\d+)\.[a-z0-9]+$")
 
 
 class VaultUnavailable(Exception):
@@ -31,56 +35,85 @@ def root() -> Path:
     return get_settings().vault_dir
 
 
+SKELETON = {"_system", "consume", "library"}
+
+
+def _bound_id() -> str | None:
+    with db.session() as session:
+        return session.scalar(select(Setting.value).where(Setting.key == ID_KEY))
+
+
+def _is_empty_skeleton(vault: Path) -> bool:
+    """Nothing but empty `_system`, `consume` and `library` folders (a fresh mount point)."""
+    return all(
+        entry.name in SKELETON and entry.is_dir() and not any(entry.iterdir())
+        for entry in vault.iterdir()
+    )
+
+
 def init() -> str:
-    """Create `_system/` with a new vault id; refuse a non-empty folder that is not a vault."""
+    """Create a new vault, or bind a fresh database to an existing one.
+
+    Refuses a folder holding anything else, and refuses to move a database that already
+    belongs to another vault: an empty mount point for an absent NAS must never become a
+    replacement vault.
+    """
     vault = root()
-    system = vault / "_system"
-    if (system / "VAULT_ID").is_file():
-        vault_id = (system / "VAULT_ID").read_text().strip()
+    marker = vault / "_system" / "VAULT_ID"
+    bound = _bound_id()
+    if marker.is_file():
+        vault_id = marker.read_text().strip()
+        if bound and bound != vault_id:
+            raise ValueError(
+                "This folder is a different vault from the one this database belongs to; "
+                "mount the right vault, or restore with `docuhive vault rebuild` on a new database"
+            )
     else:
-        if vault.is_dir() and any(vault.iterdir()) and not system.is_dir():
+        if bound:
+            raise ValueError(
+                "This database belongs to a vault that is not mounted here; mount it and retry"
+            )
+        if vault.is_dir() and not _is_empty_skeleton(vault):
             raise ValueError("The vault folder is not empty and is not a DocuHive vault")
-        system.mkdir(parents=True, exist_ok=True)
+        (vault / "_system").mkdir(parents=True, exist_ok=True)
         vault_id = str(uuid.uuid4())
-        write_atomic(system / "VAULT_ID", vault_id.encode())
-        write_atomic(system / "FORMAT", FORMAT.encode())
+        write_atomic(vault / "_system" / "FORMAT", FORMAT.encode())
+        write_atomic(marker, vault_id.encode())
     for name in ("consume", "library"):
         (vault / name).mkdir(exist_ok=True)
     from .meta import json_schema
 
     # Documents the format for anyone reading the vault without DocuHive.
     write_atomic(vault / "meta.schema.json", json_schema())
-    with db.session() as session:
-        session.merge(Setting(key=ID_KEY, value=vault_id))
-    _checked.clear()
+    if bound != vault_id:
+        with db.session() as session:
+            session.merge(Setting(key=ID_KEY, value=vault_id))
+    _probed.clear()
     return vault_id
 
 
-_checked: dict[Path, float] = {}
+_probed: dict[Path, float] = {}
 
 
 def check() -> VaultStatus:
     """The vault is mounted, is the one this database belongs to, and accepts writes.
 
-    Only a healthy result is cached (30 s), so an outage is noticed on the next call.
+    The identity is read on every call, so an unmounted share is noticed at once; only the
+    write probe is cached (30 s).
     """
     vault = root()
-    if time.monotonic() - _checked.get(vault, -CHECK_TTL_S) < CHECK_TTL_S:
-        return VaultStatus(ok=True)
-    marker = vault / "_system" / "VAULT_ID"
     try:
-        found = marker.read_text().strip()
+        found = (vault / "_system" / "VAULT_ID").read_text().strip()
     except OSError:
         return VaultStatus(ok=False, reason="not_initialised")
-    with db.session() as session:
-        expected = session.scalar(select(Setting.value).where(Setting.key == ID_KEY))
-    if expected != found:
+    if _bound_id() != found:
         return VaultStatus(ok=False, reason="id_mismatch")
-    try:
-        write_atomic(vault / "_system" / ".probe", str(time.time()).encode())
-    except OSError:
-        return VaultStatus(ok=False, reason="not_writable")
-    _checked[vault] = time.monotonic()
+    if time.monotonic() - _probed.get(vault, -CHECK_TTL_S) >= CHECK_TTL_S:
+        try:
+            write_atomic(vault / "_system" / ".probe", str(time.time()).encode())
+        except OSError:
+            return VaultStatus(ok=False, reason="not_writable")
+        _probed[vault] = time.monotonic()
     return VaultStatus(ok=True)
 
 
@@ -88,6 +121,25 @@ def require() -> None:
     status = check()
     if not status.ok:
         raise VaultUnavailable(status.reason)
+
+
+def original(folder: Path) -> Path | None:
+    found = sorted(p for p in folder.glob("original.*") if ORIGINAL.match(p.name))
+    return found[0] if found else None
+
+
+def pages(folder: Path) -> list[Path]:
+    """The separate photos of a combined upload, in page order."""
+    numbered = []
+    for path in folder.glob("original-*"):
+        if match := PAGE.match(path.name):
+            numbered.append((int(match.group(1)), path))
+    return [path for _, path in sorted(numbered)]
+
+
+def combined_sha256(digests: list[str]) -> str:
+    """Several pages are identified by the hash of their hashes, in order."""
+    return hashlib.sha256("".join(digests).encode()).hexdigest()
 
 
 def folder(doc_id: str, year: int) -> str:

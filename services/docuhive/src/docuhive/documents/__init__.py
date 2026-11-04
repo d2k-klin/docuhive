@@ -11,6 +11,7 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import delete, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from docuhive import auth, db, jobs
@@ -55,8 +56,9 @@ def slug(name: str) -> str:
     return re.sub(r"\s+", "-", name.strip().casefold())
 
 
-def _row(session: Session, doc_id: str) -> Document:
-    doc = session.get(Document, doc_id)
+def _row(session: Session, doc_id: str, *, lock: bool = False) -> Document:
+    """With `lock`, concurrent changes to this document wait for this transaction."""
+    doc = session.get(Document, doc_id, with_for_update=lock, populate_existing=lock)
     if doc is None:
         raise NotFound(doc_id)
     return doc
@@ -156,21 +158,31 @@ def _correspondent_id(session: Session, name: str | None) -> int | None:
     if not name:
         return None
     norm = norm_name(name)
-    row = session.scalar(select(Correspondent).where(Correspondent.norm_name == norm))
-    if row is None:
-        row = Correspondent(name=" ".join(name.split()), norm_name=norm)
-        session.add(row)
-        session.flush()
+    row = _find_or_create(
+        session,
+        select(Correspondent).where(Correspondent.norm_name == norm),
+        Correspondent(name=" ".join(name.split()), norm_name=norm),
+    )
     return _resolve(session, Correspondent, row).id
 
 
 def _tag_id(session: Session, name: str) -> int:
-    row = session.scalar(select(Tag).where(Tag.slug == slug(name)))
-    if row is None:
-        row = Tag(name=name.strip(), slug=slug(name))
-        session.add(row)
-        session.flush()
+    row = _find_or_create(
+        session, select(Tag).where(Tag.slug == slug(name)), Tag(name=name.strip(), slug=slug(name))
+    )
     return _resolve(session, Tag, row).id
+
+
+def _find_or_create(session: Session, query: Any, new: Any) -> Any:
+    """Two edits creating the same tag at once: the loser re-reads the winner's row."""
+    if (row := session.scalar(query)) is not None:
+        return row
+    try:
+        with session.begin_nested():
+            session.add(new)
+        return new
+    except IntegrityError:
+        return session.scalar(query)
 
 
 def _resolve(session: Session, model: type[Tag] | type[Correspondent], row: Any) -> Any:
@@ -220,7 +232,7 @@ def apply_metadata(
     force: bool = False,
 ) -> ApplyResult:
     with db.session() as session:
-        doc = _row(session, doc_id)
+        doc = _row(session, doc_id, lock=True)
         before = _view(session, doc)
         after = before.model_copy(deep=True)
         result = apply_view(after, patch, actor=actor, force=force)
@@ -262,13 +274,12 @@ def apply_metadata(
         session.flush()
         if {"title", "correspondent", "language"} & set(changed):
             refresh_tsv(session, doc_id)
-    from docuhive.vault import meta
-
-    meta.write_or_queue(doc_id)
-    payload: dict = {"document_id": doc_id, "fields": result.applied, "actor": actor}
-    if unlocked:
-        payload["unlocked"] = unlocked
-    jobs.enqueue("document.metadata_changed", payload, queue="ai")
+        payload: dict = {"document_id": doc_id, "fields": result.applied, "actor": actor}
+        if unlocked:
+            payload["unlocked"] = unlocked
+        jobs.enqueue("document.metadata_changed", payload, queue="ai", in_session=session)
+        _meta().queue(session, doc_id)
+    _meta().write_or_queue(doc_id)
     return result
 
 
@@ -303,7 +314,9 @@ def set_trashed(doc_id: str, user: CurrentUser, trashed: bool) -> None:
     """Soft delete or restore; only the owner may do either (a shared reader cannot)."""
     with db.session() as session:
         doc = session.scalar(
-            select(Document).where(Document.id == doc_id, auth.visible_docs_incl_trash(user))
+            select(Document)
+            .where(Document.id == doc_id, auth.visible_docs_incl_trash(user))
+            .with_for_update()
         )
         if doc is None or doc.owner_id != user.id:
             raise NotFound(doc_id)
@@ -317,8 +330,13 @@ def set_trashed(doc_id: str, user: CurrentUser, trashed: bool) -> None:
                 action="trash" if trashed else "restore",
             )
         )
+        kind = "document.trashed" if trashed else "document.restored"
+        jobs.enqueue(kind, {"document_id": doc_id}, queue="ai", in_session=session)
+        _meta().queue(session, doc_id)
+    _meta().write_or_queue(doc_id)
+
+
+def _meta() -> Any:
     from docuhive.vault import meta
 
-    meta.write_or_queue(doc_id)
-    kind = "document.trashed" if trashed else "document.restored"
-    jobs.enqueue(kind, {"document_id": doc_id}, queue="ai")
+    return meta

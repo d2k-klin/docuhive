@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from docuhive import db, jobs
 from docuhive.db.models import AuditLog, Correspondent, Document, DocumentTag, Tag
+from docuhive.vault import meta
 
 from . import norm_name, refresh_tsv, slug
 
@@ -59,7 +60,8 @@ def rename(kind: Kind, item_id: int, name: str, *, actor: str) -> list[str]:
                 after={"id": item_id, "name": name},
             )
         )
-    _changed(kind, ids, actor)
+        session.flush()
+        _changed(session, kind, ids, actor)
     return ids
 
 
@@ -108,7 +110,8 @@ def merge(kind: Kind, source_ids: list[int], target_id: int, *, actor: str) -> l
                 after={"id": target_id, "name": target.name, "documents": len(ids)},
             )
         )
-    _changed(kind, ids, actor)
+        session.flush()
+        _changed(session, kind, ids, actor)
     return ids
 
 
@@ -120,19 +123,17 @@ def _documents(session: Session, kind: Kind, item_ids: list[int]) -> list[str]:
     return sorted(set(session.scalars(query)))
 
 
-def _changed(kind: Kind, ids: list[str], actor: str) -> None:
+def _changed(session: Session, kind: Kind, ids: list[str], actor: str) -> None:
+    """Search vectors, `meta.json` re-renders and AI events, all in the change's transaction."""
     field = "tags" if kind == "tag" else "correspondent"
-    if kind == "correspondent":
-        with db.session() as session:
-            for doc_id in ids:
-                refresh_tsv(session, doc_id)
     # ponytail: one job per document; batch the vault writes if merges reach thousands.
     for doc_id in ids:
-        jobs.enqueue(
-            "vault.repair_meta", {"document_id": doc_id}, dedupe_key=f"vault.repair_meta:{doc_id}"
-        )
+        if kind == "correspondent":
+            refresh_tsv(session, doc_id)
+        meta.queue(session, doc_id)
         jobs.enqueue(
             "document.metadata_changed",
             {"document_id": doc_id, "fields": [field], "actor": actor},
             queue="ai",
+            in_session=session,
         )

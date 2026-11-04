@@ -13,7 +13,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from docuhive import auth, db, documents, taxonomy
+from docuhive import auth, db, documents, taxonomy, vault
 from docuhive.auth import current_user
 from docuhive.config.settings import get_settings
 from docuhive.contracts import (
@@ -33,6 +33,7 @@ from .views import DocumentPage, DocumentRow, document_page, problem
 router = APIRouter(prefix="/api", tags=["documents"])
 UserDependency = Annotated[CurrentUser, Depends(current_user)]
 MAX_BULK = 500
+INLINE_ORIGINALS = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
 CHUNK = 1 << 20
 
 
@@ -108,8 +109,7 @@ def detail(view: DocumentView) -> DocumentDetail:
 
 def file_path(folder: Path, kind: str) -> Path | None:
     if kind == "original":
-        found = sorted(folder.glob("original.*"))
-        return found[0] if found else None
+        return vault.original(folder)
     path = folder / ("archive.pdf" if kind == "archive" else "thumb.webp")
     return path if path.is_file() else None
 
@@ -276,9 +276,9 @@ def get_file(
     view = get_document(doc_id, user)
     with db.session() as session:
         vault_path = session.scalar(select(Document.vault_path).where(Document.id == doc_id))
-    vault = get_settings().vault_dir.resolve()
-    path = file_path(vault / vault_path, kind) if vault_path else None
-    if path is None or not path.resolve().is_relative_to(vault):
+    root = get_settings().vault_dir.resolve()
+    path = file_path(root / vault_path, kind) if vault_path else None
+    if path is None or not path.resolve().is_relative_to(root):
         raise problem(404, "document_file_missing", "This file is not in the vault.")
     name = Path(view.source.original_filename or "document").stem or "document"
     filename = {
@@ -286,10 +286,14 @@ def get_file(
         "archive": f"{name}.pdf",
         "thumb": f"{name}.webp",
     }[kind]
+    # Originals can be HTML or email: opened inline they would run scripts on DocuHive's
+    # origin. Only PDFs and plain images are shown; everything else downloads. (A CSP sandbox
+    # would also stop Chrome's PDF viewer, which the preview relies on.)
+    inline = not download and (kind != "original" or view.mime in INLINE_ORIGINALS)
     return FileResponse(
         path,
         filename=filename,
-        content_disposition_type="attachment" if download else "inline",
+        content_disposition_type="inline" if inline else "attachment",
         headers={"Cache-Control": "private, max-age=300", "X-Content-Type-Options": "nosniff"},
     )
 

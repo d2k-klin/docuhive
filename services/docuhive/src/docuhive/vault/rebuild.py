@@ -123,23 +123,25 @@ def rebuild(*, dry_run: bool = False) -> RebuildReport:
         try:
             with db.session() as session:
                 created, owner = upsert(session, data, rel, content, report.users_created)
+                # Re-index (not re-classify): the metadata came from the vault.
+                jobs.enqueue(
+                    "document.stored",
+                    {
+                        "document_id": data.id,
+                        "owner_id": owner,
+                        "source_kind": data.source.kind.value,
+                        "hints": {"rebuild": "true"},
+                    },
+                    queue="ai",
+                    dedupe_key=f"document.stored:{data.id}",
+                    in_session=session,
+                )
         except SQLAlchemyError as error:
             report.documents -= 1
             report.errors.append(RebuildError(path=rel, error=reason(error)))
             continue
         report.created += created
         report.updated += not created
-        jobs.enqueue(
-            "document.stored",
-            {
-                "document_id": data.id,
-                "owner_id": owner,
-                "source_kind": data.source.kind.value,
-                "hints": {"rebuild": "true"},
-            },
-            queue="ai",
-            dedupe_key=f"document.stored:{data.id}",
-        )
     return report
 
 

@@ -272,6 +272,52 @@
         }
       }
     },
+    "/api/system/backup": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Backup Report",
+        "operationId": "backup_report_api_system_backup_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/setup-status": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Setup Status",
+        "operationId": "setup_status_api_system_setup_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SetupCheck"
+                  },
+                  "type": "array",
+                  "title": "Response Setup Status Api System Setup Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -4745,6 +4791,22 @@
             }
           },
           {
+            "name": "expected_owner_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expected Owner Id"
+            }
+          },
+          {
             "name": "category",
             "in": "query",
             "required": false,
@@ -5153,6 +5215,51 @@
           "date_to"
         ],
         "title": "BackfillIn"
+      },
+      "BackupStatus": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": false
+          },
+          "last_success": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success"
+          },
+          "targets_ok": {
+            "type": "integer",
+            "title": "Targets Ok",
+            "default": 0
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "BackupStatus"
       },
       "BulkEdit": {
         "properties": {

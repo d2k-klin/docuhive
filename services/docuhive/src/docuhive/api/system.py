@@ -10,12 +10,16 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
 from docuhive import __version__
-from docuhive.auth import require_admin
-from docuhive.contracts import CurrentUser
+from docuhive.auth import current_user, require_admin
+from docuhive.config.settings import get_settings
+from docuhive.contracts import CurrentUser, SetupCheck
 from docuhive.db import session
 from docuhive.db.models import Job
 from docuhive.jobs import enqueue
 from docuhive.vault import health as vault_health
+from docuhive.vault.availability import available
+from docuhive.vault.backup import BackupStatus
+from docuhive.vault.backup import status as backup_status
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 Admin = Annotated[CurrentUser, Depends(require_admin)]
@@ -109,3 +113,69 @@ def vault_report(user: Admin) -> vault_health.VaultReport | None:
 def queue_vault_check(user: Admin, full: bool = False) -> dict:
     enqueue("vault.check", {"full": full}, dedupe_key="vault.check:manual")
     return {"queued": True}
+
+
+@router.get("/backup", response_model=BackupStatus)
+def backup_report(user: Admin) -> BackupStatus:
+    return backup_status()
+
+
+@router.get("/setup-status", response_model=list[SetupCheck])
+def setup_status(user: Annotated[CurrentUser, Depends(current_user)]) -> list[SetupCheck]:
+    settings = get_settings()
+    vault_ok = available()
+    backup = backup_status()
+    consume = settings.consume_dir or settings.vault_dir / "consume"
+    https = settings.public_url.startswith("https://")
+    return [
+        SetupCheck(
+            id="vault",
+            area="storage",
+            title="Connect your storage",
+            required=True,
+            status="ok" if vault_ok else "error",
+            message="Your archive storage is connected."
+            if vault_ok
+            else "Storage is unavailable. New uploads stay in staging until it returns.",
+            action_label="Check storage",
+            action_href="/settings/storage",
+            help_doc="docs/setup/nas-wd-ex2-ultra.md",
+        ),
+        SetupCheck(
+            id="backup",
+            area="backup",
+            title="Back up your archive",
+            status="ok" if backup.ok and not backup.stale else "warn",
+            message="Your latest backup completed."
+            if backup.ok and not backup.stale
+            else "A recent successful backup could not be confirmed. "
+            "Check the backup timer and run a backup.",
+            action_label="Check backups",
+            action_href="/settings/storage",
+            help_doc="docs/setup/operations.md",
+        ),
+        SetupCheck(
+            id="capture.https",
+            area="capture",
+            title="Set up phone capture",
+            status="ok" if https else "warn",
+            message="Your configured phone address uses HTTPS."
+            if https
+            else "Use an HTTPS address to install capture on your phone and save captures offline.",
+            action_label="Open capture",
+            action_href="/capture",
+            help_doc="docs/setup/remote-access.md",
+        ),
+        SetupCheck(
+            id="capture.consume",
+            area="capture",
+            title="Connect a scanner folder",
+            status="ok" if vault_ok and consume.is_dir() else "optional",
+            message="The scanner folder is available."
+            if vault_ok and consume.is_dir()
+            else "You can add a scanner folder when you need one.",
+            action_label="Capture guide",
+            action_href="/capture",
+            help_doc="docs/setup/mobile.md",
+        ),
+    ]

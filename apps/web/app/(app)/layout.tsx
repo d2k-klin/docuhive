@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { serverClient } from "@/lib/api/server";
 import { visibleNav } from "@/lib/nav";
 import { UserActions } from "@/components/core/user-actions";
+import { OperationsStatus } from "@/components/core/operations-status";
 
 export default async function AppLayout({
   children,
@@ -22,6 +23,7 @@ export default async function AppLayout({
     "/settings/fields",
     "/settings/storage",
     "/settings/tokens",
+    "/capture",
   ]);
   const views = await client.GET("/api/views").catch(() => null);
   const pinned = (views?.data || []).filter((view) => view.pinned);
@@ -74,6 +76,7 @@ export default async function AppLayout({
           <span className="text-sm text-text-muted">{user.username}</span>
           <UserActions />
         </header>
+        <OperationsStatus />
         {children}
       </div>
     </div>

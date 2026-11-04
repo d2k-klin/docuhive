@@ -4,10 +4,14 @@
 later in the `ingest.process` job, so a slow or unavailable NAS never blocks a source.
 """
 
-import hashlib
 import json
+import re
 import shutil
+import time
+import uuid
+from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -17,12 +21,15 @@ from docuhive import db, jobs
 from docuhive.config.settings import get_settings
 from docuhive.contracts import IngestRequest, IngestResult
 from docuhive.db.models import DocSource, Document
-from docuhive.vault import sha256
+from docuhive.vault import combined_sha256, sha256
 
 from .detect import detect
 from .errors import Quarantine
 
-HINTS = "hints.json"
+REQUEST = "request.json"
+INPUT = re.compile(r"^input-(\d+)\.[a-z0-9]+$")
+ULID_NAME = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
+ORPHAN_AFTER = timedelta(minutes=15)
 
 
 class IngestRejected(Exception):
@@ -60,7 +67,7 @@ def submit(files: list[Path], req: IngestRequest) -> IngestResult:
         raise UnsupportedType("Only images can be combined")
     digests = [sha256(path) for path in files]
     # Several pages are identified by the hash of their hashes, in order (vault health agrees).
-    digest = hashlib.sha256("".join(digests).encode()).hexdigest() if len(files) > 1 else digests[0]
+    digest = combined_sha256(digests) if len(files) > 1 else digests[0]
 
     def duplicate() -> IngestResult | None:
         with db.session() as session:
@@ -79,6 +86,7 @@ def submit(files: list[Path], req: IngestRequest) -> IngestResult:
         return found
     doc_id = str(ULID())
     folder = staging_dir() / doc_id
+    moved: list[tuple[Path, Path]] = []
     try:
         with db.session() as session:
             session.add(
@@ -96,20 +104,86 @@ def submit(files: list[Path], req: IngestRequest) -> IngestResult:
             )
             session.flush()  # the unique (owner, sha256) constraint settles a race here
             session.add(DocSource(document_id=doc_id, **req.source.model_dump(exclude_none=True)))
-            session.flush()
+            jobs.enqueue(
+                "ingest.process",
+                {"document_id": doc_id, "combine": req.combine, "hints": req.hints},
+                queue="ocr",
+                dedupe_key=f"ingest.process:{doc_id}",
+                in_session=session,
+            )
             folder.mkdir(parents=True)
-            if req.hints:
-                (folder / HINTS).write_text(json.dumps(req.hints))
+            # Enough to submit again if the process dies before the commit (see `reconcile`).
+            (folder / REQUEST).write_text(req.model_dump_json())
             for index, (path, item) in enumerate(zip(files, detected, strict=True)):
-                shutil.move(path, folder / f"input-{index}.{item.ext}")
-    except IntegrityError:
-        if found := duplicate():
+                target = folder / f"input-{index}.{item.ext}"
+                shutil.move(path, target)
+                moved.append((path, target))
+    except BaseException as error:
+        # Nothing committed: the caller still owns its files, exactly where they were.
+        for source, target in reversed(moved):
+            shutil.move(target, source)
+        shutil.rmtree(folder, ignore_errors=True)
+        if isinstance(error, IntegrityError) and (found := duplicate()):
             return found
         raise
-    jobs.enqueue(
-        "ingest.process",
-        {"document_id": doc_id, "combine": req.combine, "hints": req.hints},
-        queue="ocr",
-        dedupe_key=f"ingest.process:{doc_id}",
-    )
     return IngestResult(document_id=doc_id, status="staged")
+
+
+def saved_request(folder: Path) -> dict:
+    try:
+        data = json.loads((folder / REQUEST).read_text())
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def inputs(folder: Path) -> list[Path]:
+    """The staged files in page order; never conversion outputs or temp files."""
+    numbered = []
+    for path in folder.glob("input-*"):
+        if match := INPUT.match(path.name):
+            numbered.append((int(match.group(1)), path))
+    return [path for _, path in sorted(numbered)]
+
+
+@jobs.periodic("ingest.reconcile", every=timedelta(hours=1), queue="ocr")
+def reconcile(payload: dict, ctx: Any) -> None:
+    """A staged folder without a document is a submit that died before its commit: submit
+    its files again (dedupe makes that safe), or park the folder in `_orphaned` for a person.
+    """
+    root = staging_dir()
+    if not root.is_dir():
+        return
+    for folder in sorted(root.iterdir()):
+        young = time.time() - folder.stat().st_mtime < ORPHAN_AFTER.total_seconds()
+        if not folder.is_dir() or not ULID_NAME.match(folder.name) or young:
+            continue
+        with db.session() as session:
+            if session.get(Document, folder.name) is not None:
+                continue
+        files = inputs(folder)
+        try:
+            request = IngestRequest.model_validate(saved_request(folder))
+        except ValueError:
+            request = None
+        if request is None or not files:
+            parked = root / "_orphaned"
+            parked.mkdir(exist_ok=True)
+            shutil.move(folder, parked / folder.name)
+            ctx.log.warning("Parked an incomplete staging folder in _orphaned")
+            continue
+        recovered = []
+        for path in files:
+            target = incoming_dir() / f"recovered-{uuid.uuid4().hex}{path.suffix}"
+            shutil.move(path, target)
+            recovered.append(target)
+        try:
+            submit(recovered, request)
+        except IngestRejected:
+            for source, path in zip(files, recovered, strict=True):
+                shutil.move(path, source)
+            parked = root / "_orphaned"
+            parked.mkdir(exist_ok=True)
+            shutil.move(folder, parked / folder.name)
+            continue
+        shutil.rmtree(folder, ignore_errors=True)

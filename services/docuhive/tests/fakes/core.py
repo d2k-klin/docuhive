@@ -41,6 +41,7 @@ class FakeJobs:
         queue: str = "default",
         run_after: datetime | None = None,
         dedupe_key: str | None = None,
+        in_session: object = None,
     ) -> int:
         if dedupe_key:
             for job in self.jobs:

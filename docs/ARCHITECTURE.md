@@ -78,9 +78,9 @@ Each row is a user action, the screen where it happens, and what the system does
 | Switch light/dark theme | header icon | Stored in the browser; the class on `<html>` switches colour tokens | works |
 | Connect a mailbox | `/sources` | OAuth for Gmail or Microsoft, or IMAP credentials; tokens encrypted with `DOCUHIVE_MAIL_TOKEN_KEY`; `mail.sync.all` syncs every 15 minutes | works (connectors) |
 | Import years of old mail | `/sources` → backfill | `mail.backfill.page` jobs page through the date range and resume after a crash | works (connectors) |
-| Upload a file, photograph a letter, drop a scan in a folder | upload, phone capture, scanner folder | All go to `ingest.submit`: detect type → convert → OCR → write the vault → index | **pending** (behind the OCR quality gate) |
+| Upload a file, photograph a letter, drop a scan in a folder | upload, phone capture, scanner folder | All go to `ingest.submit`: detect type → convert → OCR → write the vault → index | works via the API, phone capture and scanner folder; upload page pending |
 | Review AI suggestions | `/review` | Each field the AI was unsure about shows the suggestion and its confidence; accept or reject per field or per document | works |
-| Correct a title or category | document page / review | `documents.apply_metadata` writes the database and `meta.json`, and locks the field so AI never overwrites it | API pending; review edits work |
+| Correct a title or category | document page / review | `documents.apply_metadata` writes the database and `meta.json`, and locks the field so AI never overwrites it | API and review edits work; document page pending |
 | Search | search box | Full-text (German/English stemming, accents, typos) and meaning-based search, fused into one ranking; only documents you may see | search engine works; search page pending |
 | Ask a question | `/ask` | The Ask agent searches, reads documents, computes Decimal totals from SQL facts, and streams an answer with citations | works against test doubles; real archive integration pending |
 | Save and re-run an analysis | `/analyses` | A saved prompt + filters + model, re-run as an `analyses.run` job | works |
@@ -98,7 +98,7 @@ Each row is a user action, the screen where it happens, and what the system does
 
 These rules decide most trade-offs in the code.
 
-1. **The vault preserves documents and metadata.** Metadata changes are intended to reach both the database and the document's `meta.json`. A planned vault rebuild restores document records; re-embedding restores vectors. Accounts, mail state and chat history require a database backup.
+1. **The vault preserves documents and metadata.** Metadata changes are intended to reach both the database and the document's `meta.json`. `docuhive vault rebuild` restores document records from the vault; re-embedding restores vectors. Accounts, mail state and chat history require a database backup.
 2. **One database does the platform work.** Jobs, full-text search, fuzzy matching, vectors and the audit trail all live in PostgreSQL. This means one backup, and "document saved" and "job queued" happen in one transaction. ([Why not a vector database or a search engine?](decisions/0002-knowledge-bases.md))
 3. **Background work uses the worker.** OCR, conversion, document AI and saved analyses use jobs. Interactive Ask runs through the shared harness in the API process and streams its response.
 4. **The web app holds no business logic.** It is a "backend for frontend": every `/api/*` request is proxied to the Python API on the same origin, so the browser never talks to the API directly.
@@ -205,9 +205,11 @@ The pipeline every document goes through, whatever its source:
 7. **Write the vault** atomically, verify the checksums, write `meta.json`, then commit the database row.
 8. **Emit** `document.stored`, which queues classification, extraction and embedding.
 
-Any failure sets `status = quarantined` with a reason, and the staged file stays for a retry.
+A document problem (encrypted, unsupported, too many pages) sets `status = quarantined` with a reason, and the staged file stays for a retry. A missing service waits instead: an unmounted vault or an unreachable converter defers the job without spending an attempt. Other errors are retried, and quarantined after the last attempt.
 
-**Status:** the detection, conversion, OCR, text and thumbnail modules exist and are tested. `ingest.submit` (steps 1, 2, 7 and 8) waits for the [OCR quality gate](decisions/0001-ocr-gate.md): character error rate measured on real scans, with Paperless-ngx as a documented fallback if it fails.
+Each step runs in its own process with a time limit, and the job renews its lease while OCR runs. Every state change commits in the same transaction as the job or event it implies (`jobs.enqueue(in_session=…)`), so a crash can never store a document without `document.stored`, or quarantine one without telling anyone. `submit` keeps a `request.json` next to the staged files; the hourly `ingest.reconcile` resubmits a folder whose database row never committed.
+
+**Status:** works end to end, tested on PostgreSQL with Gotenberg and Tesseract on synthetic files. The [OCR quality gate](decisions/0001-ocr-gate.md) was waived by the owner; real-document measurements are part of the release gate.
 
 The worker image (`services/docuhive/Dockerfile`) is **Debian trixie**. It ships Ghostscript 10.05, which ocrmypdf needs; bookworm's 10.0.0 is refused. CI runs real OCR inside the image (`make ocr-smoke`).
 
@@ -227,12 +229,17 @@ vault/
 ```
 
 - **Atomic writes:** a temporary file, `fsync`, then a rename in the same folder.
-- **Vault health:** before any write, the worker checks `_system/VAULT_ID` against the database. If the NAS is unmounted, vault writes pause, uploads wait in `staging/`, and the UI shows a banner. The vault is never created inside an empty mount point.
+- **Vault health:** before any write, the worker checks `_system/VAULT_ID` against the database, on every check (only the write probe is cached for 30 s). If the NAS is unmounted, vault writes pause, uploads wait in `staging/`, and the UI shows a banner.
+- **`docuhive vault init`** creates a vault only in an empty folder, and refuses to move a database to a different vault: an empty mount point for an absent NAS never becomes a replacement.
+- **`meta.json`** is rendered from the database after every change, with the document row locked from render to rename, and a re-render job is committed with the change itself.
 - **Without DocuHive:** the archive is still a tidy set of folders with PDFs and readable JSON.
 
-**Recovery boundary:** vault writes and rebuild remain planned. Rebuild is intended to restore
-documents and their metadata, not users, sessions, mail cursors or chat history. Keep a
-PostgreSQL backup as well as the file archive.
+**Recovery boundary:** `docuhive vault rebuild [--dry-run]` restores documents and their
+metadata (owner, sender, tags, facts, source, notes, AI provenance) from `meta.json` and re-reads
+the text from `archive.pdf`; owners missing from the database come back disabled. It does not
+restore passwords, sessions, mail cursors or chat history, so keep a PostgreSQL backup as well
+as the file archive. `meta.json` carries a schema version: older files are upgraded when read,
+`docuhive vault migrate` rewrites them, and `meta.schema.json` in the vault describes the format.
 
 ### 5.6 Database (PostgreSQL 16)
 
@@ -535,9 +542,10 @@ It costs more and has more moving parts. It is not needed for personal use.
 | Chat, analyses, reminders, notifications | works against test doubles |
 | Full-text, semantic and hybrid search; chunk retrieval | works, tested on PostgreSQL |
 | OCR, conversion, text and thumbnails | modules work; real OCR checked in the image |
-| Document intake into the vault (`ingest.submit`) and the documents API | pending the OCR quality gate |
-| Document, search, upload and capture pages | pending |
-| Production compose and backups | pending |
+| Document intake into the vault (`ingest.submit`), the documents API and the scanner folder | works, tested on PostgreSQL with real OCR; synthetic files only |
+| Phone capture page | works |
+| Document, search and upload pages | pending |
+| Production compose and backups | in progress: `deploy/compose.yml`, backup and upgrade scripts and a backup timer exist; drills on the target hardware pending |
 | Knowledge-base scopes, CRUD, suggestions, indexing status and `/knowledge` management UI | implemented and verified against the real API; archive ingest remains gated |
 | Knowledge-base retrieve/Ask HTTP APIs, MCP server and optional reranker | planned ([plan](shared/knowledge-bases.md)) |
 

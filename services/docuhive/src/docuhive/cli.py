@@ -143,6 +143,7 @@ def main() -> None:
 def ingest_files(args: argparse.Namespace) -> None:
     """Copies the files into staging, so the originals on disk stay where they are."""
     import shutil
+    import uuid
     from pathlib import Path
 
     from sqlalchemy import select
@@ -160,7 +161,7 @@ def ingest_files(args: argparse.Namespace) -> None:
     for group in groups:
         staged: list[Path] = []
         for path in group:
-            copy = ingest.incoming_dir() / f"cli-{len(staged)}-{path.name}"
+            copy = ingest.incoming_dir() / f"cli-{uuid.uuid4().hex}{path.suffix}"
             shutil.copyfile(path, copy)
             staged.append(copy)
         request = IngestRequest(

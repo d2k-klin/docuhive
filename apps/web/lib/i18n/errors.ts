@@ -1,4 +1,6 @@
 export const errors: Record<string, string> = {
+  too_large: "These files are too large. Choose fewer pages or smaller files and try again.",
+  intake_unavailable: "Document intake is unavailable. Your queued files are kept on this device. Try again later.",
   kb_not_found:
     "This knowledge base is unavailable. Refresh the list or create one.",
   kb_owner_required:

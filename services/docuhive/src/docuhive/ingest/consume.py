@@ -9,7 +9,7 @@ from pathlib import Path
 
 from sqlalchemy import select
 
-from docuhive import ingest, jobs
+from docuhive import ingest, jobs, vault
 from docuhive.config.settings import get_settings
 from docuhive.contracts import IngestRequest, SourceInfo, SourceKind
 from docuhive.db import session
@@ -85,10 +85,10 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                     doc = db.get(Document, old["document_id"])
                     if doc and doc.status == "stored" and doc.vault_path and available():
                         folder = folder_of(settings.vault_dir, doc.vault_path).resolve()
-                        originals = list(folder.glob("original.*"))
-                        if folder.is_relative_to(settings.vault_dir.resolve()) and originals:
+                        original = vault.original(folder)
+                        if folder.is_relative_to(settings.vault_dir.resolve()) and original:
                             if (
-                                sha256(originals[0]) == old["sha256"] == sha256(path)
+                                sha256(original) == old["sha256"] == sha256(path)
                                 and signature(path) == current
                             ):
                                 path.unlink()

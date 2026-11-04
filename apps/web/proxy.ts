@@ -7,10 +7,7 @@ export function proxy(request: NextRequest) {
     path === "/login" ||
     path.startsWith("/_next/") ||
     path === "/favicon.ico" ||
-    // Static capture assets without user data; a redirected service worker never installs.
-    path === "/sw.js" ||
-    path === "/capture-queue.js" ||
-    path === "/manifest.webmanifest"
+    ["/capture", "/manifest.webmanifest", "/sw.js", "/capture-queue.js", "/capture-192.png", "/capture-512.png"].includes(path)
   )
     return NextResponse.next();
   if (process.env.NODE_ENV !== "production" && path.startsWith("/dev/"))
