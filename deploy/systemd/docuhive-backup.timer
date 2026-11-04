@@ -1,0 +1,11 @@
+[Unit]
+Description=Nightly DocuHive backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+RandomizedDelaySec=5m
+Unit=docuhive-backup.service
+
+[Install]
+WantedBy=timers.target

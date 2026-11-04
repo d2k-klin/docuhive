@@ -17,8 +17,8 @@ States:
 | Email filters and triage | Built | Skips newsletters and unwanted senders per account, then lets the AI decide which attachments are real documents. |
 | Mail stays untouched | Built | Never deletes or moves your mail; adding an "imported" label is optional. |
 | Web upload | Built | Upload one or more files, with category and tags set at upload time; the API works, the browser screen comes with the document screens. |
-| Phone capture | Planned | An installable web app that takes photos, lets you reorder the pages and uploads them as one document. |
-| Scanner folder | Planned | Picks up files from a NAS folder by polling, because network mounts don't support change notifications. |
+| Phone capture | Built | An installable web app that takes photos, lets you reorder the pages and uploads them as one document. |
+| Scanner folder | Built | Picks up files from a NAS folder by polling, because network mounts don't support change notifications. |
 | API upload | Works | Personal API tokens let scripts and iOS Shortcuts upload documents. |
 
 ## Reading and storing
@@ -34,7 +34,7 @@ States:
 | Near-duplicate detection | Built | Flags the same document arriving twice in different forms, such as an email PDF and a paper scan, by comparing sender, amounts, dates and meaning. |
 | Rebuildable index | Planned | Rebuilds the database from the vault's metadata files alone. |
 | Vault health check | Built | A weekly, read-only check that every document's files exist, match their checksums and agree with the database, and that no folder is orphaned. |
-| Library view | Planned | An optional, read-only folder tree sorted by category, year, date and title. |
+| Library view | Built | An optional, read-only folder tree sorted by category, year, date and title. |
 | Parallel processing | Works | A job queue lets several workers process documents at once and recovers jobs from a crashed worker. |
 
 ## Sorting

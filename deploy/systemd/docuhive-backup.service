@@ -1,0 +1,20 @@
+[Unit]
+Description=Back up DocuHive database, vault and staged files
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+RequiresMountsFor=/srv/docuhive/vault
+
+[Service]
+Type=oneshot
+User=docuhive
+Group=docuhive
+SupplementaryGroups=docker
+EnvironmentFile=/etc/docuhive/backup.env
+ExecStart=/opt/docuhive/deploy/scripts/backup.sh
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/docuhive/vault/_system /srv/docuhive/backup /var/cache/docuhive

@@ -1,0 +1,138 @@
+name: docuhive
+x-backend: &backend
+  image: ${DOCUHIVE_IMAGE:?Set an immutable backend image tag or digest}
+  user: "1000:1000"
+  read_only: true
+  init: true
+  restart: unless-stopped
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  tmpfs: ["/tmp:uid=1000,gid=1000,mode=1777,size=1g"]
+  environment: &environment
+    DOCUHIVE_ENV: prod
+    DOCUHIVE_AUTH_DISABLED: "false"
+    DOCUHIVE_DATABASE_URL: ${DOCUHIVE_DATABASE_URL:?Set the production database URL with host postgres}
+    DOCUHIVE_SECRET_KEY: ${DOCUHIVE_SECRET_KEY:?Set a random secret of at least 32 bytes}
+    DOCUHIVE_PUBLIC_URL: ${DOCUHIVE_PUBLIC_URL:?Set the HTTPS browser URL}
+    DOCUHIVE_VAULT_DIR: /srv/vault
+    DOCUHIVE_STAGING_DIR: /srv/staging
+    DOCUHIVE_CONSUME_DIR: /srv/vault/consume
+    DOCUHIVE_CONSUME_DEFAULT_OWNER: ${DOCUHIVE_CONSUME_DEFAULT_OWNER:-}
+    DOCUHIVE_OVERLAY_DIR: /srv/overlay
+    DOCUHIVE_GOTENBERG_URL: http://gotenberg:3000
+    DOCUHIVE_MAX_UPLOAD_MB: ${DOCUHIVE_MAX_UPLOAD_MB:-100}
+    DOCUHIVE_OCR_JOBS: ${DOCUHIVE_OCR_JOBS:-2}
+    DOCUHIVE_OCR_LANGUAGES: ${DOCUHIVE_OCR_LANGUAGES:-deu+eng}
+  volumes:
+    - type: bind
+      source: ${DOCUHIVE_VAULT_HOST_DIR:?Set the mounted NAS path}
+      target: /srv/vault
+      bind: {create_host_path: false, propagation: rslave}
+    - type: bind
+      source: ${DOCUHIVE_STAGING_HOST_DIR:?Set the SSD staging path}
+      target: /srv/staging
+      bind: {create_host_path: false}
+    - type: bind
+      source: ${DOCUHIVE_OVERLAY_HOST_DIR:?Set the private overlay path}
+      target: /srv/overlay
+      read_only: true
+      bind: {create_host_path: false}
+  networks: [backend, outbound]
+services:
+  postgres:
+    image: pgvector/pgvector:pg16@sha256:0dd3149a06e4579a0d70d8fef9945636cd514005e7237deb27f9b67886f8dc4f
+    user: "999:999"
+    read_only: true
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    environment:
+      POSTGRES_DB: docuhive
+      POSTGRES_USER: docuhive
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set the production database password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    tmpfs: ["/tmp:uid=999,gid=999,mode=1777", "/var/run/postgresql:uid=999,gid=999,mode=0775"]
+    volumes:
+      - type: bind
+        source: ${DOCUHIVE_PG_HOST_DIR:?Set the SSD database path}
+        target: /var/lib/postgresql/data
+        bind: {create_host_path: false}
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/extensions.sql:ro
+    networks: [backend]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docuhive -d docuhive"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  gotenberg:
+    image: gotenberg/gotenberg:8@sha256:13672f317b443c793e972b1bd2155ec62a3e7b6891b411e8196442cc053ee5f5
+    user: "1001:1001"
+    read_only: true
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs: ["/tmp:uid=1001,gid=1001,mode=1777,size=1g", "/home/gotenberg:uid=1001,gid=1001,mode=0700"]
+    command:
+      - gotenberg
+      - --api-timeout=120s
+      - '--chromium-deny-list=(?i)^(?!file://|data:|about:).*'
+      - --libreoffice-deny-list=.*
+      - --api-download-from-deny-list=.*
+      - --webhook-disable=true
+      - --libreoffice-auto-start=true
+    networks: [backend]
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: [db, upgrade]
+    depends_on:
+      postgres: {condition: service_healthy}
+  api:
+    <<: *backend
+    build:
+      context: ..
+      dockerfile: services/docuhive/Dockerfile
+    command: [api, --host, 0.0.0.0]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/system/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+  worker-ocr:
+    <<: *backend
+    command: [worker, --queues, ocr, --concurrency, "1"]
+    cpus: ${DOCUHIVE_OCR_CPUS:-2}
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      gotenberg: {condition: service_started}
+  worker:
+    <<: *backend
+    command: [worker, --queues, "ai,mail,default", --concurrency, "4"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  web:
+    image: ${DOCUHIVE_WEB_IMAGE:?Set an immutable web image tag or digest}
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    user: "1000:1000"
+    read_only: true
+    init: true
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=1777,size=64m"]
+    environment:
+      DOCUHIVE_API_URL: http://api:8000
+      DOCUHIVE_PUBLIC_URL: ${DOCUHIVE_PUBLIC_URL}
+      NEXT_TELEMETRY_DISABLED: "1"
+      HOSTNAME: 0.0.0.0
+    ports: ["127.0.0.1:3000:3000"]
+    networks: [backend]
+    depends_on:
+      api: {condition: service_healthy}
+networks:
+  backend: {internal: true}
+  outbound: {}

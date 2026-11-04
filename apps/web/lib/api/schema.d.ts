@@ -90,6 +90,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/system/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Backup Report */
+        get: operations["backup_report_api_system_backup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/setup-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Setup Status */
+        get: operations["setup_status_api_system_setup_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/login": {
         parameters: {
             query?: never;
@@ -1579,6 +1613,28 @@ export interface components {
              */
             date_to: string;
         };
+        /** BackupStatus */
+        BackupStatus: {
+            /** At */
+            at?: string | null;
+            /**
+             * Ok
+             * @default false
+             */
+            ok: boolean;
+            /** Last Success */
+            last_success?: string | null;
+            /**
+             * Targets Ok
+             * @default 0
+             */
+            targets_ok: number;
+            /**
+             * Stale
+             * @default true
+             */
+            stale: boolean;
+        };
         /** BulkEdit */
         BulkEdit: {
             /** Ids */
@@ -2667,6 +2723,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    backup_report_api_system_backup_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupStatus"];
+                };
+            };
+        };
+    };
+    setup_status_api_system_setup_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetupCheck"][];
                 };
             };
         };
@@ -5763,6 +5859,7 @@ export interface operations {
                 combine?: boolean;
                 source?: "upload" | "mobile" | "api";
                 shared?: boolean;
+                expected_owner_id?: number | null;
                 category?: string | null;
                 tags?: string[];
             };

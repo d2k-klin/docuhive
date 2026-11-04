@@ -1,4 +1,6 @@
 .git
+.claude
+.agents
 .venv*
 node_modules
 apps/web/.next
