@@ -29,12 +29,8 @@ def parser() -> argparse.ArgumentParser:
     user.add_argument("username")
     user.add_argument("--admin", action="store_true")
     vault = subs.add_parser("vault", help="Create, check or arrange the vault")
-<<<<<<< HEAD
     vault.add_argument("action", choices=["init", "check", "rebuild", "migrate", "library-sync"])
     vault.add_argument("--dry-run", action="store_true", help="rebuild: only validate meta.json")
-=======
-    vault.add_argument("action", choices=["init", "check", "library-sync"])
->>>>>>> origin/main
     vault.add_argument("--full", action="store_true", help="Also verify every original's SHA-256")
     ingest = subs.add_parser("ingest", help="Add files to the archive, like an upload")
     ingest.add_argument("files", nargs="+")
@@ -86,7 +82,6 @@ def main() -> None:
             from docuhive import vault
 
             print(f"Vault ready at {vault.root()} (id {vault.init()})")
-<<<<<<< HEAD
         elif args.command == "vault" and args.action in {"rebuild", "migrate"}:
             from docuhive.vault import rebuild
 
@@ -100,8 +95,6 @@ def main() -> None:
                 failed = bool(summary.errors)
             if failed:
                 raise SystemExit(1)
-=======
->>>>>>> origin/main
         elif args.command == "ingest":
             ingest_files(args)
         elif args.command == "vault":

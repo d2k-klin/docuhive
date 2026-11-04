@@ -33,10 +33,7 @@ from .documents import router as documents_router  # noqa: E402
 from .upload import router as upload_router  # noqa: E402
 
 ROUTERS.extend([documents_router, upload_router])
-<<<<<<< HEAD
 
 from .vocabulary import router as vocabulary_router  # noqa: E402
 
 ROUTERS.append(vocabulary_router)
-=======
->>>>>>> origin/main

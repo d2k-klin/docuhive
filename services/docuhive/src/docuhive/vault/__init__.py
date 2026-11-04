@@ -81,13 +81,10 @@ def init() -> str:
         write_atomic(marker, vault_id.encode())
     for name in ("consume", "library"):
         (vault / name).mkdir(exist_ok=True)
-<<<<<<< HEAD
     from .meta import json_schema
 
     # Documents the format for anyone reading the vault without DocuHive.
     write_atomic(vault / "meta.schema.json", json_schema())
-=======
->>>>>>> origin/main
     if bound != vault_id:
         with db.session() as session:
             session.merge(Setting(key=ID_KEY, value=vault_id))

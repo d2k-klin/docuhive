@@ -47,11 +47,7 @@ States:
 | Custom fields | Built | Lets you define your own typed fields (such as a licence plate) that the AI fills in like the built-in details, with optional reminders for dates. |
 | Provenance and locks | Built | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
 | Bulk edit with undo | Planned | Edits many documents at once, records every change and lets you undo it. |
-<<<<<<< HEAD
 | Vocabulary management | Built | Renames and merges senders and tags; the API works, the screen comes with the document screens. |
-=======
-| Vocabulary management | Planned | Manages senders, tags, types and categories, including merging duplicates. |
->>>>>>> origin/main
 | Trash | Built | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
 
 ## Finding and asking

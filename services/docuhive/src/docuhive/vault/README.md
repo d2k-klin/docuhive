@@ -7,11 +7,8 @@
 | Path | What it is |
 | --- | --- |
 | [`__init__.py`](__init__.py) | `init`, the availability check (`check`, `require`), the folder layout and verified atomic writes |
-<<<<<<< HEAD
 | [`migrate.py`](migrate.py) | `meta.json` schema versions: ordered upgrades applied whenever a file is read |
 | [`rebuild.py`](rebuild.py) | `docuhive vault rebuild [--dry-run]` recreates the database from the vault; `docuhive vault migrate` rewrites old `meta.json` files |
-=======
->>>>>>> origin/main
 | [`meta.py`](meta.py) | `meta.json`, rendered from the database after every change, with a retried repair job when the vault is away |
 | [`health.py`](health.py) | Checks that each stored document's files exist, parse and match the database, finds orphan folders, stores the last report and runs weekly |
 

@@ -6,16 +6,10 @@ the text (which `archive.pdf` carries).
 
 import json
 from datetime import UTC, date, datetime, timedelta
-<<<<<<< HEAD
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-=======
-from typing import Any
-
-from pydantic import BaseModel
->>>>>>> origin/main
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -23,12 +17,8 @@ from docuhive import db, jobs, vault
 from docuhive.contracts import FactValue, SourceInfo
 from docuhive.db.models import Document, Note, User
 
-<<<<<<< HEAD
 from .migrate import CURRENT as SCHEMA
 from .migrate import upgrade
-=======
-SCHEMA = 1
->>>>>>> origin/main
 
 
 class NoteV1(BaseModel):
@@ -38,12 +28,8 @@ class NoteV1(BaseModel):
 
 
 class MetaV1(BaseModel):
-<<<<<<< HEAD
     model_config = ConfigDict(populate_by_name=True)
     schema_: int = Field(default=SCHEMA, alias="schema")
-=======
-    schema_: int = SCHEMA
->>>>>>> origin/main
     id: str
     sha256: str
     original_filename: str
@@ -67,7 +53,6 @@ class MetaV1(BaseModel):
     deleted_at: datetime | None
 
     def dump(self) -> bytes:
-<<<<<<< HEAD
         data = self.model_dump(mode="json", by_alias=True)
         return (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode()
 
@@ -82,13 +67,6 @@ def json_schema() -> bytes:
     return (json.dumps(schema, indent=2) + "\n").encode()
 
 
-=======
-        data = self.model_dump(mode="json")
-        data = {"schema": data.pop("schema_"), **data}
-        return (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode()
-
-
->>>>>>> origin/main
 def render(doc_id: str) -> MetaV1:
     with db.session() as session:
         doc = session.get(Document, doc_id)
