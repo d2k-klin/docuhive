@@ -4,9 +4,11 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-04
+
 ### Added
 
-- OA execution plan, binding contract models, Python and web workspaces, CLI and health API.
+- Binding contract models, Python and web workspaces, CLI and health API.
 - Validated core settings, private overlay merging, prompt versions and plugin hooks.
 - Independent database migration environments and the core PostgreSQL schema.
 - Durable jobs, retries, lease recovery, scheduler leadership and reusable platform fakes.
@@ -15,6 +17,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Streaming API proxy and generated TypeScript API types.
 - Developer commands, disposable test stack, CI and contributor documentation.
 - Mr.D brand assets with a manifest check, and a README in every folder describing each file.
+- Real light and dark screenshots of the app, captured from the synthetic QA environment.
 
 ### Changed
 
@@ -25,3 +28,6 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
+
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/d2k-klin/docuhive/releases/tag/v0.1.0
