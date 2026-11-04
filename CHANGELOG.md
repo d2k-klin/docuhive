@@ -12,6 +12,9 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Document API: list with filters, detail, original/archive/thumbnail files, history, edit, bulk edit, trash and restore, and quarantine retry. Uploads can set category and tags, which count as the user's choice.
 - Tests for the scanner folder and the library view against the real document core.
 - `docuhive ingest <files> --owner <user>`.
+- `docuhive vault rebuild [--dry-run]`: recreates the database from the vault's `meta.json` files and archive copies, reporting unreadable folders instead of stopping. Missing owners are created disabled.
+- `meta.json` schema versioning, `docuhive vault migrate`, and `meta.schema.json` in the vault.
+- Vocabulary API (`/api/vocabulary/tags`, `/api/vocabulary/correspondents`): typeahead lists, and rename and merge for administrators; merged names keep resolving to the survivor.
 
 ### Changed
 

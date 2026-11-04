@@ -9,6 +9,7 @@ import json
 import logging
 import shutil
 
+import pikepdf
 import pytest
 from docuhive import db, vault
 from docuhive.db.models import AuditLog, Document, Job
@@ -22,7 +23,16 @@ from sqlalchemy import select
 from .test_archive_tools import client, tools  # noqa: F401
 from .test_auth_integration import CSRF
 
-PDF = b"%PDF-1.4\nsynthetic QA-DOC:core-001\n%%EOF\n"
+
+def blank_pdf() -> bytes:
+    out = io.BytesIO()
+    with pikepdf.new() as pdf:
+        pdf.add_blank_page()
+        pdf.save(out, deterministic_id=True)
+    return out.getvalue()
+
+
+PDF = blank_pdf()  # a real PDF: the rebuild reads text from the archive copy
 
 
 def fake_build(work, files):
@@ -301,3 +311,136 @@ def test_library_view_links_stored_documents(core):
     core.post(f"/api/documents/{doc_id}/trash", headers=CSRF)
     assert library.sync() == {"ok": True, "links": 0}
     assert not list((vault.root() / "library").rglob("*.pdf"))
+
+
+def snapshot(doc_id: str) -> dict:
+    from docuhive import documents
+
+    return documents.get(doc_id).model_dump(exclude={"source"}) | {
+        "source": documents.get(doc_id).source.original_filename
+    }
+
+
+def stored_document(core) -> str:
+    doc_id = upload(core, category="utilities/electricity", tags=["property"]).json()["document_id"]
+    run(doc_id)
+    core.patch(
+        f"/api/documents/{doc_id}",
+        json={
+            "title": "Electricity invoice",
+            "correspondent": "Stadtwerke Muster",
+            "document_date": "2026-03-02",
+            "facts": {"amount": {"type": "money", "value": "84.20", "currency": "EUR"}},
+        },
+        headers=CSRF,
+    )
+    return doc_id
+
+
+def test_rebuild_recreates_the_database_from_the_vault(core):
+    from docuhive.db.models import DocFact, DocSource, DocumentTag, Note, User
+    from docuhive.vault import rebuild
+
+    doc_id = stored_document(core)
+    with db.session() as session:
+        owner = session.scalar(select(User.id).where(User.username == "owner"))
+        session.add(Note(document_id=doc_id, user_id=owner, body="Paid by transfer"))
+    from docuhive.vault import meta
+
+    meta.write(doc_id)
+    before = snapshot(doc_id)
+    with db.session() as session:
+        for model in (DocumentTag, DocFact, DocSource, Note, Document):
+            session.query(model).delete()
+    assert rebuild.rebuild(dry_run=True).documents == 1
+    with db.session() as session:
+        assert session.scalar(select(Document.id)) is None
+    report = rebuild.rebuild()
+    assert (report.documents, report.created, report.errors) == (1, 1, [])
+    assert snapshot(doc_id) == before
+    with db.session() as session:
+        assert session.scalar(select(Note.body)) == "Paid by transfer"
+        assert session.scalar(select(Document.vault_path)).endswith(doc_id)
+    again = rebuild.rebuild()
+    assert (again.created, again.updated) == (0, 1)
+    assert snapshot(doc_id) == before
+
+
+def test_rebuild_reports_bad_folders_and_creates_missing_owners_disabled(core):
+    from docuhive.db.models import User
+    from docuhive.vault import rebuild
+
+    doc_id = stored_document(core)
+    folder = next(vault.root().glob(f"*/{doc_id}"))
+    data = json.loads((folder / "meta.json").read_text())
+    (folder / "meta.json").write_text(json.dumps(data | {"owner": "former-member"}))
+    broken = folder.parent / "01JCBADBADBADBADBADBADBADB"
+    broken.mkdir()
+    (broken / "meta.json").write_text("{not json")
+    future = folder.parent / "01JCNEWNEWNEWNEWNEWNEWNEWN"
+    future.mkdir()
+    (future / "meta.json").write_text(json.dumps(data | {"schema": 99}))
+    report = rebuild.rebuild()
+    assert report.documents == 1 and report.users_created == ["former-member"]
+    assert sorted(e.path.split("/")[1] for e in report.errors) == [
+        "01JCBADBADBADBADBADBADBADB",
+        "01JCNEWNEWNEWNEWNEWNEWNEWN",
+    ]
+    assert any("schema" in e.error for e in report.errors)
+    with db.session() as session:
+        assert session.scalar(
+            select(User.pw_hash).where(User.username == "former-member")
+        ).startswith("!")
+    migrated = rebuild.migrate_files()
+    assert migrated["rewritten"] == 0 and len(migrated["errors"]) == 2
+    assert json.loads((vault.root() / "meta.schema.json").read_text())["properties"]["schema"]
+
+
+def test_merged_tags_and_senders_move_documents_and_stay_resolved(core):
+    from docuhive import documents
+    from docuhive.contracts import MetadataPatch
+
+    first = stored_document(core)
+    second = upload(core, data=blank_pdf() + b"%second", tags=["Auto"]).json()["document_id"]
+    run(second)
+    documents.apply_metadata(
+        second, MetadataPatch(correspondent="Stadtwerke Muster GmbH"), actor="system"
+    )
+    tags = {t["name"]: t for t in core.get("/api/vocabulary/tags").json()}
+    assert tags["Auto"]["documents"] == 1
+    merged = core.post(
+        "/api/vocabulary/tags/merge",
+        json={"source_ids": [tags["Auto"]["id"]], "target_id": tags["property"]["id"]},
+        headers=CSRF,
+    )
+    assert merged.json() == {"documents": 1}
+    assert documents.get(second).tags == ["property"]
+    documents.apply_metadata(second, MetadataPatch(tags_add=["auto"]), actor="ai:classify")
+    assert documents.get(second).tags == ["property"]  # the old name resolves to the survivor
+    names = [t["name"] for t in core.get("/api/vocabulary/tags").json()]
+    assert "Auto" not in names
+
+    senders = {
+        c["name"]: c["id"] for c in core.get("/api/vocabulary/correspondents?q=stadt").json()
+    }
+    core.post(
+        "/api/vocabulary/correspondents/merge",
+        json={
+            "source_ids": [senders["Stadtwerke Muster GmbH"]],
+            "target_id": senders["Stadtwerke Muster"],
+        },
+        headers=CSRF,
+    )
+    assert documents.get(second).correspondent == "Stadtwerke Muster"
+    renamed = core.patch(
+        f"/api/vocabulary/correspondents/{senders['Stadtwerke Muster']}",
+        json={"name": "Stadtwerke Muster AG"},
+        headers=CSRF,
+    )
+    assert renamed.json() == {"documents": 2}
+    assert documents.get(first).correspondent == "Stadtwerke Muster AG"
+    clash = core.patch(
+        f"/api/vocabulary/tags/{tags['property']['id']}", json={"name": "Auto"}, headers=CSRF
+    )
+    assert clash.json()["error"]["code"] == "vocabulary_conflict"
+    assert kinds().count("vault.repair_meta") >= 1

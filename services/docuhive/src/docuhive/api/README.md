@@ -17,6 +17,7 @@
 | [`routers.py`](routers.py) | Shared touchpoint: append routers without removing existing registrations |
 | [`system.py`](system.py) | Public health and protected platform operations, including the vault health report |
 | [`users.py`](users.py) | Administrator user management; data visibility is never elevated by this role |
+| [`vocabulary.py`](vocabulary.py) | Tags and senders: typeahead lists for everyone, rename and merge for administrators |
 | [`views.py`](views.py) | Saved views: named filters, pinning, sharing and the documents they match |
 
 ## Extending

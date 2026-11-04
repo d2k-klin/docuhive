@@ -1516,6 +1516,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/vocabulary/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Items */
+        get: operations["list_items_api_vocabulary__kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/vocabulary/{kind}/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename Item */
+        patch: operations["rename_item_api_vocabulary__kind___item_id__patch"];
+        trace?: never;
+    };
+    "/api/vocabulary/{kind}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Merge Items */
+        post: operations["merge_items_api_vocabulary__kind__merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1608,6 +1659,11 @@ export interface components {
              * @default false
              */
             restricted: boolean;
+        };
+        /** Changed */
+        Changed: {
+            /** Documents */
+            documents: number;
         };
         /** ChannelIn */
         ChannelIn: {
@@ -2122,6 +2178,13 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** Merge */
+        Merge: {
+            /** Source Ids */
+            source_ids: number[];
+            /** Target Id */
+            target_id: number;
+        };
         /** MessageIn */
         MessageIn: {
             /** Content */
@@ -2163,6 +2226,11 @@ export interface components {
              *     ]
              */
             tasks: ("classify" | "extract")[];
+        };
+        /** Rename */
+        Rename: {
+            /** Name */
+            name: string;
         };
         /** SavedViewInput */
         SavedViewInput: {
@@ -2500,6 +2568,15 @@ export interface components {
             problem_count: number;
             /** Problems */
             problems: components["schemas"]["VaultProblem"][];
+        };
+        /** VocabularyItem */
+        VocabularyItem: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Documents */
+            documents: number;
         };
     };
     responses: never;
@@ -5779,6 +5856,111 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IngestResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_items_api_vocabulary__kind__get: {
+        parameters: {
+            query?: {
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                kind: "tags" | "correspondents";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VocabularyItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rename_item_api_vocabulary__kind___item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "tags" | "correspondents";
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Rename"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Changed"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    merge_items_api_vocabulary__kind__merge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "tags" | "correspondents";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Merge"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Changed"];
                 };
             };
             /** @description Validation Error */
