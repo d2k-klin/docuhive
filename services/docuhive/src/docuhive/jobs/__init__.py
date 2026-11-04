@@ -4,10 +4,11 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import NoReturn
+from typing import Any, NoReturn
 
 from sqlalchemy import select, text, update
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Session
 
 from docuhive.db import session
 from docuhive.db.models import Job
@@ -77,7 +78,10 @@ def enqueue(
     queue: str = "default",
     run_after: datetime | None = None,
     dedupe_key: str | None = None,
+    in_session: Session | None = None,
 ) -> int:
+    """Queue a job. With `in_session`, the job commits (or rolls back) with the caller's own
+    change, so a state change and the work it implies can never be separated by a crash."""
     registration = HANDLERS.get(kind)
     values = {
         "kind": kind,
@@ -95,19 +99,25 @@ def enqueue(
         )
         .returning(Job.id)
     )
-    # READ COMMITTED takes a fresh snapshot for the select after a conflicting insert.
+    if in_session is not None:
+        return _insert(in_session, statement, dedupe_key)
     with session() as db:
-        while True:
-            job_id = db.scalar(statement)
-            if job_id is not None:
-                return job_id
-            existing = db.scalar(
-                select(Job.id).where(
-                    Job.dedupe_key == dedupe_key, Job.status.in_(["pending", "running"])
-                )
+        return _insert(db, statement, dedupe_key)
+
+
+def _insert(db: Session, statement: Any, dedupe_key: str | None) -> int:
+    # READ COMMITTED takes a fresh snapshot for the select after a conflicting insert.
+    while True:
+        job_id = db.scalar(statement)
+        if job_id is not None:
+            return job_id
+        existing = db.scalar(
+            select(Job.id).where(
+                Job.dedupe_key == dedupe_key, Job.status.in_(["pending", "running"])
             )
-            if existing is not None:
-                return existing
+        )
+        if existing is not None:
+            return existing
             # The conflicting job may have finished between INSERT and SELECT.
 
 

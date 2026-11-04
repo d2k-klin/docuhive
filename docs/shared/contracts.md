@@ -257,8 +257,11 @@ IntelBase: type[DeclarativeBase]                # CL tables (separate MetaData, 
 ### 2.3 Jobs — `docuhive.jobs`
 ```python
 def enqueue(kind: str, payload: dict, *, queue: str = "default",
-            run_after: datetime | None = None, dedupe_key: str | None = None) -> int: ...
+            run_after: datetime | None = None, dedupe_key: str | None = None,
+            in_session: Session | None = None) -> int: ...
     # dedupe_key: if a pending/running job with the same key exists, returns its id instead.
+    # in_session: insert in the caller's transaction, so a state change and the job (or event)
+    # it implies commit together or not at all.
 
 def handler(kind: str, *, queue: str = "default", max_attempts: int = 5,
             timeout_s: int = 600) -> Callable: ...

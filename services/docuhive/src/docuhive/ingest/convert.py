@@ -13,7 +13,7 @@ from pillow_heif import register_heif_opener
 from docuhive.config.settings import get_settings
 
 from .detect import Detected
-from .errors import Quarantine
+from .errors import Quarantine, Transient
 from .html import html_document, render_email, sanitize
 from .safety import MAX_IMAGE_PIXELS, MAX_PAGES
 
@@ -78,10 +78,13 @@ def to_pdf(path: Path, detected: Detected) -> Path:
                 )
                 response.raise_for_status()
             except httpx.TimeoutException as error:
-                raise Quarantine("converter_timeout") from error
+                # Could be the service or the document: retried a few times, then quarantined.
+                raise TimeoutError("converter_timeout") from error
             except httpx.ConnectError as error:
-                raise Quarantine("converter_unavailable") from error
+                raise Transient("converter_unavailable") from error
             except httpx.HTTPStatusError as error:
+                if error.response.status_code == 429 or error.response.status_code >= 500:
+                    raise Transient(f"converter_http_{error.response.status_code}") from error
                 raise Quarantine(f"conversion_http_{error.response.status_code}") from error
             output.write_bytes(response.content)
     else:
@@ -90,4 +93,20 @@ def to_pdf(path: Path, detected: Detected) -> Path:
         if len(pdf.pages) > MAX_PAGES:
             output.unlink(missing_ok=True)
             raise Quarantine("too_many_pages")
+    return output
+
+
+def combine(pdfs: list[Path], output: Path) -> Path:
+    """Several photographed pages, in order, as one PDF."""
+    with pikepdf.new() as merged:
+        sources = [pikepdf.open(path) for path in pdfs]
+        try:
+            for source in sources:
+                merged.pages.extend(source.pages)
+            if len(merged.pages) > MAX_PAGES:
+                raise Quarantine("too_many_pages")
+            merged.save(output)
+        finally:
+            for source in sources:
+                source.close()
     return output

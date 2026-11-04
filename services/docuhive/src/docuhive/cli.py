@@ -28,15 +28,20 @@ def parser() -> argparse.ArgumentParser:
     user.add_argument("action", choices=["create", "passwd", "disable"])
     user.add_argument("username")
     user.add_argument("--admin", action="store_true")
-    vault = subs.add_parser("vault", help="Check the vault without changing it")
-    vault.add_argument("action", choices=["check", "library-sync"])
+    vault = subs.add_parser("vault", help="Create, check or arrange the vault")
+    vault.add_argument("action", choices=["init", "check", "library-sync"])
     vault.add_argument("--full", action="store_true", help="Also verify every original's SHA-256")
+    ingest = subs.add_parser("ingest", help="Add files to the archive, like an upload")
+    ingest.add_argument("files", nargs="+")
+    ingest.add_argument("--owner", required=True, help="Username of the owner")
+    ingest.add_argument("--private", action="store_true", help="Do not share with the household")
+    ingest.add_argument("--combine", action="store_true", help="Several photos as one document")
     subs.add_parser("openapi", help="Print the OpenAPI schema")
     spike = subs.add_parser("spike", help="Measure conversion and OCR before selecting a backend")
     spike_sub = spike.add_subparsers(dest="spike_action", required=True)
-    ingest = spike_sub.add_parser("ingest")
-    ingest.add_argument("input_dir")
-    ingest.add_argument("--out", required=True)
+    spike_ingest = spike_sub.add_parser("ingest")
+    spike_ingest.add_argument("input_dir")
+    spike_ingest.add_argument("--out", required=True)
     try:
         module = import_module("docuhive.ai.cli")
     except ImportError:
@@ -72,6 +77,12 @@ def main() -> None:
             if args.action == "downgrade" and get_settings().env == "prod":
                 root.error("Database downgrades are only allowed in development/test")
             migrate(args.action, args.revision)
+        elif args.command == "vault" and args.action == "init":
+            from docuhive import vault
+
+            print(f"Vault ready at {vault.root()} (id {vault.init()})")
+        elif args.command == "ingest":
+            ingest_files(args)
         elif args.command == "vault":
             if args.action == "library-sync":
                 from docuhive.vault.library import sync
@@ -113,3 +124,43 @@ def main() -> None:
             args.func(args)
     except (ValueError, FileNotFoundError) as error:
         root.error(str(error))
+
+
+def ingest_files(args: argparse.Namespace) -> None:
+    """Copies the files into staging, so the originals on disk stay where they are."""
+    import shutil
+    import uuid
+    from pathlib import Path
+
+    from sqlalchemy import select
+
+    from docuhive import db, ingest
+    from docuhive.contracts import IngestRequest, SourceInfo, SourceKind
+    from docuhive.db.models import User
+
+    with db.session() as session:
+        owner = session.scalar(select(User.id).where(User.username == args.owner))
+    if owner is None:
+        raise ValueError(f"Unknown user: {args.owner}")
+    paths = [Path(name) for name in args.files]
+    groups = [paths] if args.combine else [[path] for path in paths]
+    for group in groups:
+        staged: list[Path] = []
+        for path in group:
+            copy = ingest.incoming_dir() / f"cli-{uuid.uuid4().hex}{path.suffix}"
+            shutil.copyfile(path, copy)
+            staged.append(copy)
+        request = IngestRequest(
+            owner_id=owner,
+            shared=not args.private,
+            combine=args.combine,
+            source=SourceInfo(kind=SourceKind.upload, original_filename=group[0].name),
+        )
+        try:
+            result = ingest.submit(staged, request)
+        except ingest.IngestRejected as error:
+            for copy in staged:
+                copy.unlink(missing_ok=True)
+            print(f"{group[0].name}: rejected ({error})")
+            continue
+        print(f"{group[0].name}: {result.status} {result.document_id}")

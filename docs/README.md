@@ -50,6 +50,7 @@ DocuHive is built by three parallel tracks. Each has a plan, an execution plan a
 | Work split and integration points | [shared/README.md](shared/README.md) | — |
 | Knowledge bases (all tracks): retrieve and ask APIs, MCP, evals | [shared/knowledge-bases.md](shared/knowledge-bases.md) | — |
 | Archive tools: vault health, custom fields, saved views, near-duplicates, export | [shared/archive-tools.md](shared/archive-tools.md) | — |
+| Production readiness: what is left before 1.0, in order | [shared/production-readiness.md](shared/production-readiness.md) | — |
 | Platform (OA): storage, ingest, sign-in, search, web shell, operations | [Developer-OA/](Developer-OA/README.md) | [status](Developer-OA/STATUS.md) |
 | Intelligence (CL): AI layer, classification, email, chat, reminders | [Developer-CL/](Developer-CL/README.md) | [status](Developer-CL/STATUS.md) |
 | Quality (QA): contracts, end-to-end, non-functional checks, releases | [Developer-QA/](Developer-QA/README.md) | [status](Developer-QA/STATUS.md) |

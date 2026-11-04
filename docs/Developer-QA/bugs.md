@@ -5,7 +5,9 @@ Each anchor is a stable reproduction link for strict xfails. Owners retain their
 
 ## QA-001
 
-S2 · `bug:oa` · open dependency · OA-M3/M4/M5 · ING-01, ING-05, DOC-03, SRCH-01.
+S2 · `bug:oa` · backend fixed 2026-11-04, screens pending · OA-M3/M4/M5 · ING-01, ING-05, DOC-03, SRCH-01.
+
+The real parity tests and the system upload test now run without `xfail`. The archive screens (OA-M5, the `journeys.spec.ts` markers) remain open.
 
 `ingest.incoming_dir/submit`, `documents.*` and `search.hybrid` raise `NotImplementedError`;
 the upload and document routes do not exist yet. This is unfinished planned work, not a

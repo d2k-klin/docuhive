@@ -29,6 +29,7 @@ from .views import router as views_router  # noqa: E402
 
 ROUTERS.extend([fields_router, views_router, duplicates_router, export_router])
 
+from .documents import router as documents_router  # noqa: E402
 from .upload import router as upload_router  # noqa: E402
 
-ROUTERS.append(upload_router)
+ROUTERS.extend([documents_router, upload_router])

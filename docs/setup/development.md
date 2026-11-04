@@ -22,6 +22,19 @@ If you copy it to `.env`, restrict permissions with `chmod 600 .env` and keep it
 out of Git. Production requires a secret of at least 32 bytes and refuses
 `AUTH_DISABLED`. Staging must be on local storage, separate from the vault.
 
+## Adding documents
+
+`make dev` creates the vault (`uv run docuhive vault init`, safe to repeat; it refuses a
+non-empty folder that is not a vault). Add a synthetic file from the command line like an
+upload, then watch the worker read and store it:
+
+```sh
+uv run docuhive ingest path/to/synthetic.pdf --owner admin
+```
+
+OCR uses Tesseract with the languages in `DOCUHIVE_OCR_LANGUAGES` (default `deu+eng`); on
+macOS, `brew install tesseract tesseract-lang`. The worker image ships both.
+
 ## Checks
 
 ```sh

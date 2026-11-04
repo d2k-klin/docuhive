@@ -226,24 +226,36 @@ def test_conversion_routes_send_self_contained_content(monkeypatch, tmp_path, ki
 
 
 @pytest.mark.parametrize(
-    "error,reason",
+    "error,expected,reason",
     [
-        (httpx.ConnectError("offline"), "converter_unavailable"),
-        (httpx.ReadTimeout("slow"), "converter_timeout"),
+        # The service is away: wait. A timeout: retry, then quarantine. Bad input: quarantine.
+        (httpx.ConnectError("offline"), "Transient", "converter_unavailable"),
+        (httpx.ReadTimeout("slow"), "TimeoutError", "converter_timeout"),
+        (
+            httpx.HTTPStatusError(
+                "busy",
+                request=httpx.Request("POST", "http://local"),
+                response=httpx.Response(503),
+            ),
+            "Transient",
+            "converter_http_503",
+        ),
         (
             httpx.HTTPStatusError(
                 "invalid input",
                 request=httpx.Request("POST", "http://local"),
                 response=httpx.Response(400),
             ),
+            "Quarantine",
             "conversion_http_400",
         ),
     ],
 )
 def test_converter_failures_preserve_specific_reasons_and_input(
-    monkeypatch, tmp_path, error, reason
+    monkeypatch, tmp_path, error, expected, reason
 ):
     from docuhive.ingest import convert
+    from docuhive.ingest.errors import Transient
 
     source = tmp_path / "synthetic.txt"
     source.write_text("Synthetic")
@@ -259,7 +271,8 @@ def test_converter_failures_preserve_specific_reasons_and_input(
             raise error
 
     monkeypatch.setattr(convert.httpx, "Client", lambda **kwargs: BrokenConverter())
-    with pytest.raises(Quarantine, match=reason):
+    kinds = {"Transient": Transient, "TimeoutError": TimeoutError, "Quarantine": Quarantine}
+    with pytest.raises(kinds[expected], match=reason):
         to_pdf(source, detect(source))
     assert source.read_text() == "Synthetic"
 

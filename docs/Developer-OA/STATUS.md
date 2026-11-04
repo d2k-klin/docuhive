@@ -5,10 +5,10 @@ Update this file whenever a milestone or a contract item changes state (working 
 | Milestone | State | Updated | Notes |
 |-----------|-------|---------|-------|
 | OA-M0 Repo skeleton + contract stubs + CI | in progress | 2026-11-03 | Workspaces, exact contract models, stubs, CLI, health, CI and contributor tooling implemented; local build/checks passing, CI publication unverified. |
-| OA-M1 OCR spike + gate | in progress | 2026-11-04 | Spike, conversion/OCR, synthetic generator and CER tool implemented; current trixie worker passes real synthetic OCR. Private corpus and target-host measurements unavailable; gate pending. |
+| OA-M1 OCR spike + gate | complete (waived) | 2026-11-04 | Owner waived the gate and chose the native core; real-document measurements move to the release gate ([record](../decisions/0001-ocr-gate.md)). |
 | OA-M2 Platform (settings, overlay, DB, jobs, worker) | complete | 2026-11-04 | Settings/overlay/plugins, schema/migrations and jobs/worker/scheduler implemented; PostgreSQL concurrency, scheduler leadership and killed-worker lease recovery verified. |
-| OA-M3 Ingest pipeline, vault, documents service | not started | 2026-11-03 | |
-| OA-M4 Auth, API, FTS + hybrid search | in progress | 2026-11-04 | Auth, scoped tokens, visibility, document/chunk FTS, typo fallback and hybrid fusion implemented. Real search checks pass. Document API and 20k-document latency acceptance remain pending. |
+| OA-M3 Ingest pipeline, vault, documents service | in progress | 2026-11-04 | `vault init`, availability check, verified atomic writes, `meta.json`, `ingest.submit`, `ingest.process` (convert, OCR, thumbnail, vault, quarantine, retry), documents service and events implemented; real parity tests and a Tesseract + Gotenberg pipeline test pass on PostgreSQL. Pending: `vault rebuild`/`migrate`, `meta.schema.json`, vocabulary merge helpers. |
+| OA-M4 Auth, API, FTS + hybrid search | in progress | 2026-11-04 | Auth, scoped tokens, visibility, document/chunk FTS, typo fallback and hybrid fusion implemented. Real search checks pass. Document API (list, detail, files, history, edit, bulk edit, trash/restore, upload, quarantine retry) implemented. 20k-document latency acceptance remains pending. |
 | OA-M5 Web shell + document UI | in progress | 2026-11-04 | Shell, login, BFF, generated types, knowledge-base management and token settings implemented and browser-tested. Archive workflows and setup wizard remain pending. |
 | OA-M6 PWA capture + consume folder | not started | 2026-11-03 | |
 | OA-M7 Ops: compose, NAS, backups, drills | not started | 2026-11-03 | |
@@ -17,8 +17,8 @@ Update this file whenever a milestone or a contract item changes state (working 
 ## Contract items provided (CL swaps fallbacks for these)
 - [x] I1 skeleton, `contracts/models.py`, stub modules (2026-11-03; local model/contract checks pass)
 - [x] I2 `config.load_yaml/prompt/plugins`, `db.session`, intel Alembic env, `jobs.*` (real PostgreSQL evidence, including worker kill/recovery)
-- [ ] I3 `documents.get/get_content/apply_metadata/iter_ids`, `document.*` events
-- [ ] I4 `ingest.submit/incoming_dir`
+- [x] I3 `documents.get/get_content/apply_metadata/iter_ids`, `document.*` events (2026-11-04; real parity tests on PostgreSQL)
+- [x] I4 `ingest.submit/incoming_dir` (2026-11-04; real parity tests on PostgreSQL)
 - [ ] I5 `auth.current_user/visible_docs`, `documents.get_for_user`, `search.hybrid/register_semantic`
 - [ ] I6 web shell, BFF proxy (SSE verified), generated API client, slot placeholders
 
@@ -30,7 +30,7 @@ Update this file whenever a milestone or a contract item changes state (working 
 - I11 saved knowledge-base table and `kb.get(user, kb_id)` are implemented and tested.
 
 ## Gate result (OA-M1)
-- Decision: **pending** ([gate record](../decisions/0001-ocr-gate.md)). The user confirmed no private corpus or reference transcriptions are available. Do not infer GO or NO-GO from synthetic checks.
+- Decision: **GO, waived by the owner on 2026-11-04** ([gate record](../decisions/0001-ocr-gate.md)). No real-document measurements exist; they are required at the release gate.
 
 ## Knowledge-base work (2026-11-04)
 

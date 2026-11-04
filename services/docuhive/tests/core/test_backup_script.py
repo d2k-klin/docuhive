@@ -49,6 +49,7 @@ def runner(calls, fail=None):
         if fail and fail in args:
             raise subprocess.CalledProcessError(1, args, stderr=b"credentials never published")
         return SimpleNamespace(stdout=b"")
+
     return command
 
 
@@ -74,7 +75,9 @@ def test_backup_quiesces_validates_dumps_checks_targets_and_restarts(environment
 @pytest.mark.parametrize("failure", ["pg_dump", "backup", "start"])
 def test_backup_failures_keep_last_success_and_restart_writers(environment, monkeypatch, failure):
     vault, _, _ = environment
-    (vault / "_system/backup-status.json").write_text(json.dumps({"last_success": "2026-01-01T00:00:00+00:00"}))
+    (vault / "_system/backup-status.json").write_text(
+        json.dumps({"last_success": "2026-01-01T00:00:00+00:00"})
+    )
     calls = []
     monkeypatch.setattr(backup, "command", runner(calls, failure))
     result = backup.backup(datetime(2026, 11, 4, tzinfo=UTC))

@@ -6,7 +6,7 @@
 
 | Path | What it is |
 | --- | --- |
-| [`__init__.py`](__init__.py) | Document contract; the archive backend follows the OCR decision |
+| [`__init__.py`](__init__.py) | The documents service: read, apply metadata with locks, audit, search vector and events, trash |
 | [`metadata.py`](metadata.py) | Pure metadata changes used to keep the fake and eventual backend semantics aligned |
 
 ## Extending

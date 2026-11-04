@@ -5,14 +5,23 @@ import tempfile
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from starlette.datastructures import UploadFile
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
-from docuhive import ingest
+from docuhive import documents, ingest
 from docuhive.auth import scope
 from docuhive.config.settings import get_settings
-from docuhive.contracts import CurrentUser, IngestRequest, IngestResult, SourceInfo, SourceKind
+from docuhive.contracts import (
+    CurrentUser,
+    IngestRequest,
+    IngestResult,
+    MetadataPatch,
+    SourceInfo,
+    SourceKind,
+)
+
+from .documents import validate
 
 router = APIRouter(tags=["documents"])
 
@@ -45,7 +54,12 @@ async def upload(
     source: Literal["upload", "mobile", "api"] = "upload",
     shared: bool = True,
     expected_owner_id: int | None = None,
+    category: str | None = None,
+    tags: Annotated[list[str], Query()] = [],  # noqa: B006
 ) -> IngestResult:
+    # Set at upload time, these are the user's choices and locked against the AI (DOC-08).
+    patch = MetadataPatch(category=category or None, tags_add=[t for t in tags if t.strip()])
+    validate(patch)
     if expected_owner_id is not None and expected_owner_id != user.id:
         raise HTTPException(403, "Sign in to the account that saved this capture.")
     paths: list[Path] = []
@@ -86,7 +100,7 @@ async def upload(
             # Conversion, validation, dedupe and analysis belong to the shared pipeline.
             from starlette.concurrency import run_in_threadpool
 
-            return await run_in_threadpool(ingest.submit, paths, req)
+            result = await run_in_threadpool(ingest.submit, paths, req)
     except ingest.TooLarge:
         raise HTTPException(
             413, {"code": "too_large", "message": "Choose smaller files.", "details": {}}
@@ -96,15 +110,9 @@ async def upload(
             415,
             {"code": "unsupported_type", "message": "Choose a supported file type.", "details": {}},
         ) from None
-    except NotImplementedError:
-        raise HTTPException(
-            503,
-            {
-                "code": "intake_unavailable",
-                "message": "Document intake is unavailable. Keep your files and try again later.",
-                "details": {},
-            },
-        ) from None
     finally:
         for path in paths:
             path.unlink(missing_ok=True)
+    if result.status == "staged" and (patch.category or patch.tags_add):
+        documents.apply_metadata(result.document_id, patch, actor=f"user:{user.id}")
+    return result

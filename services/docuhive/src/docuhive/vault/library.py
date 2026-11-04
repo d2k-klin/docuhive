@@ -64,7 +64,7 @@ def sync(*, retry: bool = False) -> dict:
         )
         for doc, username in rows:
             assert doc.vault_path is not None
-            original = folder_of(vault, doc.vault_path) / "archive.pdf"
+            original = folder_of(vault, str(doc.vault_path)) / "archive.pdf"
             if (
                 not original.resolve().is_relative_to(vault.resolve())
                 or original.is_symlink()

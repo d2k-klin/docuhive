@@ -4,7 +4,6 @@ import errno
 import json
 import logging
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -14,7 +13,6 @@ from docuhive.db.models import Document, Setting
 from docuhive.ingest import consume
 from docuhive.vault import backup, library
 from docuhive.vault.availability import available
-from sqlalchemy import select
 
 from .test_archive_tools import add, tools  # noqa: F401
 from .test_auth_integration import CSRF, login
@@ -22,54 +20,88 @@ from .test_auth_memory import client  # noqa: F401
 
 
 @pytest.fixture
-def mounted(tools):
+def mounted(tools):  # noqa: F811
     (tools.vault / "_system" / "VAULT_ID").write_text("synthetic-vault")
     with db.session() as session:
         session.add(Setting(key="vault.id", value="synthetic-vault"))
     return tools
 
 
-def test_token_upload_uses_the_contract_and_never_accepts_another_owner(mounted, tmp_path, monkeypatch):
+def test_token_upload_uses_the_contract_and_never_accepts_another_owner(
+    mounted, tmp_path, monkeypatch
+):
     incoming = tmp_path / "incoming"
     incoming.mkdir()
     calls = []
     monkeypatch.setattr(ingest, "incoming_dir", lambda: incoming)
+
     def submit(files, req):
         calls.append((files[0].read_bytes(), req))
         return IngestResult(document_id="synthetic", status="staged")
+
     monkeypatch.setattr(ingest, "submit", submit)
-    token = mounted.post("/api/tokens", json={"name": "phone", "scopes": ["upload"]}, headers=CSRF).json()["token"]
+    token = mounted.post(
+        "/api/tokens", json={"name": "phone", "scopes": ["upload"]}, headers=CSRF
+    ).json()["token"]
     headers = {"Authorization": f"Bearer {token}"}
-    response = mounted.post("/api/upload?source=mobile&combine=true", files={"files": ("../../scan.jpg", b"synthetic", "image/jpeg")}, headers=headers)
+    response = mounted.post(
+        "/api/upload?source=mobile&combine=true",
+        files={"files": ("../../scan.jpg", b"synthetic", "image/jpeg")},
+        headers=headers,
+    )
     assert response.status_code == 202 and response.json()["document_id"] == "synthetic"
     assert calls[0][0] == b"synthetic" and calls[0][1].source.kind == "api"
     assert calls[0][1].source.original_filename == "scan.jpg" and calls[0][1].owner_id == 1
     assert calls[0][1].combine and not list(incoming.iterdir())
     assert mounted.get("/api/auth/me", headers=headers).status_code == 403
-    assert mounted.post("/api/upload?expected_owner_id=2", files={"files": ("a.pdf", b"x")}, headers=headers).status_code == 403
+    assert (
+        mounted.post(
+            "/api/upload?expected_owner_id=2", files={"files": ("a.pdf", b"x")}, headers=headers
+        ).status_code
+        == 403
+    )
     assert len(calls) == 1
     assert mounted.post("/api/upload", files={"files": ("a.pdf", b"x")}).status_code == 403
 
 
-def test_upload_rejection_limits_chunked_body_and_cleans_temporary_files(mounted, tmp_path, monkeypatch):
+def test_upload_rejection_limits_chunked_body_and_cleans_temporary_files(
+    mounted, tmp_path, monkeypatch
+):
     incoming = tmp_path / "incoming"
     incoming.mkdir()
     monkeypatch.setattr(ingest, "incoming_dir", lambda: incoming)
     monkeypatch.setenv("DOCUHIVE_MAX_UPLOAD_MB", "1")
     config.reload()
+
     def reject(files, req):
         raise ingest.UnsupportedType()
+
     monkeypatch.setattr(ingest, "submit", reject)
-    assert mounted.post("/api/upload", files={"files": ("a.txt", b"hi")}, headers=CSRF).status_code == 415
+    assert (
+        mounted.post("/api/upload", files={"files": ("a.txt", b"hi")}, headers=CSRF).status_code
+        == 415
+    )
     assert not list(incoming.iterdir())
-    too_big = mounted.post("/api/upload", files={"files": ("a.pdf", b"x" * (1024 * 1024 + 1))}, headers=CSRF)
+    too_big = mounted.post(
+        "/api/upload", files={"files": ("a.pdf", b"x" * (1024 * 1024 + 1))}, headers=CSRF
+    )
     assert too_big.status_code == 413
+
     def chunks():
-        yield b"--boundary\r\nContent-Disposition: form-data; name=\"files\"; filename=\"a.pdf\"\r\nContent-Type: application/pdf\r\n\r\n"
+        yield (
+            b"--boundary\r\n"
+            b'Content-Disposition: form-data; name="files"; filename="a.pdf"\r\n'
+            b"Content-Type: application/pdf\r\n\r\n"
+        )
         for _ in range(4):
             yield b"x" * 1024 * 1024
         yield b"\r\n--boundary--\r\n"
-    result = mounted.post("/api/upload", content=chunks(), headers={**CSRF, "Content-Type": "multipart/form-data; boundary=boundary"})
+
+    result = mounted.post(
+        "/api/upload",
+        content=chunks(),
+        headers={**CSRF, "Content-Type": "multipart/form-data; boundary=boundary"},
+    )
     assert result.status_code == 413
     assert not list(incoming.iterdir())
 
@@ -83,6 +115,7 @@ def test_scanner_stability_persistent_ledger_and_verified_release(mounted, tmp_p
     incoming.mkdir()
     monkeypatch.setattr(ingest, "incoming_dir", lambda: incoming)
     calls = []
+
     def submit(files, req):
         calls.append((files[0].read_bytes(), req))
         add("scanned", vault=mounted.vault)
@@ -91,6 +124,7 @@ def test_scanner_stability_persistent_ledger_and_verified_release(mounted, tmp_p
             session.get(Document, "scanned").status = "processing"
         files[0].unlink()
         return IngestResult(document_id="scanned", status="staged")
+
     monkeypatch.setattr(ingest, "submit", submit)
     ctx = SimpleNamespace(log=logging.getLogger("test"), heartbeat=lambda: None)
     consume.poll({}, ctx)  # initialise durable ledger
@@ -125,9 +159,11 @@ def test_scanner_ignore_rejection_and_outage_preserve_inputs(mounted, tmp_path, 
     incoming.mkdir()
     monkeypatch.setattr(ingest, "incoming_dir", lambda: incoming)
     calls = []
+
     def reject(files, req):
         calls.append(req)
         raise ingest.UnsupportedType()
+
     monkeypatch.setattr(ingest, "submit", reject)
     ctx = SimpleNamespace(log=logging.getLogger("test"), heartbeat=lambda: None)
     for _ in range(3):
@@ -145,13 +181,17 @@ def test_scanner_ignore_rejection_and_outage_preserve_inputs(mounted, tmp_path, 
 
 def test_library_hardlinks_collision_privacy_metadata_changes_and_no_copy(mounted, monkeypatch):
     for doc_id in ["a", "b"]:
-        add(doc_id, title='A / title:*?', shared=True, vault=mounted.vault)
+        add(doc_id, title="A / title:*?", shared=True, vault=mounted.vault)
     add("private", title="Private", owner=2, vault=mounted.vault)
     original = mounted.vault / "2026/a/archive.pdf"
     assert library.sync() == {"ok": True, "links": 3}
     links = sorted((mounted.vault / "library").rglob("*.pdf"))
     assert any("(2)" in p.name for p in links)
-    assert all(p.stat().st_ino == original.stat().st_ino for p in links if "(2)" not in p.name and "_private" not in str(p))
+    assert all(
+        p.stat().st_ino == original.stat().st_ino
+        for p in links
+        if "(2)" not in p.name and "_private" not in str(p)
+    )
     assert (mounted.vault / "library/_private").stat().st_mode & 0o777 == 0o700
     assert library.sync()["links"] == 3
     foreign = mounted.vault / "library/keep.txt"
@@ -164,8 +204,10 @@ def test_library_hardlinks_collision_privacy_metadata_changes_and_no_copy(mounte
     assert library.component("../../") == "untitled"
     with db.session() as session:
         session.get(Document, "a").title = "Another title"
+
     def denied(*args):
         raise OSError(errno.EXDEV, "no hardlinks")
+
     monkeypatch.setattr(library.os, "link", denied)
     assert library.sync()["reason"] == "hardlinks_unavailable"
     assert library.sync()["reason"] == "hardlinks_unavailable"
@@ -187,7 +229,17 @@ def test_library_refuses_symlink_escape_and_vault_mismatch(mounted, tmp_path):
 def test_backup_status_is_sanitised_stale_and_guides_the_user(mounted):
     path = mounted.vault / "_system/backup-status.json"
     now = datetime.now(UTC)
-    path.write_text(json.dumps({"at": now.isoformat(), "ok": True, "last_success": now.isoformat(), "targets": [{"ok": True, "url": "secret"}], "error": "secret"}))
+    path.write_text(
+        json.dumps(
+            {
+                "at": now.isoformat(),
+                "ok": True,
+                "last_success": now.isoformat(),
+                "targets": [{"ok": True, "url": "secret"}],
+                "error": "secret",
+            }
+        )
+    )
     response = mounted.get("/api/system/backup")
     assert response.json()["targets_ok"] == 1 and response.json()["stale"] is False
     assert "secret" not in response.text

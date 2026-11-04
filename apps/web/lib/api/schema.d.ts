@@ -1342,6 +1342,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Documents */
+        get: operations["list_documents_api_documents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pending
+         * @description The owner's documents still being read, and those in quarantine.
+         */
+        get: operations["pending_api_documents_pending_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/trash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trash */
+        get: operations["trash_api_documents_trash_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Edit */
+        post: operations["bulk_edit_api_documents_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Document */
+        get: operations["get_document_api_documents__doc_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit Document */
+        patch: operations["edit_document_api_documents__doc_id__patch"];
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get File */
+        get: operations["get_file_api_documents__doc_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Thumbnail */
+        get: operations["get_thumbnail_api_documents__doc_id__thumbnail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_api_documents__doc_id__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/trash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trash Document */
+        post: operations["trash_document_api_documents__doc_id__trash_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore Document */
+        post: operations["restore_document_api_documents__doc_id__restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Document */
+        post: operations["retry_document_api_documents__doc_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/upload": {
         parameters: {
             query?: never;
@@ -1402,6 +1593,13 @@ export interface components {
             /** Route */
             route?: string | null;
         };
+        /** ApplyResult */
+        ApplyResult: {
+            /** Applied */
+            applied: string[];
+            /** Skipped Manual */
+            skipped_manual: string[];
+        };
         /** BackfillIn */
         BackfillIn: {
             /**
@@ -1436,6 +1634,19 @@ export interface components {
              * @default true
              */
             stale: boolean;
+        };
+        /** BulkEdit */
+        BulkEdit: {
+            /** Ids */
+            ids: string[];
+            patch: components["schemas"]["DocumentEdit"];
+        };
+        /** BulkResult */
+        BulkResult: {
+            /** Updated */
+            updated: number;
+            /** Skipped */
+            skipped: string[];
         };
         /** Category */
         Category: {
@@ -1560,6 +1771,97 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * DocStatus
+         * @enum {string}
+         */
+        DocStatus: "staged" | "processing" | "stored" | "quarantined";
+        /** DocumentDetail */
+        DocumentDetail: {
+            /** Id */
+            id: string;
+            /** Owner Id */
+            owner_id: number;
+            /** Shared */
+            shared: boolean;
+            status: components["schemas"]["DocStatus"];
+            /** Mime */
+            mime: string;
+            /** Pages */
+            pages: number | null;
+            /**
+             * Added At
+             * Format: date-time
+             */
+            added_at: string;
+            /** Title */
+            title: string | null;
+            /** Document Date */
+            document_date: string | null;
+            /** Language */
+            language: string | null;
+            /** Category */
+            category: string | null;
+            /** Document Type */
+            document_type: string | null;
+            /** Correspondent */
+            correspondent: string | null;
+            /** Tags */
+            tags: string[];
+            /** Facts */
+            facts: {
+                [key: string]: components["schemas"]["FactValue"];
+            };
+            /** Manual Fields */
+            manual_fields: string[];
+            source: components["schemas"]["SourceInfo"];
+            /** Deleted At */
+            deleted_at: string | null;
+            /** Quarantine Reason */
+            quarantine_reason: string | null;
+            /** Provenance */
+            provenance: {
+                [key: string]: unknown;
+            };
+            /** Files */
+            files: ("original" | "archive" | "thumb")[];
+        };
+        /** DocumentEdit */
+        DocumentEdit: {
+            /** Title */
+            title?: string | null;
+            /** Document Date */
+            document_date?: string | null;
+            /** Language */
+            language?: string | null;
+            /** Category */
+            category?: string | null;
+            /** Document Type */
+            document_type?: string | null;
+            /** Correspondent */
+            correspondent?: string | null;
+            /**
+             * Tags Add
+             * @default []
+             */
+            tags_add: string[];
+            /**
+             * Tags Remove
+             * @default []
+             */
+            tags_remove: string[];
+            /** Facts */
+            facts?: {
+                [key: string]: components["schemas"]["FactValue"] | null;
+            } | null;
+            /**
+             * Unlock Fields
+             * @default []
+             */
+            unlock_fields: string[];
+            /** Shared */
+            shared?: boolean | null;
+        };
         /** DocumentPage */
         DocumentPage: {
             /** Items */
@@ -1643,6 +1945,11 @@ export interface components {
              */
             created_at: string;
         };
+        /** EditResult */
+        EditResult: {
+            document: components["schemas"]["DocumentDetail"];
+            result: components["schemas"]["ApplyResult"];
+        };
         /** ExportRequest */
         ExportRequest: {
             filters?: components["schemas"]["SearchFilters"];
@@ -1676,10 +1983,44 @@ export interface components {
              */
             remind_days_before: number[];
         };
+        /** FactValue */
+        FactValue: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "money" | "date" | "string" | "number" | "iban";
+            /** Value */
+            value: string;
+            /** Currency */
+            currency?: string | null;
+            /** Confidence */
+            confidence?: number | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** HistoryEntry */
+        HistoryEntry: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Actor */
+            actor: string;
+            /** Action */
+            action: string;
+            /** Before */
+            before: {
+                [key: string]: unknown;
+            } | null;
+            /** After */
+            after: {
+                [key: string]: unknown;
+            } | null;
         };
         /** ImapIn */
         ImapIn: {
@@ -1848,6 +2189,22 @@ export interface components {
             current_password: string;
             /** New Password */
             new_password: string;
+        };
+        /** PendingDocument */
+        PendingDocument: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string | null;
+            /** Status */
+            status: string;
+            /** Quarantine Reason */
+            quarantine_reason: string | null;
+            /**
+             * Added At
+             * Format: date-time
+             */
+            added_at: string;
         };
         /** Reclassify */
         Reclassify: {
@@ -2030,6 +2387,22 @@ export interface components {
              * @default false
              */
             required: boolean;
+        };
+        /** SourceInfo */
+        SourceInfo: {
+            kind: components["schemas"]["SourceKind"];
+            /** Original Filename */
+            original_filename: string;
+            /** Account Id */
+            account_id?: number | null;
+            /** Message Id */
+            message_id?: string | null;
+            /** Email From */
+            email_from?: string | null;
+            /** Subject */
+            subject?: string | null;
+            /** Received At */
+            received_at?: string | null;
         };
         /**
          * SourceKind
@@ -5117,6 +5490,369 @@ export interface operations {
             };
         };
     };
+    list_documents_api_documents_get: {
+        parameters: {
+            query?: {
+                category?: string[];
+                document_type?: string[];
+                correspondent?: string[];
+                tag?: string[];
+                source?: components["schemas"]["SourceKind"][];
+                date_from?: string | null;
+                date_to?: string | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pending_api_documents_pending_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingDocument"][];
+                };
+            };
+        };
+    };
+    trash_api_documents_trash_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentRow"][];
+                };
+            };
+        };
+    };
+    bulk_edit_api_documents_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_document_api_documents__doc_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_document_api_documents__doc_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentEdit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EditResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_file_api_documents__doc_id__file_get: {
+        parameters: {
+            query?: {
+                kind?: "original" | "archive" | "thumb";
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_thumbnail_api_documents__doc_id__thumbnail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_api_documents__doc_id__history_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryEntry"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trash_document_api_documents__doc_id__trash_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_document_api_documents__doc_id__restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_document_api_documents__doc_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     upload_api_upload_post: {
         parameters: {
             query?: {
@@ -5124,6 +5860,8 @@ export interface operations {
                 source?: "upload" | "mobile" | "api";
                 shared?: boolean;
                 expected_owner_id?: number | null;
+                category?: string | null;
+                tags?: string[];
             };
             header?: never;
             path?: never;

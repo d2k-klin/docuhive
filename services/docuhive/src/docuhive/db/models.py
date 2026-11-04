@@ -77,6 +77,7 @@ class Document(CoreBase):
     content_tsv: Mapped[Any | None] = mapped_column(TSVECTOR)
     manual_fields: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
     quarantine_reason: Mapped[str | None] = mapped_column(Text)
+    ai_provenance: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'"))
     added_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
@@ -293,4 +294,5 @@ Index(
 )
 Index("documents_owner", Document.owner_id, Document.deleted_at)
 Index("documents_date", Document.document_date)
+Index("documents_status", Document.status)
 Index("doc_facts_field", DocFact.field, DocFact.value_date)

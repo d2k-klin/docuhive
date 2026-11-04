@@ -12,9 +12,12 @@ from .fakes.core import install_fake_core
 
 
 @pytest.fixture(autouse=True)
-def reset_core_settings(monkeypatch):
+def reset_core_settings(monkeypatch, tmp_path):
     monkeypatch.setenv("DOCUHIVE_ENV", "test")
     monkeypatch.setenv("DOCUHIVE_AUTH_DISABLED", "false")
+    # Never the repository's data/ folder: every test gets its own vault and staging.
+    monkeypatch.setenv("DOCUHIVE_VAULT_DIR", str(tmp_path / "vault"))
+    monkeypatch.setenv("DOCUHIVE_STAGING_DIR", str(tmp_path / "staging"))
     config.reload()
     yield
     config.reload()

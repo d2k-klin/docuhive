@@ -24,6 +24,7 @@ from docuhive.db.models import (
     DuplicatePair,
     Job,
     KnowledgeBase,
+    Note,
     SavedView,
     Setting,
     Tag,
@@ -56,6 +57,7 @@ def tools(client, monkeypatch, tmp_path):
         CustomField.__table__,
         SavedView.__table__,
         DuplicatePair.__table__,
+        Note.__table__,
     ]
     originals = [(c, c.type, c.server_default) for t in tables for c in t.columns]
     try:

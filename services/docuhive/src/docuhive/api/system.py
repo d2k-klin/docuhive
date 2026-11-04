@@ -148,7 +148,8 @@ def setup_status(user: Annotated[CurrentUser, Depends(current_user)]) -> list[Se
             status="ok" if backup.ok and not backup.stale else "warn",
             message="Your latest backup completed."
             if backup.ok and not backup.stale
-            else "A recent successful backup could not be confirmed. Check the backup timer and run a backup.",
+            else "A recent successful backup could not be confirmed. "
+            "Check the backup timer and run a backup.",
             action_label="Check backups",
             action_href="/settings/storage",
             help_doc="docs/setup/operations.md",

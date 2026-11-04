@@ -30,6 +30,9 @@ def main() -> None:
         ).fetchone():
             connection.execute("CREATE DATABASE docuhive_contract_test")
     migrate("upgrade")
+    from docuhive import vault
+
+    vault.init()  # the isolated e2e volume; refuses any folder that is not empty and not a vault
     for name, admin in (("alice", True), ("bob", False)):
         with session() as db:
             exists = db.scalar(select(User.id).where(User.username == name))

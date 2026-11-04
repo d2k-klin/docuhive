@@ -16,25 +16,25 @@ States:
 | Email backfill | Built | Imports a chosen date range of old mail, resumable and without duplicates. |
 | Email filters and triage | Built | Skips newsletters and unwanted senders per account, then lets the AI decide which attachments are real documents. |
 | Mail stays untouched | Built | Never deletes or moves your mail; adding an "imported" label is optional. |
-| Web upload | Planned | Upload one or more files from the browser, with category and tags set at upload time. |
-| Phone capture | Planned | An installable web app that takes photos, lets you reorder the pages and uploads them as one document. |
-| Scanner folder | Planned | Picks up files from a NAS folder by polling, because network mounts don't support change notifications. |
-| API upload | Planned | Personal API tokens let scripts and iOS Shortcuts upload documents. |
+| Web upload | Built | Upload one or more files, with category and tags set at upload time; the API works, the browser screen comes with the document screens. |
+| Phone capture | Built | An installable web app that takes photos, lets you reorder the pages and uploads them as one document. |
+| Scanner folder | Built | Picks up files from a NAS folder by polling, because network mounts don't support change notifications. |
+| API upload | Works | Personal API tokens let scripts and iOS Shortcuts upload documents. |
 
 ## Reading and storing
 
 | Feature | State | What it does |
 | --- | --- | --- |
-| OCR | Built | Turns scans and photos into searchable PDFs in your languages (German and English by default), straightening and rotating pages. |
-| Format conversion | Built | Converts images (including HEIC), Office files, HTML, emails and plain text to PDF. |
-| PDF/A archive copy | Built | Keeps a PDF/A copy for long-term storage next to the unchanged original. |
-| Quarantine | Built | Keeps corrupt, encrypted or unsupported files with a reason, so they can be retried instead of being lost. |
-| Vault on your storage | Planned | Stores each document as a plain folder (original, archive PDF, metadata file) on your NAS or disk, readable without DocuHive. |
-| Duplicate detection | Planned | Recognises a file you already have and reports it instead of importing it again. |
+| OCR | Works | Turns scans and photos into searchable PDFs in your languages (German and English by default), straightening and rotating pages. |
+| Format conversion | Works | Converts images (including HEIC), Office files, HTML, emails and plain text to PDF. |
+| PDF/A archive copy | Works | Keeps a PDF/A copy for long-term storage next to the unchanged original. |
+| Quarantine | Works | Keeps corrupt, encrypted or unsupported files with a reason, so they can be retried instead of being lost. |
+| Vault on your storage | Works | Stores each document as a plain folder (original, archive PDF, metadata file) on your NAS or disk, readable without DocuHive. |
+| Duplicate detection | Works | Recognises a file you already have and reports it instead of importing it again. |
 | Near-duplicate detection | Built | Flags the same document arriving twice in different forms, such as an email PDF and a paper scan, by comparing sender, amounts, dates and meaning. |
 | Rebuildable index | Planned | Rebuilds the database from the vault's metadata files alone. |
 | Vault health check | Built | A weekly, read-only check that every document's files exist, match their checksums and agree with the database, and that no folder is orphaned. |
-| Library view | Planned | An optional, read-only folder tree sorted by category, year, date and title. |
+| Library view | Built | An optional, read-only folder tree sorted by category, year, date and title. |
 | Parallel processing | Works | A job queue lets several workers process documents at once and recovers jobs from a crashed worker. |
 
 ## Sorting
@@ -45,10 +45,10 @@ States:
 | Fact extraction | Built | Pulls out amounts, due dates, contract terms and policy numbers, and validates them (dates, currencies, IBAN checksums). |
 | Review queue | Built | Asks you about low-confidence results and proposed new tags instead of guessing. |
 | Custom fields | Built | Lets you define your own typed fields (such as a licence plate) that the AI fills in like the built-in details, with optional reminders for dates. |
-| Provenance and locks | Planned | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
+| Provenance and locks | Built | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
 | Bulk edit with undo | Planned | Edits many documents at once, records every change and lets you undo it. |
 | Vocabulary management | Planned | Manages senders, tags, types and categories, including merging duplicates. |
-| Trash | Planned | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
+| Trash | Built | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
 
 ## Finding and asking
 
@@ -63,7 +63,7 @@ States:
 | Knowledge bases | Works | Named, shareable scopes of documents (categories, senders, dates, tags) for chat and other agents. |
 | Saved views | Built | Pins a saved filter, such as "Unpaid invoices" or "Car", to the sidebar and lists the documents it matches. |
 | Filtered export | Built | Exports the documents behind a saved view, knowledge base or filter as one ZIP with their PDFs and a CSV of their details. |
-| Document list and filters | Planned | Browses all documents with filters, sorting and pagination. |
+| Document list and filters | Built | Browses all documents with filters, sorting and pagination. |
 | Agent access (MCP) | Planned | Lets other AI agents search and ask your knowledge bases, with the same permissions. |
 
 ## Reminders and notifications
