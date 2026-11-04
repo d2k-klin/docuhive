@@ -56,6 +56,8 @@ Progress (2026-11-04): production Compose and standalone web image, NAS/HTTPS gu
 
 The security checklist ticked item by item (sessions, CSRF, headers and CSP, upload limits, isolated converters, secret handling, log redaction). Performance targets measured: a 1–5 page document ingested in under 60 s, search under 500 ms at 20,000 documents.
 
+Progress (2026-11-04): word search at 20,000 synthetic documents (`make perf-search`, development Mac, PostgreSQL 16 in Docker): median 174 ms, p95 206 ms, max 292 ms. Still to measure on the target host, and with the meaning-based half once an embedding model runs there.
+
 ### 6. Real-world verification and 1.0
 
 Real provider and mailbox runs, a golden evaluation set and the auto-apply gate, the end-to-end journeys, the restore drill on the target hardware, then the QA release gate. On GO: version 1.0.0, and the README badge and status section say so.
