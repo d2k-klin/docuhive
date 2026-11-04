@@ -69,6 +69,8 @@ The consumer never blocks: it builds against the fallback and switches over when
 | **I8** | CL → OA | `search.register_semantic(...)` implementation | Hybrid search runs FTS-only |
 | **I9** | CL → OA | Web components for the slots (dashboard widgets, document AI panel, similar docs) | Placeholder components that return `null` (created by OA, owned by CL) |
 
+Knowledge bases add **I10–I13** and milestones KB-M1…KB-M7; see [knowledge-bases.md](knowledge-bases.md).
+
 ## Milestone dependency graph
 
 ```

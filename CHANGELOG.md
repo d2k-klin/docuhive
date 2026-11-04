@@ -12,6 +12,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- Decision 0002 and an implementation plan for Bedrock-style knowledge bases inside DocuHive (retrieve and ask APIs, MCP server, retrieval evals), with requirements KB-01…KB-08.
 - `make ocr-smoke` and a workflow that run real OCR inside the worker image, because unit tests mock ocrmypdf.
 
 ### Fixed
