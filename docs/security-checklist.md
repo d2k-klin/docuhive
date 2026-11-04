@@ -7,7 +7,7 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
 - [x] **Secrets.**
   - gitleaks runs in pre-commit and in CI.
   - The production `.env.production` is mode 600 ([operations guide](setup/operations.md)).
-  - Every log handler (worker, API and uvicorn's own) masks values after `password`, `token`, `secret`, `authorization`, `api_key`, `session` and `cookie` keys (`docuhive.cli.Redact`, tested in `test_cli.py`). Tracebacks are not scrubbed.
+  - Every log handler (worker, API, uvicorn's own and the root handler of `--reload` children) masks the whole value after `password`, `token`, `secret`, `authorization`, `api_key`, `session` and `cookie` keys: quoted strings with spaces or escapes, any `Authorization` scheme, query parameters. Access-log lines keep their structure (`docuhive.cli.Redact`, tested in `test_cli.py`). Tracebacks are not scrubbed.
 - [x] **Uploads.**
   - The file type is detected from its content (magic bytes), not its name (`ingest/detect.py`).
   - The size limit is enforced while the upload streams in (`UploadLimitMiddleware`, `api/upload.py`).
@@ -26,7 +26,7 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
   | `.eml` with a remote-image beacon | stored, no remote URL in the archive |
   | HTML with `<script>`/`<iframe>` | stored, no script or remote URL in the archive |
 
-  The worker never crashes.
+  "No JavaScript" and "no remote URL" are checked on the decoded PDF objects, object streams included (scripts, actions, `/URI`, launch and embedded files), not by searching raw bytes; a compressed active PDF proves the check sees through compression. The worker never crashes.
 - [x] **Web headers.** [next.config.ts](../apps/web/next.config.ts) sets the CSP (`default-src 'self'; frame-src 'self'; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`), `nosniff`, `Referrer-Policy: same-origin` and `Permissions-Policy: camera=(self)`. The file route alone allows framing by DocuHive's own pages, for the PDF preview. Known limit: `script-src` allows `'unsafe-inline'`, because Next.js needs nonces to remove it.
 - [x] **Downloads.**
   - Starlette's `FileResponse` writes an RFC 5987 `filename*`.
@@ -40,7 +40,7 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
 - [x] **Containers.** All are non-root with read-only root filesystems (writable volumes and tmpfs where needed), use `no-new-privileges`, and drop all Linux capabilities. There are no Docker socket mounts. PostgreSQL and Gotenberg are on an internal-only network.
 - [x] **Permission matrix.** `tests/core/test_permission_matrix_integration.py` walks every route in the OpenAPI schema:
   - Without a session, everything answers 401. The only exceptions are login, the health check and the token-authenticated calendar feed.
-  - Every document route refuses another user, administrators included, on a private document.
+  - Every document route refuses another user, administrators included, on a private document that has real files in the vault; the owner gets 200 on every read route first, so a refusal cannot be a "file missing" 404.
 
   CL's privacy tests (`tests/intel/test_privacy_audit.py`) pass.
 - [x] **Network.** Only the web app publishes a port, on `127.0.0.1:3000`. The operations guide shows how to check this with `ss -tlnp`.

@@ -1,16 +1,20 @@
 """NFR-04 ingest time: submit synthetic scanned PDFs (image only, so every page needs OCR) and
 time each until it is stored, through a real worker process.
 
-    DOCUHIVE_DATABASE_URL=postgresql+psycopg://…/docuhive_test DOCUHIVE_VAULT_DIR=… \
+    DOCUHIVE_DATABASE_URL=postgresql+psycopg://…/docuhive_test \
       uv run python deploy/scripts/perf_ingest.py --pages 1 5 --rounds 3
 
-Synthetic data only; refuses any database whose name does not end in `_test`.
+Bootstraps itself like the integration tests: migrates and EMPTIES the `_test` database, and
+uses a fresh temporary vault and staging folder. Synthetic data only; refuses any database
+whose name does not end in `_test`.
 """
 
 import argparse
+import os
 import statistics
 import subprocess
 import sys
+import tempfile
 import time
 
 from PIL import Image, ImageDraw, ImageFont
@@ -58,15 +62,29 @@ def run(owner: int, pages: int) -> float:
     while True:
         with db.session() as session:
             doc = session.get(Document, result.document_id)
-            status = doc.status if doc else "missing"
+            status, reason = (doc.status, doc.quarantine_reason) if doc else ("missing", None)
         if status in {"stored", "quarantined"}:
             break
         if time.perf_counter() - started > 600:
             raise SystemExit(f"{pages} pages: still {status} after 600 s")
         time.sleep(0.2)
     if status != "stored":
-        raise SystemExit(f"{pages} pages: quarantined ({doc.quarantine_reason})")
+        raise SystemExit(f"{pages} pages: quarantined ({reason})")
     return time.perf_counter() - started
+
+
+def bootstrap() -> None:
+    """Same steps as the integration fixture: migrate, empty the core tables, bind the vault."""
+    from docuhive import db, vault
+    from docuhive.db import CoreBase, models  # noqa: F401
+    from docuhive.db.migrations import migrate
+    from sqlalchemy import text
+
+    migrate("upgrade")
+    names = ", ".join(f'"{table}"' for table in CoreBase.metadata.tables)
+    with db.session() as session:
+        session.execute(text(f"TRUNCATE {names} RESTART IDENTITY CASCADE"))
+    vault.init()
 
 
 def main() -> None:
@@ -74,11 +92,16 @@ def main() -> None:
     parser.add_argument("--pages", type=int, nargs="+", default=[1, 5])
     parser.add_argument("--rounds", type=int, default=3)
     args = parser.parse_args()
+    root = tempfile.mkdtemp(prefix="docuhive-perf-")
+    os.environ["DOCUHIVE_VAULT_DIR"] = os.path.join(root, "vault")
+    os.environ["DOCUHIVE_STAGING_DIR"] = os.path.join(root, "staging")
+    os.makedirs(os.environ["DOCUHIVE_VAULT_DIR"])
     from docuhive.auth import create_user
     from docuhive.config.settings import get_settings
 
     if not (make_url(get_settings().database_url).database or "").endswith("_test"):
         raise SystemExit("Refusing: the database name must end in _test")
+    bootstrap()
     owner = create_user(f"perf-{time.time_ns()}", "synthetic perf password 2026")
     worker = subprocess.Popen(
         [

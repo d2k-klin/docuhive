@@ -13,6 +13,7 @@ import pytest
 from docuhive.api.app import create_app
 from docuhive.auth import create_user
 from docuhive.auth.rate_limit import LoginLimiter
+from docuhive.config.settings import get_settings
 from docuhive.db import session
 from fastapi.testclient import TestClient
 from sqlalchemy import text
@@ -38,11 +39,16 @@ def client(postgres, monkeypatch):
         db.execute(
             text(
                 "INSERT INTO documents (id, owner_id, shared, status, sha256, mime, title, "
-                "manual_fields, fts_config) VALUES (:id, :owner, false, 'stored', :sha, "
-                "'application/pdf', 'Synthetic private letter', '{}', 'dh_simple')"
+                "manual_fields, fts_config, vault_path) VALUES (:id, :owner, false, 'stored', "
+                ":sha, 'application/pdf', 'Synthetic private letter', '{}', 'dh_simple', :path)"
             ),
-            {"id": DOC, "owner": owner, "sha": "0" * 64},
+            {"id": DOC, "owner": owner, "sha": "0" * 64, "path": f"2026/{DOC}"},
         )
+    # Real files, so a refusal can never be a "file missing" 404 in disguise.
+    folder = get_settings().vault_dir / "2026" / DOC
+    folder.mkdir(parents=True)
+    for name in ("original.pdf", "archive.pdf", "thumb.webp"):
+        (folder / name).write_bytes(b"%PDF-1.4 synthetic")
     with TestClient(create_app(), base_url="https://testserver") as client:
         yield client
 
@@ -91,13 +97,21 @@ def test_document_routes_refuse_everyone_but_the_owner(client):
         if "{doc_id}" in path or "{document_id}" in path
     ]
     assert len(routes) >= 10
-    sign_in("intruder")
-    leaks = [
-        (method, path, response.status_code)
-        for method, path in routes
-        if (response := call(client, method, path)).status_code < 400
-        or response.status_code in {401, 500}
-    ]
-    assert leaks == []
     sign_in("owner")
-    assert client.get(f"/api/documents/{DOC}").status_code == 200
+    reads = [path for method, path in routes if method == "get" and "similar" not in path]
+    for kind in ("original", "archive", "thumb"):
+        assert client.get(f"/api/documents/{DOC}/file?kind={kind}").status_code == 200
+    assert [(p, call(client, "get", p).status_code) for p in reads] == [(p, 200) for p in reads]
+
+    sign_in("intruder")
+    leaks = []
+    for method, path in routes:
+        response = call(client, method, path)
+        code = response.json().get("error", {}).get("code") if response.content else None
+        if response.status_code not in {403, 404} or code == "document_file_missing":
+            leaks.append((method, path, response.status_code, code))
+    for kind in ("original", "archive", "thumb"):
+        response = client.get(f"/api/documents/{DOC}/file?kind={kind}")
+        if response.status_code != 404 or response.json()["error"]["code"] != "document_not_found":
+            leaks.append(("get", f"file?kind={kind}", response.status_code, response.text[:80]))
+    assert leaks == [], "\n".join(map(str, leaks))

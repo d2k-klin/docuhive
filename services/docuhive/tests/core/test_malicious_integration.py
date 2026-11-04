@@ -105,6 +105,36 @@ def html_with_script() -> bytes:
     )
 
 
+ACTIVE_KEYS = {"/JS", "/JavaScript", "/OpenAction", "/AA", "/URI", "/Launch", "/EmbeddedFiles"}
+ACTIVE_ACTIONS = {"/JavaScript", "/Launch", "/URI", "/SubmitForm", "/ImportData", "/GoToR"}
+
+
+def active_content(data: bytes) -> list[str]:
+    """Every action, script or remote link in the decoded objects, object streams included."""
+    found = []
+    with pikepdf.open(BytesIO(data)) as pdf:
+        for obj in pdf.objects:
+            if not isinstance(obj, (pikepdf.Dictionary, pikepdf.Stream)):
+                continue
+            keys = set(obj.keys())
+            found += sorted(keys & ACTIVE_KEYS)
+            if str(obj.get("/S", "")) in ACTIVE_ACTIONS:
+                found.append(str(obj["/S"]))
+    return found
+
+
+def test_inertness_check_sees_actions_inside_compressed_object_streams():
+    stream = BytesIO()
+    with pikepdf.open(BytesIO(pdf_with_javascript())) as pdf:
+        pdf.save(
+            stream, object_stream_mode=pikepdf.ObjectStreamMode.generate, compress_streams=True
+        )
+    data = stream.getvalue()
+    assert b"/JavaScript" not in data  # hidden from a raw byte search
+    assert "/OpenAction" in active_content(data)
+    assert "/JavaScript" in active_content(data)
+
+
 CORPUS = {
     "bomb.docx": zip_bomb_docx,
     "script.pdf": pdf_with_javascript,
@@ -128,5 +158,4 @@ def test_hostile_file_is_quarantined_or_stored_inert(owner, name):  # noqa: F811
     assert status in {"stored", "quarantined"}, (status, reason)
     if status == "stored":
         archive = (next(vault.root().glob(f"*/{doc_id}")) / "archive.pdf").read_bytes()
-        assert b"/JavaScript" not in archive and b"/JS " not in archive and b"/JS(" not in archive
-        assert b"example.invalid" not in archive
+        assert active_content(archive) == []

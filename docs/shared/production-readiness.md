@@ -1,6 +1,6 @@
 # Production readiness: plan
 
-**Overview.** What stands between DocuHive 0.2.0 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The status badge changes when the [release gate](../Developer-QA/README.md) says GO, not before: a document manager that cannot yet store a document is not production software, whatever the label says.
+**Overview.** What stands between DocuHive 0.3.0 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The status badge changes when the [release gate](../Developer-QA/README.md) says GO, not before: software that has never held a real household's documents on its target hardware is not production software, whatever the label says.
 
 ## Where it stands (2026-11-04)
 
@@ -10,10 +10,11 @@
 | Search, knowledge bases, archive tools (0.2.0) | Done; tested only with synthetic data |
 | AI layer, classification, review, mail, Ask, reminders | Built against test doubles; never run with a real provider or mailbox |
 | Document intake, vault writes, document service and API | Built in phase 1, including rebuilding the database from the vault; tested with synthetic files on PostgreSQL, Tesseract and Gotenberg |
-| Document screens: list, detail, search, upload, quarantine, vocabulary, setup wizard | Not built (QA-002) |
+| Document screens: list, detail, search, upload, quarantine, trash, vocabulary, account, setup checklist, AI run page (0.3.0) | Built and checked in the browser against the real API, worker and OCR with synthetic files; undo, notes and a compact phone menu still open |
 | Phone capture and scanner folder | Implemented; production browser and real PostgreSQL checks pass, and the scanner folder runs against the real document core. Real-phone and NAS acceptance pending |
 | Production deployment, backups, restore drills | Implemented and exercised on a disposable local stack; target NAS/host drills and three nightly backups pending |
-| Security checklist, performance targets, release gate | Not done; the QA release gate is NO-GO |
+| Security checklist, performance targets (0.3.0) | Checklist ticked with evidence; ingest and search well under target on the development Mac. Open: OWASP ZAP scan, both timings on the target host |
+| Release gate | NO-GO until phase 6 |
 
 ## Decisions only the owner can make
 

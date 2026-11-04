@@ -45,7 +45,7 @@ States:
 | Fact extraction | Built | Pulls out amounts, due dates, contract terms and policy numbers, and validates them (dates, currencies, IBAN checksums). |
 | Review queue | Built | Asks you about low-confidence results and proposed new tags instead of guessing. |
 | Custom fields | Built | Lets you define your own typed fields (such as a licence plate) that the AI fills in like the built-in details, with optional reminders for dates. |
-| Provenance and locks | Works | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
+| Provenance and locks | Works | Shows whether a person or the AI set each field, with the AI's confidence where it has one, keeps AI from overwriting what a person set, and lets you clear a field or hand it back to the AI. |
 | Bulk edit with undo | Built | Edits many documents at once and records every change; undo is not built yet. |
 | Vocabulary management | Works | Renames and merges senders and tags; saved views and knowledge bases follow, and private names stay private. |
 | Trash | Works | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
@@ -80,9 +80,9 @@ States:
 | --- | --- | --- |
 | Your choice of AI | Built | Runs each AI task locally (Ollama) or with a cloud provider, with fallbacks and budgets. |
 | Privacy routing | Built | Keeps health and identity documents on local models only. |
-| AI audit trail | Built | Records the model, prompt version, tokens and cost of every AI call. |
+| AI audit trail | Built | Records the model, prompt version, tokens and cost of every AI call; each AI-set value links to a "How was this made?" page with the prompt, output and retries. |
 | User accounts | Works | Local accounts with hashed passwords and secure sessions. |
-| Household sharing | Works | Each document has an owner and can be shared with the household, enforced inside every database query. |
+| Household sharing | Works | Each document has an owner and can be shared with the household, enforced inside every database query; shared readers see it read-only. |
 | Scoped API tokens | Works | Personal tokens limited to reading or asking knowledge bases, with an explicit flag for local-only consumers. |
 
 ## Operations
@@ -91,6 +91,7 @@ States:
 | --- | --- | --- |
 | Production containers | Built | Runs isolated internal services and a loopback web entry point with pinned images, non-root users and read-only roots. |
 | Nightly backups | Built | Pauses writers, dumps the database, backs up the vault and staging with restic, and reports failures or stale backups. |
+| Security hardening | Works | Secrets are masked in every log line, hostile files are refused, quarantined or stored inert, and a test checks every API route for missing sign-in and cross-user access. See the [security checklist](security-checklist.md). |
 | Recovery and upgrades | Built | Provides recovery drills, snapshot comparison and an upgrade helper with a backup and migration boundary; target-host acceptance is pending. |
 
 ## Not planned for the first version
