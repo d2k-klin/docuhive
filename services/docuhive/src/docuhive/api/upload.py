@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.datastructures import UploadFile
-from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from docuhive import ingest
 from docuhive.auth import scope
@@ -24,7 +24,7 @@ class UploadLimitMiddleware:
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         total = 0
 
-        async def bounded_receive() -> dict:
+        async def bounded_receive() -> Message:
             nonlocal total
             message = await receive()
             total += len(message.get("body", b""))

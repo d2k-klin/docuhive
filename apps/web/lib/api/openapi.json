@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "DocuHive",
-    "version": "0.2.0"
+    "version": "0.1.0"
   },
   "paths": {
     "/api/system/health": {
@@ -265,6 +265,52 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/backup": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Backup Report",
+        "operationId": "backup_report_api_system_backup_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/setup-status": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Setup Status",
+        "operationId": "setup_status_api_system_setup_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SetupCheck"
+                  },
+                  "type": "array",
+                  "title": "Response Setup Status Api System Setup Status Get"
                 }
               }
             }
@@ -4099,6 +4145,90 @@
           }
         }
       }
+    },
+    "/api/upload": {
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Upload",
+        "operationId": "upload_api_upload_post",
+        "parameters": [
+          {
+            "name": "combine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Combine"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "upload",
+                "mobile",
+                "api"
+              ],
+              "type": "string",
+              "default": "upload",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Shared"
+            }
+          },
+          {
+            "name": "expected_owner_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expected Owner Id"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IngestResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4237,6 +4367,51 @@
           "date_to"
         ],
         "title": "BackfillIn"
+      },
+      "BackupStatus": {
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": false
+          },
+          "last_success": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success"
+          },
+          "targets_ok": {
+            "type": "integer",
+            "title": "Targets Ok",
+            "default": 0
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "BackupStatus"
       },
       "Category": {
         "properties": {
@@ -4954,6 +5129,28 @@
           "password"
         ],
         "title": "ImapIn"
+      },
+      "IngestResult": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "title": "Document Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "staged",
+              "duplicate"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "status"
+        ],
+        "title": "IngestResult"
       },
       "KnowledgeBaseInput": {
         "properties": {

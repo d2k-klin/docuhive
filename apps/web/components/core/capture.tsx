@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Camera, FileUp, RotateCw, Trash2, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,12 @@ export function Capture() {
   }, [accepted, refresh]);
 
   useEffect(() => {
-    const saved = Number(localStorage.getItem("capture-owner"));
-    if (saved) setOwner(saved);
-    setOnline(navigator.onLine);
+    void entries().then(items => {
+      setQueued(items);
+      const saved = Number(localStorage.getItem("capture-owner"));
+      if (saved) setOwner(current => current ?? saved);
+      setOnline(navigator.onLine);
+    }).catch(() => setError("This browser cannot save captures. Keep your original files and enable site storage."));
     void fetch("/api/auth/me", { cache: "no-store" }).then(async response => {
       if (!response.ok) { setError("Sign in to send your captures. Queued files stay on this device."); setOwner(null); return; }
       const user = await response.json();
@@ -55,7 +59,6 @@ export function Capture() {
       setOwner(user.id);
       void send();
     }).catch(() => {});
-    void refresh().catch(() => setError("This browser cannot save captures. Keep your original files and enable site storage."));
     if ("serviceWorker" in navigator && window.isSecureContext) {
       void navigator.serviceWorker.register("/sw.js", { type: "module", updateViaCache: "none" })
         .catch(() => setError("Offline reopening is unavailable. Keep this page open until your upload finishes."));
@@ -149,7 +152,7 @@ export function Capture() {
       <ol className="space-y-3" aria-label="Pages in upload order">
         {pages.map((item, index) => <li key={item.id} draggable={!busy} onDragStart={() => { drag.current = index; }} onDragOver={event => event.preventDefault()} onDrop={() => { if (drag.current !== null) setPages(old => reorder(old, drag.current!, index)); drag.current = null; }} className="space-y-3 rounded-card border border-border bg-surface p-4">
           <div className="flex items-center gap-3">
-            {item.preview && /* User-selected blob URLs need no image optimisation. */ <img src={item.preview} alt={`Page ${index + 1} preview`} className="h-24 w-16 rounded object-contain" />}
+            {item.preview && <Image unoptimized width={64} height={96} src={item.preview} alt={`Page ${index + 1} preview`} className="h-24 w-16 rounded object-contain" />}
             <p className="min-w-0 break-all text-sm"><span className="font-medium">Page {index + 1}</span><br />{item.file.name}</p>
           </div>
           <div className="flex flex-wrap gap-2">
