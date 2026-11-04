@@ -277,11 +277,11 @@ export default function AskPage() {
                 <p className="text-text-muted">Ask about your documents. Answers cite the documents they come from, and totals are computed from your data.</p>
                 <div className="flex flex-col gap-2">
                   {SUGGESTIONS.map((s) => (
-                    // Controls keep one height, so a long question truncates; the title shows it in full.
-                    // `!`: cn() only joins classes, so it can't override Button's justify-center.
-                    <Button key={s} variant="secondary" onClick={() => send(s)} title={s} className="!justify-start">
-                      <span className="min-w-0 truncate">{s}</span>
-                    </Button>
+                    // A wrapping control, like the tag input: control height on one line, taller when the
+                    // question wraps, so the full text is always visible before it is sent.
+                    // `!`: cn() only joins classes, so it can't override Button's own classes.
+                    <Button key={s} variant="secondary" onClick={() => send(s)} data-wrap
+                      className="!h-auto min-h-control !justify-start py-1.5 text-left !whitespace-normal">{s}</Button>
                   ))}
                 </div>
               </div>

@@ -102,6 +102,7 @@ export const controlSm = control.replace("h-control", "h-control-sm");
 | Date | native `<input type="date">` with `control` and `color-scheme` set for dark mode. **No date-picker library** |
 | Textarea | `control` minus the fixed height: `min-h-[5.5rem] py-2`, vertical resize only |
 | Tag input | a container with `control` and `min-h` (not a fixed `h`) that wraps. Chips are 24px tall, 12px text, radius 6px |
+| Suggestion chip (a question that is sent on click) | a secondary button with `min-h` control height that wraps, marked `data-wrap`; never truncate text the user is about to send |
 | Button | 36px tall, `px-3.5`, 14px weight 500, radius 8px. Variants: `primary`, `secondary` (surface + border), `ghost`, `danger`. Icon + label gap is 8px. **Icon-only buttons are 36×36** with an `aria-label` |
 | Checkbox / radio | 16px box, radius 4px (radio full), with the label at 14px and a 8px gap. The row is 20px tall and vertically centred. The click target is the whole label |
 | Switch | 20×36 track, for on/off settings that apply immediately. A checkbox is for choices that are submitted with a form |

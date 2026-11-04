@@ -9,7 +9,7 @@ test("sign in and sign out through the actual same-origin proxy", async ({ page 
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
   const initial = await page.locator("html").getAttribute("class");
-  await page.getByRole("button", { name: "Dark theme" }).click();
+  await page.getByRole("button", { name: /^Switch to (light|dark) theme$/ }).click();
   await expect.poll(() => page.locator("html").getAttribute("class")).not.toBe(initial);
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/login/);
