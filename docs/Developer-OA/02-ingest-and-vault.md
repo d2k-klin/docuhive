@@ -5,7 +5,7 @@
 **Goal:** prove, on real documents, that our own ingest is good enough before building on it. **Size:** about 1 week.
 
 ### Tasks
-1. **Worker image** `services/docuhive/Dockerfile` (multi-stage, `python:3.12-slim-bookworm`):
+1. **Worker image** `services/docuhive/Dockerfile` (multi-stage, `python:3.12-slim-trixie`, for Ghostscript >= 10.03):
    - apt: `tesseract-ocr`, `tesseract-ocr-deu`, `tesseract-ocr-eng`, `ghostscript`, `unpaper`, `pngquant`, `qpdf`, `libheif1`, `fonts-dejavu-core`
    - pip: `ocrmypdf`, `pypdfium2`, `pikepdf`, `img2pdf`, `pillow`, `pillow-heif`, `filetype`
    - The image runs as a non-root user `docuhive` (uid 1000). Pin `ocrmypdf` and Tesseract versions in the image tag notes.

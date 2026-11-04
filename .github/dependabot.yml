@@ -5,11 +5,6 @@ updates:
     schedule: { interval: weekly }
     commit-message: { prefix: deps }
     labels: [dependencies]
-    ignore:
-      # ocrmypdf 17 refuses Ghostscript 10.0.0 (Debian bookworm, our base image) with
-      # skip_text. Take it together with a base image that ships Ghostscript >= 10.03.
-      - dependency-name: ocrmypdf
-        update-types: [version-update:semver-major]
   - package-ecosystem: npm
     directory: /
     schedule: { interval: weekly }
