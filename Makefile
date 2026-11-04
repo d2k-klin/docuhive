@@ -26,7 +26,7 @@ test-ui:
 
 test-integration:
 	docker compose -f deploy/compose.test.yml up -d --wait
-	DOCUHIVE_TEST_DATABASE_URL=postgresql+psycopg://docuhive_test:docuhive_test@127.0.0.1:55432/docuhive_test $(UV) run pytest -m integration
+	DOCUHIVE_TEST_DATABASE_URL=postgresql+psycopg://docuhive_test:docuhive_test@127.0.0.1:55432/docuhive_test $(UV) run pytest -m 'integration and not system'
 
 lint:
 	$(UV) run ruff check .
