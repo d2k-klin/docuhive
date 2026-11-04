@@ -22,6 +22,25 @@ Invoices arrive by email, letters come by post, contracts sit in a drawer, and a
 
 You choose where the AI runs: entirely on your own machine, with a cloud provider, or both. Health and identity documents always stay local.
 
+## A look inside
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/ask-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/screenshots/ask-light.png">
+  <img alt="The DocuHive Ask screen with category and model selectors, a local-only option, suggested questions and a question box." src="assets/screenshots/ask-light.png" width="1280">
+</picture>
+
+*Ask your archive: suggested questions, category filters and a local-only switch. Real app UI with a synthetic test account; the image follows your light or dark theme.*
+
+<details>
+<summary><strong>AI settings</strong>: providers, routing per task, privacy and usage</summary>
+
+![DocuHive AI settings in dark mode, showing which providers are available, which model runs each task, and local versus cloud run counts.](assets/screenshots/ai-settings-dark.png)
+
+*The `qa` provider and the usage figures come from the scripted test environment. More in [assets/screenshots](assets/screenshots/README.md).*
+
+</details>
+
 ## What you'll learn
 
 DocuHive is also a worked example of building a real AI product. The code, the [learning notes](docs/learn/README.md) and the app itself show:
