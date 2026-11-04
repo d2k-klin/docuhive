@@ -1,0 +1,20 @@
+{
+ "value": [
+  {
+   "@odata.type": "#microsoft.graph.fileAttachment",
+   "id": "ga1",
+   "name": "Police-2026.pdf",
+   "contentType": "application/pdf",
+   "size": 30000000,
+   "isInline": false
+  },
+  {
+   "@odata.type": "#microsoft.graph.itemAttachment",
+   "id": "ga2",
+   "name": "Forwarded",
+   "contentType": null,
+   "size": 9000,
+   "isInline": false
+  }
+ ]
+}

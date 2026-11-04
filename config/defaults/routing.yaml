@@ -1,0 +1,47 @@
+# Which model runs which AI task. The overlay's routing.yaml is the source of truth in v1.
+# Merge rules: mappings merge, lists and scalars from the overlay replace these defaults.
+# Secrets (API keys) come from DOCUHIVE_AI_* env variables, never from this file.
+# ${VAR} or ${VAR:-default} is replaced from the environment when the file is loaded.
+version: 1
+providers:
+  ollama:    { kind: ollama, host: "${DOCUHIVE_AI_OLLAMA_HOST:-http://localhost:11434}", local: true }
+  anthropic: { kind: anthropic, local: false }
+  openai:    { kind: openai, local: false }          # base_url optional -> any OpenAI-compatible server
+  bedrock:   { kind: bedrock, local: false }
+  # GitHub Copilot through LiteLLM: unofficial for this use, off by default.
+  copilot:   { kind: litellm, prefix: github_copilot, local: false, experimental: true, enabled: false }
+  # An OpenAI-compatible server on your LAN (LM Studio, vLLM) can be declared with local: true:
+  # lan:     { kind: openai, base_url: "http://192.168.1.20:1234/v1", local: true }
+tasks:
+  triage:   { route: ollama/qwen3:4b, accept_threshold: 0.6 }
+  classify:
+    route: ollama/qwen3:8b
+    context: { head_chars: 6000, tail_chars: 1500 }
+    apply:
+      auto: false            # stays false until the CL-M3 eval gate passes (docs/decisions/0004)
+      threshold: 0.80
+      per_field: { document_date: 0.90, correspondent: 0.85 }
+  extract:
+    route: ollama/qwen3:8b
+    context: { max_chars: 12000 }
+    apply: { auto: false, threshold: 0.80 }
+  embed:    { route: ollama/bge-m3, dims: 1024, batch: 32 }
+  chat:     { route: anthropic/claude-sonnet-5-5, fallback: [ollama/qwen3:8b], max_tool_calls: 8 }
+  analyse:  { route: anthropic/claude-sonnet-5-5, fallback: [ollama/qwen3:8b], max_tool_calls: 8 }
+privacy:
+  local_only: false
+  classify_unknown_locally: true         # unclassified documents are classified by a local model
+  restricted_tags: [private]
+  # restricted categories come from the taxonomy (Category.restricted)
+  on_restricted_without_local: skip      # skip | error
+budgets:                                  # USD per calendar month (UTC); omitted = unlimited
+  anthropic: 10
+  openai: 5
+  bedrock: 10
+pricing:                                  # USD per 1M tokens; user-maintained, check provider pages
+  anthropic/claude-sonnet-5-5: { in: 0.0, out: 0.0 }   # fill in current prices
+  anthropic/claude-haiku-5-5: { in: 0.0, out: 0.0 }
+  # local models cost 0
+limits:
+  timeout_s: { triage: 60, classify: 120, extract: 120, embed: 120, chat: 300, analyse: 600 }
+  retries: 2

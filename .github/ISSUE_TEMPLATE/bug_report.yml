@@ -1,0 +1,10 @@
+name: Bug report
+description: Report a reproducible failure using synthetic data.
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, expected result and actual result
+      description: Include the version and deployment profile. Never attach private documents or tokens.
+    validations:
+      required: true

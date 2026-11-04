@@ -1,0 +1,18 @@
+# Synthetic routes used only by compose.e2e.yml.
+providers:
+  qa:
+    kind: openai
+    local: true
+    base_url: http://llm-proxy:8000/v1
+  ollama: {enabled: false}
+  anthropic: {enabled: false}
+  openai: {enabled: false}
+  bedrock: {enabled: false}
+  copilot: {enabled: false}
+tasks:
+  triage: {route: qa/qa-triage, fallback: []}
+  classify: {route: qa/qa-classify, fallback: []}
+  extract: {route: qa/qa-extract, fallback: []}
+  embed: {route: qa/qa-embed, fallback: [], dims: 1024}
+  chat: {route: qa/qa-chat, fallback: []}
+  analyse: {route: qa/qa-chat, fallback: []}

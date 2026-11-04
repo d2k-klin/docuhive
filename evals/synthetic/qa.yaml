@@ -1,0 +1,20 @@
+- question: How much did I pay for electricity in 2025?
+  expect_citations:
+  - inv-001
+  - inv-002
+  - inv-003
+  - inv-004
+  - inv-005
+  - inv-006
+  expect_number:
+    value: 424.48
+    tolerance: 0.01
+- question: Wann endet mein Stromvertrag?
+  expect_citations:
+  - con-001
+- question: Welche Kündigungsfrist hat mein Mietvertrag?
+  expect_citations:
+  - con-004
+  expect_number:
+    value: 90
+    tolerance: 0

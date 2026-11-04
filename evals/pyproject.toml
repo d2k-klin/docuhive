@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "docuhive-evals"
+version = "0.1.0"
+description = "Eval harness for DocuHive's agents (classify, extract, search, ask)"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+dependencies = ["docuhive[ai]", "pyyaml>=6", "pytest>=8"]
+
+[tool.uv.sources]
+docuhive = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["docuhive_evals"]

@@ -1,0 +1,116 @@
+name: docuhive-qa
+x-backend: &backend
+  image: docuhive-qa-backend:local
+  pull_policy: never
+  environment: &environment
+    DOCUHIVE_ENV: test
+    DOCUHIVE_AUTH_DISABLED: "false"
+    DOCUHIVE_DATABASE_URL: postgresql+psycopg://docuhive_test:docuhive_test@postgres:5432/docuhive_test
+    DOCUHIVE_VAULT_DIR: /srv/vault
+    DOCUHIVE_STAGING_DIR: /srv/staging
+    DOCUHIVE_GOTENBERG_URL: http://gotenberg:3000
+    DOCUHIVE_OVERLAY_DIR: /app/tests/mocks/config
+    DOCUHIVE_AI_OPENAI_API_KEY: synthetic-qa-key
+    DOCUHIVE_PUBLIC_URL: https://127.0.0.1:53100
+  volumes:
+    - e2e-vault:/srv/vault
+    - e2e-staging:/srv/staging
+  networks: [isolated]
+services:
+  postgres:
+    extends:
+      file: compose.test.yml
+      service: postgres
+    ports: !override []
+    volumes:
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/extensions.sql:ro
+    networks: [isolated]
+  gotenberg:
+    extends:
+      file: compose.test.yml
+      service: gotenberg
+    ports: !override []
+    networks: [isolated]
+  migrate:
+    <<: *backend
+    command: ["python", "tests/system/tools/seed.py"]
+    depends_on:
+      postgres: {condition: service_healthy}
+  api:
+    <<: *backend
+    build:
+      context: ..
+      dockerfile: tests/system/Dockerfile
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/system/health')"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  worker:
+    <<: *backend
+    command: ["docuhive", "worker", "--queues", "ai,mail,default"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  worker-ocr:
+    <<: *backend
+    command: ["docuhive", "worker", "--queues", "ocr"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  web:
+    build:
+      context: ..
+      dockerfile: tests/e2e/Dockerfile
+    environment:
+      DOCUHIVE_API_URL: http://api:8000
+      DOCUHIVE_PUBLIC_URL: https://127.0.0.1:53100
+      NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      api: {condition: service_healthy}
+    networks: [isolated]
+  fake-llm:
+    <<: *backend
+    command: ["uvicorn", "--app-dir", "tests/mocks", "server:create_app", "--factory", "--host", "0.0.0.0"]
+    volumes: []
+  llm-proxy:
+    <<: *backend
+    command: ["uvicorn", "--app-dir", "tests/mocks", "server:create_app", "--factory", "--host", "0.0.0.0"]
+    environment:
+      QA_LLM_UPSTREAM: http://fake-llm:8000
+      QA_CAPTURE_LOG: /srv/captures/llm.jsonl
+    volumes: ["e2e-captures:/srv/captures"]
+  mock-mail:
+    <<: *backend
+    command: ["uvicorn", "--app-dir", "tests/mocks", "server:create_app", "--factory", "--host", "0.0.0.0"]
+    volumes: []
+  gateway:
+    image: python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
+    user: "10001:10001"
+    command: ["python", "/gateway.py"]
+    volumes:
+      - ../tests/system/tools/gateway.py:/gateway.py:ro
+      - ../tmp/qa/tls:/tls:ro
+    networks: [entry, isolated]
+    ports:
+      - "127.0.0.1:58000:58000"
+      - "127.0.0.1:53100:53100"
+      - "127.0.0.1:55433:55433"
+      - "127.0.0.1:58001:58001"
+      - "127.0.0.1:58002:58002"
+    depends_on:
+      api: {condition: service_healthy}
+      web: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import ssl, urllib.request; urllib.request.urlopen('https://127.0.0.1:58000/api/system/health', context=ssl.create_default_context(cafile='/tls/cert.pem'))"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+networks:
+  entry: {}
+  isolated:
+    internal: true
+volumes:
+  e2e-vault:
+  e2e-staging:
+  e2e-captures:

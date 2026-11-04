@@ -1,0 +1,18 @@
+# Cheap, deterministic mail rules that run before the triage agent.
+# Sender patterns are fnmatch globs on the lowercased address ("*@amazon.de").
+# `accounts` holds per-address overrides with the same keys, deep-merged over `defaults`.
+version: 1
+defaults:
+  attachment_mime_allow: [application/pdf, image/jpeg, image/png, image/heic, image/tiff,
+                          application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                          application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+                          application/vnd.oasis.opendocument.text]
+  min_attachment_kb: 15          # skips logos / signature images
+  skip_inline_images: true
+  skip_labels: [CATEGORY_PROMOTIONS, CATEGORY_SOCIAL, SPAM, TRASH]
+  skip_if_list_unsubscribe_and_no_attachment: true
+  skip_auto_submitted: false
+  deny_senders: ["*@*.newsletter.*", "no-reply@marketing.*"]
+  allow_senders: []              # always import attachments, skip triage
+  body_archive_senders: []       # archive the email body itself (HTML receipts), e.g. "*@amazon.de"
+accounts: {}

@@ -1,0 +1,80 @@
+{
+ "id": "m1",
+ "internalDate": "1762000000000",
+ "labelIds": [
+  "INBOX",
+  "CATEGORY_UPDATES"
+ ],
+ "payload": {
+  "mimeType": "multipart/mixed",
+  "headers": [
+   {
+    "name": "From",
+    "value": "Stadtwerke <rechnung@stadtwerke-musterstadt.example>"
+   },
+   {
+    "name": "To",
+    "value": "me@example.org"
+   },
+   {
+    "name": "Subject",
+    "value": "Ihre Stromrechnung November"
+   },
+   {
+    "name": "Message-ID",
+    "value": "<abc@stadtwerke.example>"
+   }
+  ],
+  "parts": [
+   {
+    "mimeType": "multipart/alternative",
+    "parts": [
+     {
+      "mimeType": "text/plain",
+      "body": {
+       "data": "QW5iZWkgSWhyZSBSZWNobnVuZyBmdWVyIE5vdmVtYmVyLg"
+      }
+     },
+     {
+      "mimeType": "text/html",
+      "body": {
+       "data": "PHA-QW5iZWkgSWhyZSA8Yj5SZWNobnVuZzwvYj48L3A-"
+      }
+     }
+    ]
+   },
+   {
+    "mimeType": "image/png",
+    "filename": "logo.png",
+    "headers": [
+     {
+      "name": "Content-Disposition",
+      "value": "inline; filename=logo.png"
+     },
+     {
+      "name": "Content-ID",
+      "value": "<logo>"
+     }
+    ],
+    "body": {
+     "attachmentId": "att-logo",
+     "size": 4000
+    }
+   },
+   {
+    "mimeType": "application/pdf",
+    "filename": "Rechnung-2025-11.pdf",
+    "headers": [
+     {
+      "name": "Content-Disposition",
+      "value": "attachment; filename=Rechnung-2025-11.pdf"
+     }
+    ],
+    "body": {
+     "attachmentId": "att-pdf",
+     "size": 52000
+    }
+   }
+  ]
+ }
+}

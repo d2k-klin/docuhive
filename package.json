@@ -1,0 +1,13 @@
+{
+  "name": "docuhive-workspace",
+  "private": true,
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "build": "npm run build --workspace apps/web",
+    "lint": "npm run lint --workspace apps/web",
+    "typecheck": "npm run typecheck --workspace apps/web",
+    "test": "npm run test --workspace apps/web",
+    "format": "prettier --write apps/web --ignore-path .gitignore"
+  },
+  "devDependencies": {"prettier": "^3.5.0", "license-checker": "^25.0.1"}
+}

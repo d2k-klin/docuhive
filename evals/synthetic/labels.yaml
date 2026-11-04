@@ -1,0 +1,621 @@
+- id: inv-001
+  file: docs/inv-001.txt
+  expect:
+    category: utilities/electricity
+    document_type: invoice
+    correspondent: Stadtwerke Musterstadt
+    document_date: '2025-01-01'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '53.52'
+        currency: EUR
+      due_date: '2025-01-15'
+      iban: DE02120300000000202051
+  restricted: false
+- id: inv-002
+  file: docs/inv-002.txt
+  expect:
+    category: utilities/electricity
+    document_type: invoice
+    correspondent: Stadtwerke Musterstadt
+    document_date: '2025-02-05'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '51.88'
+        currency: EUR
+      due_date: '2025-02-19'
+      iban: DE12500105170648489890
+  restricted: false
+- id: inv-003
+  file: docs/inv-003.txt
+  expect:
+    category: utilities/electricity
+    document_type: invoice
+    correspondent: Stadtwerke Musterstadt
+    document_date: '2025-04-05'
+    language: en
+    tags: []
+    facts:
+      amount_total:
+        value: '48.74'
+        currency: EUR
+      due_date: '2025-04-19'
+      iban: DE89370400440532013000
+  restricted: false
+- id: inv-004
+  file: docs/inv-004.txt
+  expect:
+    category: utilities/electricity
+    document_type: invoice
+    correspondent: Stadtwerke Musterstadt
+    document_date: '2025-07-03'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '135.45'
+        currency: EUR
+      due_date: '2025-07-17'
+      iban: DE02120300000000202051
+  restricted: false
+- id: inv-005
+  file: docs/inv-005.txt
+  expect:
+    category: utilities/electricity
+    document_type: invoice
+    correspondent: Stadtwerke Musterstadt
+    document_date: '2025-09-04'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '85.67'
+        currency: EUR
+      due_date: '2025-09-18'
+      iban: DE12500105170648489890
+  restricted: false
+- id: inv-006
+  file: docs/inv-006.txt
+  expect:
+    category: utilities/electricity
+    document_type: invoice
+    correspondent: Stadtwerke Musterstadt
+    document_date: '2025-11-05'
+    language: en
+    tags: []
+    facts:
+      amount_total:
+        value: '49.22'
+        currency: EUR
+      due_date: '2025-11-19'
+      iban: DE89370400440532013000
+  restricted: false
+- id: inv-007
+  file: docs/inv-007.txt
+  expect:
+    category: utilities/gas-heating
+    document_type: invoice
+    correspondent: Gaswerk Nordstadt
+    document_date: '2025-03-05'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '109.08'
+        currency: EUR
+      due_date: '2025-03-19'
+      iban: DE02120300000000202051
+  restricted: false
+- id: inv-008
+  file: docs/inv-008.txt
+  expect:
+    category: utilities/gas-heating
+    document_type: invoice
+    correspondent: Gaswerk Nordstadt
+    document_date: '2025-06-01'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '43.92'
+        currency: EUR
+      due_date: '2025-06-15'
+      iban: DE12500105170648489890
+  restricted: false
+- id: inv-009
+  file: docs/inv-009.txt
+  expect:
+    category: utilities/gas-heating
+    document_type: invoice
+    correspondent: Gaswerk Nordstadt
+    document_date: '2025-09-02'
+    language: en
+    tags: []
+    facts:
+      amount_total:
+        value: '126.31'
+        currency: EUR
+      due_date: '2025-09-16'
+      iban: DE89370400440532013000
+  restricted: false
+- id: inv-010
+  file: docs/inv-010.txt
+  expect:
+    category: utilities/internet-phone
+    document_type: invoice
+    correspondent: NetzFunk Telekom GmbH
+    document_date: '2025-03-05'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '47.81'
+        currency: EUR
+      due_date: '2025-03-19'
+      iban: DE02120300000000202051
+  restricted: false
+- id: inv-011
+  file: docs/inv-011.txt
+  expect:
+    category: utilities/internet-phone
+    document_type: invoice
+    correspondent: NetzFunk Telekom GmbH
+    document_date: '2025-06-02'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '108.41'
+        currency: EUR
+      due_date: '2025-06-16'
+      iban: DE12500105170648489890
+  restricted: false
+- id: inv-012
+  file: docs/inv-012.txt
+  expect:
+    category: utilities/internet-phone
+    document_type: invoice
+    correspondent: NetzFunk Telekom GmbH
+    document_date: '2025-09-05'
+    language: en
+    tags: []
+    facts:
+      amount_total:
+        value: '110.99'
+        currency: EUR
+      due_date: '2025-09-19'
+      iban: DE89370400440532013000
+  restricted: false
+- id: inv-013
+  file: docs/inv-013.txt
+  expect:
+    category: utilities/water
+    document_type: invoice
+    correspondent: Wasserverband Talheim
+    document_date: '2025-03-02'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '112.73'
+        currency: EUR
+      due_date: '2025-03-16'
+      iban: DE02120300000000202051
+  restricted: false
+- id: inv-014
+  file: docs/inv-014.txt
+  expect:
+    category: utilities/water
+    document_type: invoice
+    correspondent: Wasserverband Talheim
+    document_date: '2025-06-05'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '47.02'
+        currency: EUR
+      due_date: '2025-06-19'
+      iban: DE12500105170648489890
+  restricted: false
+- id: inv-015
+  file: docs/inv-015.txt
+  expect:
+    category: utilities/water
+    document_type: invoice
+    correspondent: Wasserverband Talheim
+    document_date: '2025-09-02'
+    language: en
+    tags: []
+    facts:
+      amount_total:
+        value: '58.94'
+        currency: EUR
+      due_date: '2025-09-16'
+      iban: DE89370400440532013000
+  restricted: false
+- id: rcp-001
+  file: docs/rcp-001.txt
+  expect:
+    category: purchases/receipts
+    document_type: receipt
+    correspondent: Bäckerei Sonnenschein
+    document_date: '2025-01-07'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '31.45'
+        currency: EUR
+      purchase_date: '2025-01-07'
+  restricted: false
+- id: rcp-002
+  file: docs/rcp-002.txt
+  expect:
+    category: purchases/receipts
+    document_type: receipt
+    correspondent: Elektro Markt Berlin
+    document_date: '2025-06-09'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '39.24'
+        currency: EUR
+      purchase_date: '2025-06-09'
+  restricted: false
+- id: rcp-003
+  file: docs/rcp-003.txt
+  expect:
+    category: purchases/receipts
+    document_type: receipt
+    correspondent: Corner Books London
+    document_date: '2025-10-28'
+    language: en
+    tags: []
+    facts:
+      amount_total:
+        value: '75.74'
+        currency: GBP
+      purchase_date: '2025-10-28'
+  restricted: false
+- id: rcp-004
+  file: docs/rcp-004.txt
+  expect:
+    category: purchases/receipts
+    document_type: receipt
+    correspondent: Café Lago Zürich
+    document_date: '2025-07-26'
+    language: de
+    tags: []
+    facts:
+      amount_total:
+        value: '42.75'
+        currency: CHF
+      purchase_date: '2025-07-26'
+  restricted: false
+- id: pay-001
+  file: docs/pay-001.txt
+  expect:
+    category: income/payslips
+    document_type: payslip
+    correspondent: Beispiel Software GmbH
+    document_date: '2025-03-28'
+    language: de
+    tags: []
+    facts:
+      gross:
+        value: '4049.63'
+        currency: EUR
+      net:
+        value: '2510.77'
+        currency: EUR
+      period_month: '2025-03-01'
+  restricted: false
+- id: pay-002
+  file: docs/pay-002.txt
+  expect:
+    category: income/payslips
+    document_type: payslip
+    correspondent: Beispiel Software GmbH
+    document_date: '2025-06-28'
+    language: de
+    tags: []
+    facts:
+      gross:
+        value: '4588.22'
+        currency: EUR
+      net:
+        value: '2844.70'
+        currency: EUR
+      period_month: '2025-06-01'
+  restricted: false
+- id: pay-003
+  file: docs/pay-003.txt
+  expect:
+    category: income/payslips
+    document_type: payslip
+    correspondent: Beispiel Software GmbH
+    document_date: '2025-09-28'
+    language: de
+    tags: []
+    facts:
+      gross:
+        value: '3952.06'
+        currency: EUR
+      net:
+        value: '2450.28'
+        currency: EUR
+      period_month: '2025-09-01'
+  restricted: false
+- id: pay-004
+  file: docs/pay-004.txt
+  expect:
+    category: income/payslips
+    document_type: payslip
+    correspondent: Beispiel Software GmbH
+    document_date: '2025-12-28'
+    language: de
+    tags: []
+    facts:
+      gross:
+        value: '4763.25'
+        currency: EUR
+      net:
+        value: '2953.22'
+        currency: EUR
+      period_month: '2025-12-01'
+  restricted: false
+- id: con-001
+  file: docs/con-001.txt
+  expect:
+    category: utilities/electricity
+    document_type: contract
+    correspondent: Stadtwerke Musterstadt
+    document_date: '2025-03-01'
+    language: de
+    tags: []
+    facts:
+      end_date: '2027-03-31'
+      notice_period_days: '90'
+      monthly_cost:
+        value: '79.00'
+        currency: EUR
+      contract_number: V-1001
+  restricted: false
+- id: con-002
+  file: docs/con-002.txt
+  expect:
+    category: utilities/internet-phone
+    document_type: contract
+    correspondent: NetzFunk Telekom GmbH
+    document_date: '2024-12-01'
+    language: de
+    tags: []
+    facts:
+      end_date: '2026-12-31'
+      notice_period_days: '30'
+      monthly_cost:
+        value: '24.99'
+        currency: EUR
+      contract_number: V-1002
+  restricted: false
+- id: con-003
+  file: docs/con-003.txt
+  expect:
+    category: legal
+    document_type: contract
+    correspondent: FitHall Studios
+    document_date: '2024-08-01'
+    language: en
+    tags: []
+    facts:
+      end_date: '2026-08-31'
+      notice_period_days: '60'
+      monthly_cost:
+        value: '39.90'
+        currency: EUR
+      contract_number: V-1003
+  restricted: false
+- id: con-004
+  file: docs/con-004.txt
+  expect:
+    category: housing/rent
+    document_type: contract
+    correspondent: Wohnbau Musterstadt eG
+    document_date: '2026-01-01'
+    language: de
+    tags: []
+    facts:
+      end_date: '2028-01-31'
+      notice_period_days: '90'
+      monthly_cost:
+        value: '980.00'
+        currency: EUR
+      contract_number: V-1004
+  restricted: false
+- id: ins-001
+  file: docs/ins-001.txt
+  expect:
+    category: insurance/vehicle
+    document_type: insurance-policy
+    correspondent: Versicherung Nord AG
+    document_date: '2025-01-02'
+    language: de
+    tags: []
+    facts:
+      policy_number: VN-77001
+      renewal_date: '2026-06-01'
+      premium:
+        value: '412.80'
+        currency: EUR
+      premium_interval: yearly
+  restricted: false
+- id: ins-002
+  file: docs/ins-002.txt
+  expect:
+    category: insurance/home
+    document_type: insurance-policy
+    correspondent: Versicherung Nord AG
+    document_date: '2025-01-02'
+    language: de
+    tags: []
+    facts:
+      policy_number: VN-77002
+      renewal_date: '2026-03-01'
+      premium:
+        value: '6.90'
+        currency: EUR
+      premium_interval: monthly
+  restricted: false
+- id: ins-003
+  file: docs/ins-003.txt
+  expect:
+    category: insurance/health
+    document_type: insurance-policy
+    correspondent: Versicherung Nord AG
+    document_date: '2025-01-02'
+    language: de
+    tags: []
+    facts:
+      policy_number: VN-77003
+      renewal_date: '2026-06-01'
+      premium:
+        value: '512.40'
+        currency: EUR
+      premium_interval: monthly
+  restricted: true
+- id: tax-001
+  file: docs/tax-001.txt
+  expect:
+    category: finance/tax
+    document_type: tax-document
+    correspondent: Finanzamt Musterstadt
+    document_date: '2025-07-15'
+    language: de
+    tags:
+    - tax-relevant
+    facts:
+      tax_year: '2024'
+      due_date: '2025-08-18'
+      amount_due:
+        value: '1234.00'
+        currency: EUR
+  restricted: false
+- id: let-001
+  file: docs/let-001.txt
+  expect:
+    category: income/benefits
+    document_type: letter
+    correspondent: Deutsche Rentenversicherung Musterland
+    document_date: '2025-05-12'
+    language: de
+    tags: []
+    facts: {}
+  restricted: false
+- id: let-002
+  file: docs/let-002.txt
+  expect:
+    category: government/official
+    document_type: letter
+    correspondent: Stadt Musterstadt Bürgeramt
+    document_date: '2025-09-02'
+    language: de
+    tags: []
+    facts: {}
+  restricted: false
+- id: cert-001
+  file: docs/cert-001.txt
+  expect:
+    category: employment
+    document_type: certificate
+    correspondent: Beispiel Software GmbH
+    document_date: '2025-06-30'
+    language: en
+    tags: []
+    facts: {}
+  restricted: false
+- id: id-001
+  file: docs/id-001.txt
+  expect:
+    category: government/identity
+    document_type: id-document
+    correspondent: Stadt Musterstadt Bürgeramt
+    document_date: '2021-07-01'
+    language: de
+    tags: []
+    facts:
+      document_number: L01X00T47
+      expiry_date: '2031-06-30'
+  restricted: true
+- id: med-001
+  file: docs/med-001.txt
+  expect:
+    category: health
+    document_type: medical-report
+    correspondent: Praxis Dr. Beispiel
+    document_date: '2025-03-03'
+    language: de
+    tags: []
+    facts: {}
+  restricted: true
+- id: war-001
+  file: docs/war-001.txt
+  expect:
+    category: purchases/warranties
+    document_type: warranty
+    correspondent: TechHaus Online
+    document_date: '2025-02-14'
+    language: de
+    tags: []
+    facts:
+      warranty_end: '2027-02-14'
+  restricted: false
+- id: war-002
+  file: docs/war-002.txt
+  expect:
+    category: purchases/warranties
+    document_type: warranty
+    correspondent: Elektro Markt Berlin
+    document_date: '2026-05-02'
+    language: de
+    tags: []
+    facts:
+      warranty_end: '2028-05-02'
+  restricted: false
+- id: bnk-001
+  file: docs/bnk-001.txt
+  expect:
+    category: finance/banking
+    document_type: bank-statement
+    correspondent: Musterbank AG
+    document_date: '2025-03-31'
+    language: de
+    tags: []
+    facts:
+      closing_balance:
+        value: '5025.31'
+        currency: EUR
+      period_end: '2025-03-31'
+      account_iban: DE89370400440532013000
+  restricted: false
+- id: bnk-002
+  file: docs/bnk-002.txt
+  expect:
+    category: finance/banking
+    document_type: bank-statement
+    correspondent: Musterbank AG
+    document_date: '2025-06-30'
+    language: de
+    tags: []
+    facts:
+      closing_balance:
+        value: '8450.92'
+        currency: EUR
+      period_end: '2025-06-30'
+      account_iban: DE89370400440532013000
+  restricted: false

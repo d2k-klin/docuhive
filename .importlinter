@@ -1,0 +1,61 @@
+[importlinter]
+root_package = docuhive
+
+[importlinter:contract:cl-oa-private]
+name = CL uses public OA contracts
+type = forbidden
+source_modules =
+    docuhive.ai
+    docuhive.agents
+    docuhive.mail
+    docuhive.taxonomy
+    docuhive.review
+    docuhive.index
+    docuhive.chat
+    docuhive.reminders
+    docuhive.notify
+forbidden_modules =
+    docuhive.config.settings
+    docuhive.jobs.runner
+    docuhive.jobs.scheduler
+    docuhive.ingest.convert
+    docuhive.ingest.ocr
+    docuhive.ingest.safety
+    docuhive.documents.metadata
+    docuhive.auth.rate_limit
+allow_indirect_imports = True
+
+[importlinter:contract:oa-cl-private]
+name = OA uses CL only through startup taxonomy and router registration
+type = forbidden
+source_modules =
+    docuhive.config
+    docuhive.db
+    docuhive.jobs
+    docuhive.worker
+    docuhive.ingest
+    docuhive.documents
+    docuhive.auth
+    docuhive.search
+    docuhive.api
+forbidden_modules =
+    docuhive.agents
+    docuhive.mail
+    docuhive.review
+    docuhive.index
+    docuhive.chat
+    docuhive.reminders
+    docuhive.notify
+allow_indirect_imports = True
+
+[importlinter:contract:contract-leaf]
+name = Shared contracts have no product dependencies
+type = forbidden
+source_modules = docuhive.contracts
+forbidden_modules =
+    docuhive.config
+    docuhive.db
+    docuhive.jobs
+    docuhive.ai
+    docuhive.documents
+allow_indirect_imports = True

@@ -1,0 +1,31 @@
+{
+ "id": "g1",
+ "internetMessageId": "<g1@outlook.example>",
+ "receivedDateTime": "2025-11-02T08:00:00Z",
+ "from": {
+  "emailAddress": {
+   "address": "service@versicherung.example",
+   "name": "Versicherung"
+  }
+ },
+ "toRecipients": [
+  {
+   "emailAddress": {
+    "address": "me@outlook.example"
+   }
+  }
+ ],
+ "subject": "Ihre Police 2026",
+ "internetMessageHeaders": [
+  {
+   "name": "Precedence",
+   "value": "bulk"
+  }
+ ],
+ "categories": [],
+ "body": {
+  "contentType": "html",
+  "content": "<html><body>Ihre neue Police im Anhang.</body></html>"
+ },
+ "hasAttachments": true
+}

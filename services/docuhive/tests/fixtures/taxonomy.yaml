@@ -1,0 +1,108 @@
+# The controlled vocabulary the AI chooses from. The overlay replaces these lists entirely
+# (overlay rule: lists replace). Validate an overlay file with `docuhive taxonomy check <path>`.
+version: 1
+languages: [de, en]
+default_currency: EUR
+categories:
+  - { id: finance, label: Finance }
+  - { id: finance/banking, label: Banking, description: "Bank statements, account letters, cards" }
+  - { id: finance/tax, label: Tax, description: "Tax returns, assessments, tax office letters" }
+  - { id: finance/investments, label: Investments, description: "Brokerage, pension funds, securities" }
+  - { id: finance/loans, label: Loans & credit }
+  - { id: income, label: Income }
+  - { id: income/payslips, label: Payslips }
+  - { id: income/benefits, label: Benefits & pension }
+  - { id: housing, label: Housing }
+  - { id: housing/rent, label: Rent & lease }
+  - { id: housing/property, label: Property & mortgage }
+  - { id: utilities, label: Utilities }
+  - { id: utilities/electricity, label: Electricity }
+  - { id: utilities/gas-heating, label: Gas & heating }
+  - { id: utilities/water, label: Water }
+  - { id: utilities/internet-phone, label: Internet & phone }
+  - { id: insurance, label: Insurance }
+  - { id: insurance/health, label: Health insurance, restricted: true }
+  - { id: insurance/vehicle, label: Vehicle insurance }
+  - { id: insurance/home, label: Home & liability }
+  - { id: insurance/life, label: Life & disability }
+  - { id: health, label: Health, restricted: true, description: "Medical reports, prescriptions, invoices from doctors" }
+  - { id: vehicle, label: Vehicle, description: "Registration, service, purchase" }
+  - { id: employment, label: Employment, description: "Contracts, references, HR letters" }
+  - { id: education, label: Education, description: "Certificates, diplomas, courses" }
+  - { id: legal, label: Legal & contracts, description: "Contracts not covered elsewhere, legal letters" }
+  - { id: government, label: Government }
+  - { id: government/identity, label: Identity documents, restricted: true }
+  - { id: government/official, label: Official letters }
+  - { id: purchases, label: Purchases }
+  - { id: purchases/receipts, label: Receipts }
+  - { id: purchases/warranties, label: Warranties & manuals }
+  - { id: travel, label: Travel }
+  - { id: personal, label: Personal correspondence }
+  - { id: other, label: Other }
+document_types:
+  - id: invoice
+    label: Invoice
+    facts:
+      - { name: amount_total, type: money, required: true }
+      - { name: amount_tax, type: money }
+      - { name: invoice_number, type: string }
+      - { name: invoice_date, type: date }
+      - { name: due_date, type: date, remind_days_before: [7, 1] }
+      - { name: period_start, type: date }
+      - { name: period_end, type: date }
+      - { name: iban, type: iban, description: "Payee IBAN if printed" }
+  - id: receipt
+    label: Receipt
+    facts:
+      - { name: amount_total, type: money, required: true }
+      - { name: purchase_date, type: date }
+      - { name: merchant, type: string }
+  - id: bank-statement
+    label: Bank statement
+    facts:
+      - { name: period_start, type: date }
+      - { name: period_end, type: date }
+      - { name: closing_balance, type: money }
+      - { name: account_iban, type: iban }
+  - id: payslip
+    label: Payslip
+    facts:
+      - { name: period_month, type: date, description: "First day of the month" }
+      - { name: gross, type: money }
+      - { name: net, type: money }
+  - id: contract
+    label: Contract
+    facts:
+      - { name: start_date, type: date }
+      - { name: end_date, type: date, remind_days_before: [90, 30] }
+      - { name: notice_period_days, type: number }
+      - { name: monthly_cost, type: money }
+      - { name: contract_number, type: string }
+  - id: insurance-policy
+    label: Insurance policy
+    facts:
+      - { name: policy_number, type: string }
+      - { name: premium, type: money }
+      - { name: premium_interval, type: string, description: "monthly | quarterly | yearly" }
+      - { name: renewal_date, type: date, remind_days_before: [60, 14] }
+  - id: tax-document
+    label: Tax document
+    facts:
+      - { name: tax_year, type: number }
+      - { name: amount_due, type: money }
+      - { name: due_date, type: date, remind_days_before: [14, 3] }
+  - { id: letter, label: Letter }
+  - { id: certificate, label: Certificate }
+  - id: id-document
+    label: ID document
+    facts:
+      - { name: document_number, type: string }
+      - { name: expiry_date, type: date, remind_days_before: [180, 60] }
+  - { id: medical-report, label: Medical report }
+  - id: warranty
+    label: Warranty
+    facts:
+      - { name: warranty_end, type: date, remind_days_before: [30] }
+  - { id: manual, label: Manual }
+  - { id: other, label: Other }
+tags: [important, tax-relevant, private, recurring, archive-only]

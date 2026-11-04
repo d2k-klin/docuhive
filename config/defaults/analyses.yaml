@@ -1,0 +1,28 @@
+# Built-in saved-analysis templates (Ask → Analyses → "New from template").
+# The overlay replaces this list (overlay rule: lists replace).
+version: 1
+templates:
+  - id: utilities-by-month
+    name: "Utilities spend by month (this year)"
+    prompt: >-
+      Sum amount_total of invoices in the utilities category for this calendar year,
+      grouped by month. Show a table per month and currency, and list the invoices included.
+    filters: { categories: [utilities] }
+  - id: contracts-ending
+    name: "Contracts ending or renewable in the next 90 days"
+    prompt: >-
+      List contracts (end_date) and insurance policies (renewal_date) that end or renew within
+      the next 90 days. Include the notice period where known and the notice deadline.
+    filters: {}
+  - id: insurance-overview
+    name: "Insurance overview: policies, premiums, renewal dates"
+    prompt: >-
+      List all insurance policies with policy number, premium and premium interval, and
+      renewal date. Total the premiums per currency and interval.
+    filters: { categories: [insurance] }
+  - id: tax-relevant
+    name: "Tax-relevant documents for year X"
+    prompt: >-
+      List all documents tagged tax-relevant or in the finance/tax category with a document
+      date in the year I name (ask me if I did not), grouped by document type.
+    filters: {}

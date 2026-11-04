@@ -1,0 +1,9 @@
+name: Feature request
+description: Describe a problem DocuHive should solve.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and desired behavior
+    validations:
+      required: true

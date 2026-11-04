@@ -1,0 +1,13 @@
+"""Shared touchpoint: append handler modules; preserve other track registrations."""
+
+HANDLER_MODULES: list[str] = []
+
+# CL: AI pipeline, index, mail, reminders, notifications, analyses (see docuhive/ai/startup.py)
+HANDLER_MODULES += [
+    "docuhive.agents.pipeline",
+    "docuhive.index.jobs",
+    "docuhive.mail.jobs",
+    "docuhive.reminders.jobs",
+    "docuhive.notify.jobs",
+    "docuhive.chat.jobs",
+]

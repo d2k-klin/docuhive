@@ -1,0 +1,15 @@
+{
+ "value": [
+  {
+   "id": "g1",
+   "receivedDateTime": "2025-11-02T08:00:00Z",
+   "parentFolderId": "inbox"
+  },
+  {
+   "id": "g2",
+   "receivedDateTime": "2025-11-02T09:00:00Z",
+   "parentFolderId": "deleted-id"
+  }
+ ],
+ "@odata.nextLink": "https://graph.microsoft.com/v1.0/me/messages?$skiptoken=abc"
+}

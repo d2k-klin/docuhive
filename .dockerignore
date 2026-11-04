@@ -1,0 +1,15 @@
+.git
+.venv*
+node_modules
+apps/web/.next
+overlay
+.env
+.env.*
+data
+tmp
+runs
+evals/reports
+__pycache__
+.pytest_cache
+.ruff_cache
+.mypy_cache

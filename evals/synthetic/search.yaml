@@ -1,0 +1,39 @@
+- query: Stromrechnung
+  expect: &id001
+  - inv-001
+  - inv-002
+  - inv-003
+  - inv-004
+  - inv-005
+  - inv-006
+  k: 10
+- query: electricity invoice
+  expect: *id001
+  k: 10
+- query: Brief über meine Rentenänderung
+  expect:
+  - let-001
+  k: 5
+- query: Kündigungsfrist Mietvertrag
+  expect:
+  - con-004
+  k: 5
+- query: Kfz Versicherung Police
+  expect:
+  - ins-001
+  k: 5
+- query: Garantie Waschmaschine
+  expect:
+  - war-002
+  k: 5
+- query: Steuerbescheid Nachzahlung
+  expect:
+  - tax-001
+  k: 5
+- query: Gehaltsabrechnung
+  expect:
+  - pay-001
+  - pay-002
+  - pay-003
+  - pay-004
+  k: 10

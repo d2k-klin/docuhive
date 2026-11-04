@@ -1,0 +1,45 @@
+name: QA system smoke
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-system-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - run: python -m pip install uv==0.11.13
+      - run: UV_PROJECT_ENVIRONMENT=.venv-qa uv sync --locked --all-packages --all-extras --dev
+      - run: npm ci
+      - run: node node_modules/@playwright/test/cli.js install --with-deps chromium
+      - run: make qa-check qa-corpus qa-up qa-contracts qa-system qa-e2e-smoke qa-trace
+      - if: always()
+        run: |
+          mkdir -p tmp/qa
+          docker compose -f deploy/compose.e2e.yml logs --no-color > tmp/qa/stack.log
+          docker compose -f deploy/compose.e2e.yml cp llm-proxy:/srv/captures/. tmp/qa/captures || true
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: qa-system-evidence
+          path: |
+            tmp/qa/*.json
+            tmp/qa/*.log
+            tmp/qa/browser-results
+            tmp/qa/captures
+            docs/Developer-QA/traceability.md
+      - if: always()
+        run: make qa-down
