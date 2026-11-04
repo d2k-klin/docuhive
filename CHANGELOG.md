@@ -12,6 +12,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Document API: list with filters, detail, original/archive/thumbnail files, history, edit, bulk edit, trash and restore, and quarantine retry. Uploads can set category and tags, which count as the user's choice.
 - Tests for the scanner folder and the library view against the real document core.
 - `docuhive ingest <files> --owner <user>`.
+- Phone capture with oriented/downscaled images, page ordering and an account-bound offline upload queue; scoped-token upload and durable scanner polling.
+- Production containers, NAS/HTTPS guides, quiesced restic backups with a timer, backup warnings, managed library hardlinks and recovery/upgrade runbooks. Target-hardware acceptance remains pending.
 
 ### Changed
 

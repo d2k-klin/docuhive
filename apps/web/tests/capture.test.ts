@@ -7,12 +7,25 @@ describe("capture images", () => {
     const close = vi.fn();
     const bitmap = vi.fn(async () => ({ width: 4000, height: 3000, close }));
     vi.stubGlobal("createImageBitmap", bitmap);
-    const context = { fillRect: vi.fn(), translate: vi.fn(), rotate: vi.fn(), drawImage: vi.fn() };
-    const canvas = { width: 0, height: 0, getContext: () => context, toBlob: (callback: (blob: Blob) => void) => callback(new Blob(["image"], { type: "image/jpeg" })) };
+    const context = {
+      fillRect: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      drawImage: vi.fn(),
+    };
+    const canvas = {
+      width: 0,
+      height: 0,
+      getContext: () => context,
+      toBlob: (callback: (blob: Blob) => void) =>
+        callback(new Blob(["image"], { type: "image/jpeg" })),
+    };
     vi.stubGlobal("document", { createElement: () => canvas });
     const input = new File(["photo"], "letter.png", { type: "image/png" });
     const output = await prepareImage(input, 1);
-    expect(bitmap).toHaveBeenCalledWith(input, { imageOrientation: "from-image" });
+    expect(bitmap).toHaveBeenCalledWith(input, {
+      imageOrientation: "from-image",
+    });
     expect(canvas.width).toBe(1800);
     expect(canvas.height).toBe(2400);
     expect(context.rotate).toHaveBeenCalledWith(Math.PI / 2);

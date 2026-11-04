@@ -18,6 +18,7 @@
 | [`system.py`](system.py) | Public health and protected platform operations, including the vault health report |
 | [`users.py`](users.py) | Administrator user management; data visibility is never elevated by this role |
 | [`views.py`](views.py) | Saved views: named filters, pinning, sharing and the documents they match |
+| [upload.py](upload.py) | Bounded multipart upload for browsers and scoped tokens |
 
 ## Extending
 

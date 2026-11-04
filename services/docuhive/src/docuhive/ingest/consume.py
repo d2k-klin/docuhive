@@ -36,7 +36,8 @@ def signature(path: Path) -> list[int]:
 
 def verified_copy(source: Path, target: Path) -> str:
     before = signature(source)
-    with source.open("rb") as src, target.open("wb") as out:
+    descriptor = os.open(source, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(descriptor, "rb") as src, target.open("wb") as out:
         shutil.copyfileobj(src, out, 1024 * 1024)
         out.flush()
         os.fsync(out.fileno())
@@ -68,7 +69,12 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
         candidates = [(p, settings.consume_default_owner) for p in root.iterdir() if p.is_file()]
         for name in users:
             folder = root / name
-            if folder.is_dir() and not folder.is_symlink() and not ignored(folder):
+            if (
+                name != "_rejected"
+                and folder.is_dir()
+                and not folder.is_symlink()
+                and not ignored(folder)
+            ):
                 candidates.extend((p, name) for p in folder.iterdir() if p.is_file())
         for path, owner in candidates:
             if ignored(path) or path.is_symlink() or owner not in users:
@@ -88,17 +94,19 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                         original = vault.original(folder)
                         if folder.is_relative_to(settings.vault_dir.resolve()) and original:
                             if (
-                                sha256(original) == old["sha256"] == sha256(path)
+                                sha256(original) == old["sha256"] == doc.sha256 == sha256(path)
                                 and signature(path) == current
                             ):
                                 path.unlink()
                                 del seen[key]
                     continue
                 incoming = ingest.incoming_dir()
-                fd, name = tempfile.mkstemp(dir=incoming, suffix=path.suffix)
+                fd, name = tempfile.mkstemp(dir=incoming, suffix=path.suffix[:16])
                 os.close(fd)
                 copy = Path(name)
                 try:
+                    if current[0] > settings.max_upload_mb * 1024 * 1024:
+                        raise ingest.TooLarge()
                     digest = verified_copy(path, copy)
                     result = ingest.submit(
                         [copy],
@@ -113,17 +121,21 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                         "sha256": digest,
                     }
                 except ingest.IngestRejected as error:
+                    if signature(path) != current:
+                        continue
                     rejected = root / "_rejected"
+                    if rejected.is_symlink():
+                        raise OSError("Rejected folder must not be a symbolic link") from None
                     rejected.mkdir(exist_ok=True)
                     # Unique names preserve earlier rejections and their explanations.
-                    destination = rejected / f"{copy.stem}-{path.name}"
+                    filename = path.name.encode("utf-8")[:180].decode("utf-8", errors="ignore")
+                    destination = rejected / f"{copy.stem}-{filename}"
                     os.replace(path, destination)
                     destination.with_name(destination.name + ".reason.txt").write_text(
                         json.dumps(
                             {
                                 "reason": type(error).__name__,
-                                "action": "Check file type and size, "
-                                "then move the file back to retry.",
+                                "action": "Check file type and size, then move it back to retry.",
                             }
                         )
                     )

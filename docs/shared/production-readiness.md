@@ -11,8 +11,8 @@
 | AI layer, classification, review, mail, Ask, reminders | Built against test doubles; never run with a real provider or mailbox |
 | Document intake, vault writes, document service and API | Built in phase 1; tested with synthetic files on PostgreSQL, Tesseract and Gotenberg. Vault rebuild still to come |
 | Document screens: list, detail, search, upload, quarantine, vocabulary, setup wizard | Not built (QA-002) |
-| Phone capture and scanner folder | Not built (QA-003) |
-| Production deployment, backups, restore drills | Not built: only dev and test compose files exist |
+| Phone capture and scanner folder | Implemented; production browser and real PostgreSQL checks pass, and the scanner folder runs against the real document core. Real-phone and NAS acceptance pending |
+| Production deployment, backups, restore drills | Implemented and exercised on a disposable local stack; target NAS/host drills and three nightly backups pending |
 | Security checklist, performance targets, release gate | Not done; the QA release gate is NO-GO |
 
 ## Decisions only the owner can make
@@ -42,9 +42,13 @@ Documents list with filters, document detail (preview, metadata editing with AI/
 
 The installable phone capture page (photos, reorder, upload as one document), the polling scanner folder, and API upload with personal tokens (QA-003).
 
+Progress (2026-11-04): capture PWA, EXIF-aware downscaling/rotation/reordering, persistent account-bound offline queue, bounded multipart/token upload, and durable scanner polling are implemented. See the [capture guide](../setup/mobile.md). Scanner originals remain until the stored vault original passes checksum verification. Browser checks use production assets; acceptance on actual phones is still open.
+
 ### 4. Operations
 
 `deploy/compose.yml` with API, worker, web, PostgreSQL and the converter: pinned images, non-root, read-only roots, no public ports. A web Dockerfile. NAS mount guide, nightly database dump and restic backup with a timer, documented restore, NAS-offline and restore drills, the library view, and a tested upgrade path between releases.
+
+Progress (2026-11-04): production Compose and standalone web image, NAS/HTTPS guides, quiesced database/vault/staging backups, timer, backup status and warning banner, managed library hardlinks, recovery runbooks and upgrade helper are implemented. A real local restic backup/restore preserved synthetic document bytes, metadata, facts, ownership and staged input. The v0.1.0-to-current schema upgrade passes on disposable PostgreSQL. See the [operations guide](../setup/operations.md) and [drill evidence](../decisions/0003-operations-verification.md). Actual NAS outage, host-loss/vault-only rebuild drills, and three consecutive nightly runs remain pending.
 
 ### 5. Hardening
 

@@ -7,6 +7,7 @@
 | Path | What it is |
 | --- | --- |
 | [`__init__.py`](__init__.py) | `submit`: the single entry point for every source (validate, dedupe, stage, queue) |
+| [`consume.py`](consume.py) | Durable scanner polling; retains input until the stored original is checksum-verified |
 | [`convert.py`](convert.py) | Pure conversion steps reused by the OCR feasibility spike |
 | [`detect.py`](detect.py) | Content detection without trusting a filename or decoding arbitrary binary as text |
 | [`errors.py`](errors.py) | Explicit reasons for preserving a file for review |

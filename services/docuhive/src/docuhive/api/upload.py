@@ -46,7 +46,31 @@ class UploadLimitMiddleware:
         await self.app(scope, bounded_receive if limited else receive, send)
 
 
-@router.post("/api/upload", response_model=IngestResult, status_code=202)
+@router.post(
+    "/api/upload",
+    response_model=IngestResult,
+    status_code=202,
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "multipart/form-data": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["files"],
+                        "properties": {
+                            "files": {
+                                "type": "array",
+                                "maxItems": 50,
+                                "items": {"type": "string", "format": "binary"},
+                            }
+                        },
+                    }
+                }
+            },
+        }
+    },
+)
 async def upload(
     request: Request,
     user: Annotated[CurrentUser, Depends(scope("upload"))],

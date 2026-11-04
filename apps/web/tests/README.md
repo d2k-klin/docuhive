@@ -10,6 +10,7 @@
 | [`auth.test.ts`](auth.test.ts) | Sign-in redirect rules |
 | [`nav.test.ts`](nav.test.ts) | Navigation by role |
 | [`proxy.test.ts`](proxy.test.ts) | Proxy headers, streaming and cross-site rejection |
+| [capture/](capture/) | Production-mode capture and offline-browser acceptance |
 
 ## Extending
 

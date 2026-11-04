@@ -1,6 +1,7 @@
 """Source adapters and operations against the existing network-free storage fixture."""
 
 import errno
+import hashlib
 import json
 import logging
 from datetime import UTC, datetime, timedelta
@@ -14,9 +15,13 @@ from docuhive.ingest import consume
 from docuhive.vault import backup, library
 from docuhive.vault.availability import available
 
-from .test_archive_tools import add, tools  # noqa: F401
+from .test_archive_tools import add
+from .test_archive_tools import tools as archive_tools
 from .test_auth_integration import CSRF, login
-from .test_auth_memory import client  # noqa: F401
+from .test_auth_memory import client as auth_client
+
+client = auth_client
+tools = archive_tools
 
 
 @pytest.fixture
@@ -122,6 +127,9 @@ def test_scanner_stability_persistent_ledger_and_verified_release(mounted, tmp_p
         (mounted.vault / "2026/scanned/original.pdf").write_bytes(files[0].read_bytes())
         with db.session() as session:
             session.get(Document, "scanned").status = "processing"
+            session.get(Document, "scanned").sha256 = hashlib.sha256(
+                files[0].read_bytes()
+            ).hexdigest()
         files[0].unlink()
         return IngestResult(document_id="scanned", status="staged")
 
@@ -199,6 +207,7 @@ def test_library_hardlinks_collision_privacy_metadata_changes_and_no_copy(mounte
     with db.session() as session:
         session.get(Document, "a").title = "New title"
         session.get(Document, "b").deleted_at = datetime.now(UTC)
+        session.get(Setting, library.MANIFEST).value = {}  # Crash before manifest commit.
     assert library.sync()["links"] == 2
     assert original.exists() and foreign.exists()
     assert library.component("../../") == "untitled"

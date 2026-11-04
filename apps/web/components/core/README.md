@@ -17,6 +17,8 @@
 | [`saved-views.tsx`](saved-views.tsx) | Saved views: create, edit, pin, share and delete |
 | [`vault-health.tsx`](vault-health.tsx) | The last storage check and buttons to start a quick or full one |
 | [`view-documents.tsx`](view-documents.tsx) | The documents a saved view matches, with paging and export |
+| [capture.tsx](capture.tsx) | Phone capture with page ordering, rotation and persistent offline uploads |
+| [operations-status.tsx](operations-status.tsx) | Live storage and backup warning banner |
 
 ## Extending
 

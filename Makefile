@@ -24,6 +24,7 @@ test:
 test-ui:
 	$(NPM) run build
 	$(NPM) exec --workspace apps/web -- playwright test
+	$(NPM) exec --workspace apps/web -- playwright test --config playwright.capture.config.ts
 
 test-integration:
 	docker compose -f deploy/compose.test.yml up -d --wait
@@ -87,10 +88,11 @@ upgrade:
 test-capture:
 	$(UV) run pytest services/docuhive/tests/core/test_capture_operations.py -q
 	$(NPM) test --workspace apps/web
-	$(NPM) exec --workspace apps/web -- playwright test tests/ui/capture.spec.ts
+	$(NPM) run build --workspace apps/web
+	$(NPM) exec --workspace apps/web -- playwright test --config playwright.capture.config.ts
 
 test-ops:
-	$(UV) run pytest services/docuhive/tests/core/test_backup_script.py services/docuhive/tests/core/test_operations_integration.py -q
+	$(UV) run pytest services/docuhive/tests/core/test_backup_script.py services/docuhive/tests/core/test_operations_integration.py services/docuhive/tests/core/test_capture_operations_integration.py -q
 
 verify-restore:
 	$(UV) run python deploy/drills/verify_snapshot.py "$(ORIGINAL)" "$(RESTORED)"
