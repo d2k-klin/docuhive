@@ -132,6 +132,18 @@ class SearchFilters(BaseModel):
     include_trashed: bool = False
 
 
+class KnowledgeBaseView(BaseModel):
+    id: int
+    name: str
+    description: str
+    filters: SearchFilters
+    owner_id: int
+    shared: bool
+    local_only: bool
+    created_at: datetime
+    updated_at: datetime
+
+
 class SemanticHit(BaseModel):
     document_id: str
     score: float                # cosine similarity, higher = better
@@ -160,6 +172,8 @@ class ChunkHit(BaseModel):
     title: str | None
     document_date: date | None
     category: str | None
+    page: int | None = None
+    url: str | None = None
 
 
 class CurrentUser(BaseModel):
@@ -331,6 +345,20 @@ def retrieve(user: CurrentUser, query: str, filters: SearchFilters,
 
 ---
 
+### 2.8 Knowledge bases — `docuhive.kb`
+```python
+def get(user: CurrentUser, kb_id: int) -> KnowledgeBaseView: ...
+```
+Missing and invisible bases both raise HTTP 404. Sharing a base never shares its
+documents: every retrieval intersects its saved filters with `visible_docs(user)`.
+Only the owner changes or deletes a base, including when the caller is an admin.
+
+Authentication also supplies `request.state.token_id` (integer or `None`) and
+`request.state.token_local_consumer` (boolean, false for browser sessions).
+Tokens may have `kb:read` and `kb:ask` scopes. Only a browser session may issue a
+token with `local_consumer=true`; bearer tokens cannot grant this flag, even with
+the admin scope. CL applies restricted-document policy at its retrieval boundary.
+
 ## 3. Functions CL provides
 
 | Function / file | Purpose | OA fallback |
@@ -426,8 +454,13 @@ CREATE TABLE doc_sources (
 ```
 Other core tables (CL does not need them): `sessions`, `api_tokens`, `notes`, `audit_log`, `jobs`, `settings`.
 
+`knowledge_bases` is core-owned and readable through `kb.get`: integer `id`, text
+`name`, `description`, JSONB `filters`, `owner_id` referencing users, boolean
+`shared` (default false), `local_only` (default true), and `created_at`/`updated_at`.
+`api_tokens.local_consumer` is boolean, false by default.
+
 ### 5.2 Intel tables (CL)
-`mail_accounts`, `mail_messages`, `mail_attachments`, `backfills`, `ai_runs`, `review_items`, `doc_chunks`, `chat_sessions`, `chat_messages`, `analyses`, `reminders`, `notification_channels`. Schemas are in the CL plan files. OA does not read them, except through CL's API/UI.
+`mail_accounts`, `mail_messages`, `mail_attachments`, `backfills`, `ai_runs`, `review_items`, `doc_chunks`, `chat_sessions`, `chat_messages`, `analyses`, `reminders`, `notification_channels`. Schemas are in the CL plan files. OA reads `doc_chunks` by its shared columns for retrieval and knowledge-base status; other intel tables are accessed through CL's API/UI.
 
 ---
 
@@ -439,6 +472,8 @@ The base path is `/api`. There is one FastAPI app. Routers are listed in `docuhi
 |--------|-------|
 | `/api/auth/*`, `/api/users/*`, `/api/tokens/*` | OA |
 | `/api/documents/*`, `/api/upload`, `/api/search` | OA |
+| `/api/kb`, `/api/kb/{id}`, `/api/kb/{id}/status`, `/api/kb/suggestions`, `/api/kb/options` | OA |
+| `/api/kb/{id}/retrieve`, `/api/kb/{id}/ask` | CL |
 | `/api/vocabulary/*` (tags, correspondents) | OA |
 | `/api/system/*` (health, vault, jobs, quarantine, stats, `sse-test`, `setup-status`) | OA |
 | `/api/taxonomy` | CL |
@@ -460,6 +495,9 @@ The base path is `/api`. There is one FastAPI app. Routers are listed in `docuhi
 ---
 
 ## 7. Web ownership (`apps/web`)
+
+OA owns `/knowledge` (saved scopes and indexing status); CL owns its retrieval test
+panel and Ask scope integration. OA owns `/settings/tokens`, including KB scopes.
 
 | Path | Owner |
 |------|-------|

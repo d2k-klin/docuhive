@@ -12,6 +12,11 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- Saved knowledge bases with owner-only editing, shared scopes, taxonomy validation, indexing status, suggestions and the `/knowledge` manager.
+- API token settings with knowledge-base permissions and an explicit local-consumer trust flag; bearer tokens cannot grant that flag to new tokens.
+- Hybrid retrieval learning note and offline example; chunk typo fallback and candidate diversification before fusion.
+
+- System architecture illustrations covering the web/API, workers, OCR, agents, embeddings, PostgreSQL, file storage and knowledge bases, with incomplete components marked.
 - `docs/ARCHITECTURE.md`: how DocuHive works, from the basics down to components, libraries, user actions, data flows, hosting, security and current status.
 - Hybrid search: full-text (German/English stemming, accents, typo fallback) fused with semantic search by reciprocal rank fusion, with permissions and filters on both sides, and chunk-level `search.retrieve` for knowledge bases (KB-M1).
 - Decision 0002 and an implementation plan for Bedrock-style knowledge bases inside DocuHive (retrieve and ask APIs, MCP server, retrieval evals), with requirements KB-01…KB-08.

@@ -17,3 +17,7 @@ ROUTERS.append(users_router)
 from docuhive.ai.routers import CL_ROUTERS  # noqa: E402  (CL: taxonomy, ai, review, sources, chat, ...)
 
 ROUTERS.extend(CL_ROUTERS)
+
+from .knowledge import router as knowledge_router  # noqa: E402
+
+ROUTERS.append(knowledge_router)

@@ -40,7 +40,30 @@ class PasswordChange(BaseModel):
 
 class TokenCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    scopes: list[Literal["upload", "read", "write", "admin"]] = Field(min_length=1)
+    scopes: list[Literal["upload", "read", "write", "admin", "kb:read", "kb:ask"]] = Field(
+        min_length=1, max_length=6
+    )
+    local_consumer: bool = False
+
+
+class TokenView(BaseModel):
+    id: int
+    prefix: str
+    name: str
+    scopes: list[str]
+    local_consumer: bool
+    created_at: datetime
+    last_used_at: datetime | None
+    revoked_at: datetime | None
+
+
+class TokenSecret(TokenView):
+    token: str
+
+
+class TokenList(BaseModel):
+    items: list[TokenView]
+    next_cursor: None = None
 
 
 @router.post("/api/auth/login", status_code=204)
@@ -139,8 +162,17 @@ def sessions(user: UserDependency) -> dict:
         }
 
 
-@router.post("/api/tokens", status_code=201)
-def create_token(body: TokenCreate, user: UserDependency) -> dict:
+@router.post("/api/tokens", status_code=201, response_model=TokenSecret)
+def create_token(body: TokenCreate, request: Request, user: UserDependency) -> TokenSecret:
+    if body.local_consumer and request.state.token_scopes is not None:
+        raise HTTPException(
+            403,
+            {
+                "code": "local_consumer_session_required",
+                "message": "Sign in to mark a consumer as local-only.",
+                "details": {},
+            },
+        )
     if "admin" in body.scopes and user.role != "admin":
         raise HTTPException(403, "Only administrators can create admin tokens")
     prefix = secrets.token_hex(4)
@@ -150,41 +182,24 @@ def create_token(body: TokenCreate, user: UserDependency) -> dict:
             user_id=user.id,
             name=body.name,
             scopes=sorted(set(body.scopes)),
+            local_consumer=body.local_consumer,
             prefix=prefix,
             token_hash=token_hash(raw),
         )
         db.add(row)
         db.flush()
-        return {
-            "id": row.id,
-            "token": raw,
-            "prefix": prefix,
-            "name": row.name,
-            "scopes": row.scopes,
-        }
+        return TokenSecret(
+            **TokenView.model_validate(row, from_attributes=True).model_dump(), token=raw
+        )
 
 
-@router.get("/api/tokens")
-def tokens(user: UserDependency) -> dict:
+@router.get("/api/tokens", response_model=TokenList)
+def tokens(user: UserDependency) -> TokenList:
     with session() as db:
         rows = db.scalars(
             select(ApiToken).where(ApiToken.user_id == user.id).order_by(ApiToken.id.desc())
         )
-        return {
-            "items": [
-                {
-                    "id": t.id,
-                    "name": t.name,
-                    "prefix": t.prefix,
-                    "scopes": t.scopes,
-                    "created_at": t.created_at,
-                    "last_used_at": t.last_used_at,
-                    "revoked_at": t.revoked_at,
-                }
-                for t in rows
-            ],
-            "next_cursor": None,
-        }
+        return TokenList(items=[TokenView.model_validate(t, from_attributes=True) for t in rows])
 
 
 @router.delete("/api/tokens/{token_id}", status_code=204)

@@ -7,6 +7,7 @@ lists an item appears in, using ranks only, so FTS and cosine scores never need 
 from collections import Counter
 from collections.abc import Callable, Hashable, Sequence
 from typing import Literal
+from urllib.parse import quote
 
 from docuhive.contracts import ChunkHit, CurrentUser, SearchFilters, SearchHit, SemanticHit
 
@@ -58,7 +59,7 @@ def hybrid(
 
     if mode == "semantic" and _semantic is None:
         raise SemanticUnavailable
-    if not query.strip():
+    if not query.strip() or limit <= 0:
         return []
     fts_ids = [] if mode == "semantic" else fts.documents(user, query, filters, CANDIDATES)
     sem = _semantic(user, query, filters, CANDIDATES) if _semantic and mode != "fts" else []
@@ -94,7 +95,7 @@ def retrieve(
 
     if mode == "semantic" and _chunk_semantic is None:
         raise SemanticUnavailable
-    if not query.strip():
+    if not query.strip() or k <= 0:
         return []
     lexical = [] if mode == "semantic" else fts.chunks(user, query, filters, CANDIDATES)
     sem = (
@@ -127,6 +128,7 @@ def retrieve(
                 title=title,
                 document_date=document_date,
                 category=category,
+                url=f"/documents/{quote(doc_id, safe='')}",
             )
         )
     return hits

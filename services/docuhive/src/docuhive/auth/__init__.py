@@ -20,7 +20,7 @@ from .permissions import visible_docs, visible_docs_incl_trash  # noqa: F401
 
 password_hasher = PasswordHasher()
 _dummy_hash = password_hasher.hash(secrets.token_urlsafe(32))
-SCOPES = {"upload", "read", "write", "admin"}
+SCOPES = {"upload", "read", "write", "admin", "kb:read", "kb:ask"}
 
 
 def token_hash(token: str) -> str:
@@ -52,6 +52,8 @@ def current_user(request: Request) -> CurrentUser:
     settings = get_settings()
     authorization = request.headers.get("authorization", "")
     now = datetime.now(UTC)
+    request.state.token_id = None
+    request.state.token_local_consumer = False
     if settings.env == "dev" and settings.auth_disabled:
         check_csrf(request)
         request.state.token_scopes = None
@@ -70,6 +72,8 @@ def current_user(request: Request) -> CurrentUser:
             if token:
                 user = db.get(User, token.user_id)
                 request.state.token_scopes = set(token.scopes)
+                request.state.token_id = token.id
+                request.state.token_local_consumer = token.local_consumer
                 if token.last_used_at is None or now - token.last_used_at >= timedelta(minutes=1):
                     token.last_used_at = now
         else:
@@ -94,11 +98,18 @@ def current_user(request: Request) -> CurrentUser:
         )
         upload = request.method == "POST" and path == "/api/upload"
         write = path.startswith("/api/documents")
+        kb_path = path == "/api/kb" or path.startswith("/api/kb/")
+        kb_read = kb_path and request.method in {"GET", "HEAD"}
+        kb_retrieve = kb_path and path.endswith("/retrieve") and request.method == "POST"
+        kb_ask = kb_path and path.endswith("/ask") and request.method == "POST"
         allowed = (
             "admin" in scopes
             or (upload and "upload" in scopes)
             or (read and bool(scopes & {"read", "write"}))
             or (write and "write" in scopes)
+            or (kb_read and bool(scopes & {"read", "write", "kb:read", "kb:ask"}))
+            or (kb_retrieve and "kb:read" in scopes)
+            or (kb_ask and "kb:ask" in scopes)
         )
         if not allowed:
             raise HTTPException(403, "This token does not permit this action")

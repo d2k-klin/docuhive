@@ -7,6 +7,8 @@ import {
   Settings,
   ShieldAlert,
   Tags,
+  BookOpen,
+  KeyRound,
 } from "lucide-react";
 import {
   BarChart3,
@@ -33,6 +35,18 @@ export const nav: NavItem[] = [
   { href: "/upload", label: "Upload", icon: Upload, section: "core" },
   { href: "/capture", label: "Capture", icon: Camera, section: "core" },
   {
+    href: "/knowledge",
+    label: "Knowledge bases",
+    icon: BookOpen,
+    section: "core",
+  },
+  {
+    href: "/settings/tokens",
+    label: "API tokens",
+    icon: KeyRound,
+    section: "core",
+  },
+  {
     href: "/quarantine",
     label: "Quarantine",
     icon: ShieldAlert,
@@ -50,10 +64,20 @@ export const nav: NavItem[] = [
   { href: "/review", label: "Review", icon: Inbox, section: "intel" },
   { href: "/ask", label: "Ask", icon: MessageSquare, section: "intel" },
   { href: "/analyses", label: "Analyses", icon: BarChart3, section: "intel" },
-  { href: "/reminders", label: "Reminders", icon: CalendarClock, section: "intel" },
+  {
+    href: "/reminders",
+    label: "Reminders",
+    icon: CalendarClock,
+    section: "intel",
+  },
   { href: "/sources", label: "Sources", icon: Mail, section: "intel" },
   { href: "/settings/ai", label: "AI", icon: Sparkles, section: "intel" },
-  { href: "/settings/notifications", label: "Notifications", icon: Bell, section: "intel" },
+  {
+    href: "/settings/notifications",
+    label: "Notifications",
+    icon: Bell,
+    section: "intel",
+  },
 ];
 
 export function visibleNav(role: "admin" | "member"): NavItem[] {

@@ -32,6 +32,8 @@ def heading_anchors(text: str) -> set[str]:
 
 
 def _generated(path: Path) -> bool:
+    if path.relative_to(ROOT).parts[0] in {"tmp", "data", "overlay"}:
+        return True
     return any(part in {"node_modules", ".next"} or part.startswith(".venv") for part in path.parts)
 
 

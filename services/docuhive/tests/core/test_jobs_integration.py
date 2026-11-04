@@ -133,9 +133,13 @@ def test_scheduler_leader_and_periodic_dedupe(postgres):
 
 
 def test_migration_environments_have_separate_versions(postgres):
+    from alembic.script import ScriptDirectory
+    from docuhive.db.migrations import migration_config
+
     with session() as db:
-        assert db.scalar(text("SELECT version_num FROM alembic_version_core")) == "0001_core"
-        assert db.scalar(text("SELECT version_num FROM alembic_version_intel"))
+        for track in ("core", "intel"):
+            expected = ScriptDirectory.from_config(migration_config(track)).get_current_head()
+            assert db.scalar(text(f"SELECT version_num FROM alembic_version_{track}")) == expected
         assert db.scalar(
             text(
                 "SELECT to_tsvector('dh_german', 'Müller Rechnungen') @@ "

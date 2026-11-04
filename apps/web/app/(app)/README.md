@@ -8,9 +8,10 @@
 | --- | --- |
 | [`analyses/`](analyses/) | Saved analyses |
 | [`ask/`](ask/) | Chat with your documents |
+| [`knowledge/`](knowledge/) | Saved document scopes and indexing status |
 | [`reminders/`](reminders/) | Upcoming deadlines |
 | [`review/`](review/) | Review queue for AI suggestions |
-| [`settings/`](settings/) | Settings: AI providers and runs, notifications |
+| [`settings/`](settings/) | Settings: API tokens, AI providers and runs, notifications |
 | [`sources/`](sources/) | Email accounts, backfills and the triage log |
 | [`layout.tsx`](layout.tsx) | The app shell: navigation, theme switch and user menu |
 | [`page.tsx`](page.tsx) | Dashboard |

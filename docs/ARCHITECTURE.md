@@ -16,13 +16,19 @@ DocuHive collects your documents from email, your phone, a scanner and uploads. 
 
 Three ideas shape everything else:
 
-1. **Your storage holds the truth.** Each document lives in its own folder on your NAS or disk, with the original file and a readable description next to it. The database is only an index, and it can be rebuilt from those folders.
+1. **Your storage holds the document archive.** Each document is intended to live in its own folder on your NAS or disk, with the original file and a readable description next to it. Document records can then be rebuilt from those folders. Accounts, mail state and chat history still need a database backup.
 2. **AI suggests, you decide.** The assistant proposes titles, categories and facts. When it is unsure, it asks you, and it never overwrites something you changed.
 3. **You choose where the AI runs.** A local model on your own machine, a cloud provider, or both. Health and identity documents only ever go to a local model.
 
 ---
 
 ## 2. The big picture
+
+[![Handwritten DocuHive architecture showing the web/API, worker, OCR pipeline, agent harness, separate embedding clients, model providers, PostgreSQL, NAS vault and knowledge bases. Amber dashed outlines identify planned or incomplete parts.](../assets/docuhive-architecture-handwritten.webp)](../assets/docuhive-architecture-handwritten.webp)
+
+*Open the image for full size. Solid outlines mean code exists; amber dashed outlines mean
+planned or incomplete work. Real-provider, NAS and full archive acceptance remain pending.
+The handwritten overview is for this guide; the technical blog uses the separate system map.*
 
 ```
    You (browser or phone)
@@ -52,7 +58,7 @@ Three ideas shape everything else:
 | --- | --- | --- |
 | **Web app** | The screens you use: dashboard, review, ask, analyses, reminders, sources, AI and notification settings | a Next.js server (`apps/web`) |
 | **API** | Signs you in, checks permissions, answers the web app, streams chat answers | `docuhive api` (FastAPI + uvicorn) |
-| **Worker** | Does every slow job: OCR, AI calls, mail sync, reminders | `docuhive worker` (one or more processes) |
+| **Worker** | Background OCR, document AI, indexing, mail sync and reminders; interactive chat runs in the API | `docuhive worker` (one or more processes) |
 | **PostgreSQL** | Metadata, full-text and vector search, the job queue, the AI audit trail | a database container (`pgvector/pgvector:pg16`) |
 | **Vault** | The permanent archive: one folder per document | a folder on the NAS or a disk |
 | **Gotenberg** | Converts office files, emails and HTML to PDF | a container |
@@ -70,19 +76,20 @@ Each row is a user action, the screen where it happens, and what the system does
 | --- | --- | --- | --- |
 | Sign in | `/login` | Password checked with Argon2; a `dh_session` cookie is set; every later change needs the `X-DocuHive-CSRF` header | works |
 | Switch light/dark theme | header icon | Stored in the browser; the class on `<html>` switches colour tokens | works |
-| Connect a mailbox | `/sources` | OAuth for Gmail or Microsoft, or IMAP credentials; tokens encrypted with `DOCUHIVE_SECRET_KEY`; `mail.sync.all` syncs every 15 minutes | works (connectors) |
+| Connect a mailbox | `/sources` | OAuth for Gmail or Microsoft, or IMAP credentials; tokens encrypted with `DOCUHIVE_MAIL_TOKEN_KEY`; `mail.sync.all` syncs every 15 minutes | works (connectors) |
 | Import years of old mail | `/sources` → backfill | `mail.backfill.page` jobs page through the date range and resume after a crash | works (connectors) |
 | Upload a file, photograph a letter, drop a scan in a folder | upload, phone capture, scanner folder | All go to `ingest.submit`: detect type → convert → OCR → write the vault → index | **pending** (behind the OCR quality gate) |
 | Review AI suggestions | `/review` | Each field the AI was unsure about shows the suggestion and its confidence; accept or reject per field or per document | works |
 | Correct a title or category | document page / review | `documents.apply_metadata` writes the database and `meta.json`, and locks the field so AI never overwrites it | API pending; review edits work |
 | Search | search box | Full-text (German/English stemming, accents, typos) and meaning-based search, fused into one ranking; only documents you may see | search engine works; search page pending |
-| Ask a question | `/ask` | The Ask agent searches, reads documents, computes totals in SQL, and streams an answer with citations | works |
+| Ask a question | `/ask` | The Ask agent searches, reads documents, computes Decimal totals from SQL facts, and streams an answer with citations | works against test doubles; real archive integration pending |
 | Save and re-run an analysis | `/analyses` | A saved prompt + filters + model, re-run as an `analyses.run` job | works |
 | See reminders | `/reminders`, calendar | Due dates and notice periods from extracted facts; a hourly scan; an `.ics` calendar feed | works |
 | Get notified | `/settings/notifications` | Channels: ntfy push or email; daily review-backlog and backup checks | works |
 | Choose AI models and privacy | `/settings/ai` | Shows `routing.yaml`: which model runs which task, providers, privacy counts, monthly usage and every run | works |
 | See how an AI result was made | `/settings/ai/runs/{id}` | The run's model, prompt version, tools, tokens, cost and output, from `ai_runs` | works |
-| Create an API token | API | Scoped, revocable tokens for scripts and other agents | works (API) |
+| Create an API token | `/settings/tokens` | Scoped, revocable tokens, including knowledge-base permissions and an explicit local-consumer flag | works |
+| Manage knowledge bases | `/knowledge` | Save filters, share a scope, inspect indexing status and edit or delete your own scopes | works; archive ingest remains gated |
 | Use a knowledge base from another agent | API / MCP | Retrieve and ask over a named scope, with permissions and privacy | planned ([plan](shared/knowledge-bases.md)) |
 
 ---
@@ -91,13 +98,13 @@ Each row is a user action, the screen where it happens, and what the system does
 
 These rules decide most trade-offs in the code.
 
-1. **The vault is the source of truth, PostgreSQL is the index.** Every metadata change is written to the database *and* the document's `meta.json`. If the database is lost, a vault rebuild (planned with document intake) recreates it from the folders, and `docuhive index rebuild` re-embeds the documents.
+1. **The vault preserves documents and metadata.** Metadata changes are intended to reach both the database and the document's `meta.json`. A planned vault rebuild restores document records; re-embedding restores vectors. Accounts, mail state and chat history require a database backup.
 2. **One database does the platform work.** Jobs, full-text search, fuzzy matching, vectors and the audit trail all live in PostgreSQL. This means one backup, and "document saved" and "job queued" happen in one transaction. ([Why not a vector database or a search engine?](decisions/0002-knowledge-bases.md))
-3. **Slow work never runs in the API.** OCR, conversion and AI calls happen only in the worker, so the UI stays responsive.
+3. **Background work uses the worker.** OCR, conversion, document AI and saved analyses use jobs. Interactive Ask runs through the shared harness in the API process and streams its response.
 4. **The web app holds no business logic.** It is a "backend for frontend": every `/api/*` request is proxied to the Python API on the same origin, so the browser never talks to the API directly.
 5. **One permission rule.** `auth.visible_docs(user)` is a single SQL condition used by every query: lists, search, vectors and agent tools.
-6. **One door to a model.** Feature code never creates a model client. Everything goes through the agent harness, which applies routing, privacy, budgets, validation and logging (§5.8).
-7. **Promises are enforced where they can't be skipped.** For example, `ai_runs` has `CHECK (NOT restricted OR local)`, so a cloud call on a health document cannot even be recorded.
+6. **Agents use one harness.** LLM tasks share routing, privacy, budgets, validation and logging (§5.8). Embeddings use separate provider clients with route selection, document privacy checks and audit logging (§5.7).
+7. **Check privacy before sending content.** Routing and tool masking exclude restricted text from cloud calls. The `ai_runs` constraint `CHECK (NOT restricted OR local)` additionally catches inconsistent audit records; a log written after an attempt cannot prevent that request.
 8. **The public code works on its own; personal settings live in a private overlay.** Taxonomy, prompts, routing and evaluation data can be overridden from a separate, private folder (§5.11).
 
 ---
@@ -223,6 +230,10 @@ vault/
 - **Vault health:** before any write, the worker checks `_system/VAULT_ID` against the database. If the NAS is unmounted, vault writes pause, uploads wait in `staging/`, and the UI shows a banner. The vault is never created inside an empty mount point.
 - **Without DocuHive:** the archive is still a tidy set of folders with PDFs and readable JSON.
 
+**Recovery boundary:** vault writes and rebuild remain planned. Rebuild is intended to restore
+documents and their metadata, not users, sessions, mail cursors or chat history. Keep a
+PostgreSQL backup as well as the file archive.
+
 ### 5.6 Database (PostgreSQL 16)
 
 **Extensions:**
@@ -245,7 +256,7 @@ There are three text-search configurations, `dh_german`, `dh_english` and `dh_si
 Key columns:
 
 - `documents`: ULID `id`, `owner_id`, `shared`, `status`, `sha256`, `title`, `document_date`, `language`, `fts_config`, `category`, `document_type`, `content`, `content_tsv`, `manual_fields[]`, `deleted_at`
-- `doc_facts`: typed extracted values (`value_num`, `value_date`, `value_text`, `currency`), so totals are SQL, not model arithmetic
+- `doc_facts`: typed extracted values (`value_num`, `value_date`, `value_text`, `currency`), read through SQL for Decimal totals per currency
 - `doc_chunks`: `document_id`, `chunk_no`, `text`, `embedding vector(1024)`, `embed_model`
 - `ai_runs`: task, provider, model, prompt version, tokens, cost, latency, output, `restricted`, `local`, plus the privacy CHECK
 
@@ -261,6 +272,19 @@ Access goes through **SQLAlchemy 2** with **psycopg 3**. Database models are typ
 | **Chunk retrieval** | `search.retrieve` fuses full-text and vectors at chunk level, with at most 3 chunks per document. This is the base for Bedrock-style knowledge bases. |
 
 Both sides apply the same permission rule and the same filter builder (`search.filters`): categories, document types, senders, tags, dates, sources and document IDs.
+
+**Embedding requests are separate from Strands.** The [embedding clients](../services/docuhive/src/docuhive/ai/embeddings.py)
+call Ollama, OpenAI-compatible or Bedrock APIs directly. Indexing checks document privacy
+before sending text and logs attempts to `ai_runs`; indexing and query embedding share one
+vector space. These clients do not automatically inherit the LLM harness's budget check or
+structured-output retries.
+
+**Knowledge bases are saved scopes over this index.** The current implementation adds
+named scopes, CRUD, suggestions and indexing status under `/api/kb`, with ownership,
+sharing and local-only settings, plus a tested management page at `/knowledge`. The
+manager and token settings are implemented. Retrieve/Ask HTTP endpoints, MCP tools and optional local
+reranking remain planned. See the
+[KB plan](shared/knowledge-bases.md); no separate vector database or KB service is required.
 
 ### 5.8 AI layer (`docuhive.ai`, `docuhive.agents`)
 
@@ -287,7 +311,7 @@ Both sides apply the same permission rule and the same filter builder (`search.f
 
 Each task can set thresholds, context limits and fallbacks. Budgets are set in USD per provider per month.
 
-**The harness** (`agents/base.py`): every model call takes the same path.
+**The harness** (`agents/base.py`): structured LLM tasks take this path; tool-using Ask runs share routing, privacy, budgets, timeouts and audit logging.
 
 ```
 privacy gate → routes (primary, fallbacks) → budget check → Strands call with timeout
@@ -340,7 +364,8 @@ privacy gate → routes (primary, fallbacks) → budget check → Strands call w
   | `DOCUHIVE_DATABASE_URL` | the database |
   | `DOCUHIVE_VAULT_DIR` | the vault folder |
   | `DOCUHIVE_STAGING_DIR` | where uploads wait |
-  | `DOCUHIVE_SECRET_KEY` | encryption of mail tokens |
+  | `DOCUHIVE_SECRET_KEY` | core secret required in production |
+  | `DOCUHIVE_MAIL_TOKEN_KEY` | Fernet encryption of mail credentials |
   | `DOCUHIVE_PUBLIC_URL` | the public address |
   | `DOCUHIVE_API_URL` | the API address, for the web proxy |
   | `DOCUHIVE_GOTENBERG_URL` | the converter |
@@ -376,7 +401,7 @@ phone photo ─► ingest.submit ─► staging/ + SHA-256 ─► dedupe ─► 
 1. You ask in `/ask`: "How much did I spend on electricity last year?", optionally scoped to a category or to local models only.
 2. The API creates a chat message and starts the Ask agent through the harness. The privacy gate picks the route.
 3. The agent calls `search_documents` (hybrid search, permission-filtered), then `read_document` for the best hits.
-4. For the total it calls `query_facts`, which sums `doc_facts` per currency in SQL and returns the rows it used.
+4. For the total it calls `query_facts`, which reads scoped `doc_facts` through SQL and computes Decimal totals per currency, returning the rows it used.
 5. The answer streams back over SSE through the web proxy. Citations render as links to the documents, and the run appears under AI settings.
 
 ### 6.3 One model call through the harness
@@ -473,7 +498,7 @@ It costs more and has more moving parts. It is not needed for personal use.
   - unclassified documents are classified locally first
   - the Ask agent masks restricted documents when it runs on a cloud model
 - **Secrets:**
-  - mail tokens are encrypted with Fernet (`cryptography`), keyed by `DOCUHIVE_SECRET_KEY`
+  - mail tokens are encrypted with Fernet (`cryptography`), keyed by `DOCUHIVE_MAIL_TOKEN_KEY`
   - API keys come from environment variables, never from config files
   - gitleaks runs in pre-commit and CI
 - **Network:** designed for LAN and Tailscale. The browser talks to one origin.
@@ -513,7 +538,8 @@ It costs more and has more moving parts. It is not needed for personal use.
 | Document intake into the vault (`ingest.submit`) and the documents API | pending the OCR quality gate |
 | Document, search, upload and capture pages | pending |
 | Production compose and backups | pending |
-| Knowledge bases (APIs, MCP server, UI) | planned ([plan](shared/knowledge-bases.md)) |
+| Knowledge-base scopes, CRUD, suggestions, indexing status and `/knowledge` management UI | implemented and verified against the real API; archive ingest remains gated |
+| Knowledge-base retrieve/Ask HTTP APIs, MCP server and optional reranker | planned ([plan](shared/knowledge-bases.md)) |
 
 ---
 
@@ -569,7 +595,7 @@ AGPL and GPL tools (Ghostscript, unpaper) are only run as separate processes. Py
 | **Embedding** | A list of numbers that represents a text's meaning; similar texts get similar numbers |
 | **Chunk** | A piece of a document (~800 tokens) that is embedded and retrieved on its own |
 | **Hybrid search / RRF** | Combining keyword and meaning-based results by their ranks |
-| **Harness** | The code around every model call: routing, privacy, budgets, validation, logging |
+| **Harness** | The code around LLM agent tasks: routing, privacy, budgets, validation and logging; embeddings use separate provider clients |
 | **Overlay** | A private folder whose settings override the public defaults |
 | **Restricted document** | One in a restricted category (health, identity) or with a restricted tag; local models only |
 | **ULID** | A unique ID that also sorts by creation time |

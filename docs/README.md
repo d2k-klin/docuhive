@@ -7,6 +7,7 @@
 | Doc | Read it for |
 | --- | --- |
 | [setup/development.md](setup/development.md) | Running DocuHive locally, and the checks to run before a pull request |
+| [setup/knowledge-bases.md](setup/knowledge-bases.md) | Saved scopes, indexing status and API token privacy |
 | [setup/ai-providers.md](setup/ai-providers.md) | Local and cloud AI, which model does what, privacy and budgets |
 | [setup/mail-accounts.md](setup/mail-accounts.md) | Connecting Gmail, Outlook and IMAP accounts, and importing old mail |
 | [setup/notifications.md](setup/notifications.md) | Push and email alerts, reminders and the calendar feed |
@@ -16,6 +17,7 @@
 
 | Doc | Read it for |
 | --- | --- |
+| [FEATURES.md](FEATURES.md) | Every feature in one sentence with its current state, plus ideas for what comes next |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How DocuHive works, from the big picture down to each component, user action and hosting option |
 | [REQUIREMENTS.md](REQUIREMENTS.md) | What DocuHive must do, with requirement IDs used across tests and plans |
 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | The architecture: vault, ingest pipeline, AI layer, search and web app |

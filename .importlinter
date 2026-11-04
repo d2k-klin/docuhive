@@ -37,6 +37,7 @@ source_modules =
     docuhive.documents
     docuhive.auth
     docuhive.search
+    docuhive.kb
     docuhive.api
 forbidden_modules =
     docuhive.agents

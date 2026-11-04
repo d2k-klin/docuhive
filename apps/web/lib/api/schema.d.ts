@@ -1061,6 +1061,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Bases */
+        get: operations["list_bases_api_kb_get"];
+        put?: never;
+        /** Create Base */
+        post: operations["create_base_api_kb_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kb/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suggest Bases */
+        get: operations["suggest_bases_api_kb_suggestions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kb/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Filter Options */
+        get: operations["filter_options_api_kb_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/kb/{kb_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Base */
+        get: operations["get_base_api_kb__kb_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Base */
+        delete: operations["delete_base_api_kb__kb_id__delete"];
+        options?: never;
+        head?: never;
+        /** Edit Base */
+        patch: operations["edit_base_api_kb__kb_id__patch"];
+        trace?: never;
+    };
+    "/api/kb/{kb_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Base Status */
+        get: operations["base_status_api_kb__kb_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1117,6 +1205,23 @@ export interface components {
              */
             date_to: string;
         };
+        /** Category */
+        Category: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Restricted
+             * @default false
+             */
+            restricted: boolean;
+        };
         /** ChannelIn */
         ChannelIn: {
             /** Kind */
@@ -1151,6 +1256,48 @@ export interface components {
              * @enum {string}
              */
             role: "admin" | "member";
+        };
+        /** DocumentType */
+        DocumentType: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Facts
+             * @default []
+             */
+            facts: components["schemas"]["FactField"][];
+        };
+        /** FactField */
+        FactField: {
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "money" | "date" | "string" | "number" | "iban";
+            /**
+             * Required
+             * @default false
+             */
+            required: boolean;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Remind Days Before
+             * @default []
+             */
+            remind_days_before: number[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1194,6 +1341,107 @@ export interface components {
              * @default true
              */
             default_shared: boolean;
+        };
+        /** KnowledgeBaseInput */
+        KnowledgeBaseInput: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            filters?: components["schemas"]["SearchFilters"];
+            /**
+             * Shared
+             * @default false
+             */
+            shared: boolean;
+            /**
+             * Local Only
+             * @default true
+             */
+            local_only: boolean;
+        };
+        /** KnowledgeBaseList */
+        KnowledgeBaseList: {
+            /** Items */
+            items: components["schemas"]["KnowledgeBaseView"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** KnowledgeBasePatch */
+        KnowledgeBasePatch: {
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            filters?: components["schemas"]["SearchFilters"];
+            /**
+             * Shared
+             * @default false
+             */
+            shared: boolean;
+            /**
+             * Local Only
+             * @default true
+             */
+            local_only: boolean;
+        };
+        /** KnowledgeBaseStatus */
+        KnowledgeBaseStatus: {
+            /** Documents */
+            documents: number;
+            /** Embedded */
+            embedded: number;
+            /** Pending */
+            pending: number;
+            /** Failed */
+            failed: number;
+            /** Stale */
+            stale: number;
+            /** Last Indexed At */
+            last_indexed_at: string | null;
+            /** Embedding Model */
+            embedding_model: string | null;
+        };
+        /** KnowledgeBaseSuggestion */
+        KnowledgeBaseSuggestion: {
+            /** Name */
+            name: string;
+            filters: components["schemas"]["SearchFilters"];
+        };
+        /** KnowledgeBaseView */
+        KnowledgeBaseView: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            filters: components["schemas"]["SearchFilters"];
+            /** Owner Id */
+            owner_id: number;
+            /** Shared */
+            shared: boolean;
+            /** Local Only */
+            local_only: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /** Login */
         Login: {
@@ -1342,12 +1590,88 @@ export interface components {
          * @enum {string}
          */
         SourceKind: "upload" | "mobile" | "email" | "consume" | "api";
+        /** Taxonomy */
+        Taxonomy: {
+            /** Version */
+            version: number;
+            /** Languages */
+            languages: string[];
+            /**
+             * Default Currency
+             * @default EUR
+             */
+            default_currency: string;
+            /** Categories */
+            categories: components["schemas"]["Category"][];
+            /** Document Types */
+            document_types: components["schemas"]["DocumentType"][];
+            /** Tags */
+            tags: string[];
+        };
         /** TokenCreate */
         TokenCreate: {
             /** Name */
             name: string;
             /** Scopes */
-            scopes: ("upload" | "read" | "write" | "admin")[];
+            scopes: ("upload" | "read" | "write" | "admin" | "kb:read" | "kb:ask")[];
+            /**
+             * Local Consumer
+             * @default false
+             */
+            local_consumer: boolean;
+        };
+        /** TokenList */
+        TokenList: {
+            /** Items */
+            items: components["schemas"]["TokenView"][];
+            /** Next Cursor */
+            next_cursor?: null;
+        };
+        /** TokenSecret */
+        TokenSecret: {
+            /** Id */
+            id: number;
+            /** Prefix */
+            prefix: string;
+            /** Name */
+            name: string;
+            /** Scopes */
+            scopes: string[];
+            /** Local Consumer */
+            local_consumer: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Token */
+            token: string;
+        };
+        /** TokenView */
+        TokenView: {
+            /** Id */
+            id: number;
+            /** Prefix */
+            prefix: string;
+            /** Name */
+            name: string;
+            /** Scopes */
+            scopes: string[];
+            /** Local Consumer */
+            local_consumer: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Revoked At */
+            revoked_at: string | null;
         };
         /** UserCreate */
         UserCreate: {
@@ -1656,9 +1980,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["TokenList"];
                 };
             };
         };
@@ -1682,9 +2004,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["TokenSecret"];
                 };
             };
             /** @description Validation Error */
@@ -3599,6 +3919,237 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SetupCheck"][];
+                };
+            };
+        };
+    };
+    list_bases_api_kb_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeBaseList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_base_api_kb_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeBaseInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeBaseView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suggest_bases_api_kb_suggestions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeBaseSuggestion"][];
+                };
+            };
+        };
+    };
+    filter_options_api_kb_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Taxonomy"];
+                };
+            };
+        };
+    };
+    get_base_api_kb__kb_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kb_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeBaseView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_base_api_kb__kb_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kb_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    edit_base_api_kb__kb_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kb_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KnowledgeBasePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeBaseView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    base_status_api_kb__kb_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kb_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnowledgeBaseStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

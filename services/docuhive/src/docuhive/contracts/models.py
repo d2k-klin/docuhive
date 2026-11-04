@@ -118,6 +118,18 @@ class SearchFilters(BaseModel):
     include_trashed: bool = False
 
 
+class KnowledgeBaseView(BaseModel):
+    id: int
+    name: str
+    description: str
+    filters: SearchFilters
+    owner_id: int
+    shared: bool
+    local_only: bool
+    created_at: datetime
+    updated_at: datetime
+
+
 class SemanticHit(BaseModel):
     document_id: str
     score: float  # cosine similarity, higher = better
@@ -146,6 +158,8 @@ class ChunkHit(BaseModel):
     title: str | None
     document_date: date | None
     category: str | None
+    page: int | None = None
+    url: str | None = None
 
 
 class CurrentUser(BaseModel):

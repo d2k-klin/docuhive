@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { checkbox } from "@/lib/ui/control";
 
 export default function UI() {
   if (process.env.NODE_ENV === "production") notFound();
@@ -15,6 +16,10 @@ export default function UI() {
           Secondary
         </Button>
       </div>
+      <label className="mt-4 flex min-h-5 items-center gap-2 text-sm">
+        <input className={checkbox} type="checkbox" />
+        Form choice
+      </label>
     </main>
   );
 }

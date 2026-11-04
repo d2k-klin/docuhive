@@ -49,6 +49,7 @@ def test_retrieve_caps_chunks_per_document_and_keeps_both_ranks(monkeypatch):
     assert (hits[0].fts_rank, hits[0].semantic_rank) == (6, 1)
     assert [h.chunk_no for h in hits if h.document_id == "doc-a"] == [0, 1, 2]
     assert hits[0].title == "DOC-B" and hits[0].category == "utilities"
+    assert hits[0].url == "/documents/doc-b" and hits[0].page is None
     assert search.retrieve(USER, "Strom", SearchFilters(), k=2)[1].document_id == "doc-a"
 
 
@@ -56,6 +57,8 @@ def test_blank_queries_return_nothing(monkeypatch):
     monkeypatch.setattr(search, "_semantic", None)
     assert search.hybrid(USER, "   ", SearchFilters()) == []
     assert search.retrieve(USER, "", SearchFilters()) == []
+    assert search.hybrid(USER, "Strom", SearchFilters(), limit=0) == []
+    assert search.retrieve(USER, "Strom", SearchFilters(), k=0) == []
 
 
 class CapturingSession:
@@ -117,6 +120,7 @@ def test_fts_skips_the_typo_query_with_enough_hits_and_builds_chunk_queries(monk
             [f"doc-{i}" for i in range(5)],
             [("doc-1", "Title", "\u0002Strom\u0003")],
             [("doc-1", 0, "Strom")],
+            [],  # no additional typo candidates
             [("doc-1", "Title", None, "utilities")],
         ]
     )
@@ -126,6 +130,22 @@ def test_fts_skips_the_typo_query_with_enough_hits_and_builds_chunk_queries(monk
     assert fts.headlines(["doc-1"], "Strom") == {"doc-1": ("Title", "\u0002Strom\u0003")}
     assert fts.chunks(USER, "Strom", SearchFilters(), 10) == [("doc-1", 0, "Strom")]
     assert fts.details(["doc-1"]) == {"doc-1": ("Title", None, "utilities")}
-    assert len(session.sql) == 4  # no typo query
+    assert len(session.sql) == 5  # chunk search tries typos; document search has enough hits
     assert "doc_chunks" in session.sql[2] and "to_tsvector(documents.fts_config" in session.sql[2]
+    assert "row_number() OVER (PARTITION BY doc_chunks.document_id" in session.sql[2]
     assert fts.headlines([], "x") == {} and fts.details([]) == {}
+
+
+def test_chunk_typo_fallback_preserves_rank_and_filters(monkeypatch):
+    from docuhive import db
+    from docuhive.search import fts
+
+    session = CapturingSession([[], ["city"], [("city", 0, "Synthetic bill")]])
+    monkeypatch.setattr(db, "session", lambda: session)
+    assert fts.chunks(USER, "Stadwerke", SearchFilters(categories=["utilities"]), 20) == [
+        ("city", 0, "Synthetic bill")
+    ]
+    assert "similarity(" in session.sql[1] and "documents.category" in session.sql[1]
+    assert (
+        "documents.owner_id" in session.sql[1] and "documents.deleted_at IS NULL" in session.sql[1]
+    )

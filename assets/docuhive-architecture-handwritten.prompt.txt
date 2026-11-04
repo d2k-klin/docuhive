@@ -1,0 +1,43 @@
+Use case: infographic-diagram.
+Asset type: an accurate handwritten architecture illustration for docs/ARCHITECTURE.md in the DocuHive repository.
+Input image 1 is the verified system-map CONTENT REFERENCE, not the desired visual style. Create a newly drawn handwritten version of the architecture. Simplify the text to the concise labels below; preserve the actual relationships. One correction to the reference: named knowledge-base CRUD/status code is now being implemented, so label that part "in progress" while retrieve/ask HTTP APIs and MCP remain planned. Full-text + trigram + pgvector + RRF hybrid retrieval IS implemented.
+
+Primary request: A beautiful, clear architecture diagram that looks like a senior engineer carefully drew it in a notebook. Cream paper with an extremely faint dot grid, slightly irregular charcoal fineliner boxes, confident readable hand-printed lettering (not cursive), thin black arrows, restrained sage-green highlighter for the agent harness and local models, amber dashed boxes and small "planned" or "partial" labels for unfinished components. Large clean lettering, generous space, no fake code, no decorations that obscure relationships. It must feel drawn by a human, not like a dashboard or typeset corporate slide. Flat overhead view of the diagram only, no desk, hands, pens, page curl, photorealistic objects, logos or mascots. High-resolution landscape 3:2 composition with all text inside the canvas and no cropping. Use the available space to make the major components and arrows readable at a glance.
+
+Exact title: "DocuHive: how everything connects"
+Small subtitle: "Web + Python + PostgreSQL + your own files"
+
+Arrange a clear logical component map with a browser / source entry layer, a central application layer, model services to the right, and persistence underneath. These are logical modules, not separate microservices. Do not blindly copy the reference's rows or arrow crossings. Keep edges around boxes, with whitespace between arrows and words.
+
+Required component labels, verbatim where quoted, with concise sublabels:
+1. "Browser / phone"; "React + TypeScript + Tailwind".
+2. "Next.js web / BFF"; "same-origin /api proxy"; "JSON + streamed SSE".
+3. "FastAPI + Pydantic"; "auth, tokens, chat + settings"; "Ask streams in the API".
+4. "Mail connectors"; "Gmail / Graph / IMAP"; "sync + backfill / rules / AI triage". Nearby small amber note "Uploads / camera / scanner intake: planned".
+5. "Worker + scheduler"; "PostgreSQL jobs"; "leases / retries / dedupe".
+6. "Ingest + OCR [partial]" in an amber dashed box; "Gotenberg: office + HTML to PDF"; "OCRmyPDF / Tesseract / Ghostscript"; "Pillow + HEIF + img2pdf"; "pikepdf / PDFium"; small amber note "production intake + OCR gate pending".
+7. "Agent harness" in a sage highlighted box; "Strands Agents"; "triage / classify / extract / Ask"; "privacy > route > budget > validation"; "timeouts / retries / ai_runs audit"; "restricted documents: local only".
+8. "Embeddings + retrieval"; "separate embedding clients"; "bge-m3 / 1024D"; "FTS + pg_trgm + pgvector / HNSW"; "RRF hybrid search". Make clear this is separate from the Strands agent loop, not an agent tool that generates embeddings through Strands.
+9. "Model services" with a small local green subsection "Local: Ollama" and optional cloud subsection "Anthropic / OpenAI / Bedrock"; small note "LiteLLM / Copilot: experimental, off".
+10. "PostgreSQL 16 + pgvector" as the main database cylinder or hand-drawn database box; "metadata / text / facts / vectors"; "users / jobs / ai_runs / review"; "mail state / chat / analyses / reminders". Small label below "database + staging on host SSD"; staging is planned.
+11. "NAS / disk vault [planned]" in amber dashed outline; "NFS / SMB, files only"; "original.* / archive.pdf"; "meta.json / thumb.webp"; "atomic writes + checksums".
+12. "Knowledge bases [in progress]" with amber dashed outline; "named scopes / CRUD / status"; "same document index"; "retrieve / ask APIs + MCP: planned"; "optional local reranker: planned".
+13. "Review + reminders"; "human field locks / auto-apply off"; "ntfy / SMTP / ICS".
+
+Connections that MUST be unambiguous, using arrow direction and concise labels:
+- Browser goes through Next.js to FastAPI; FastAPI streams answers back over SSE.
+- Mail connectors feed worker jobs. Accepted files go to the common ingest module; this production ingest connection is dashed amber because unfinished.
+- FastAPI and worker both connect directly to the SAME PostgreSQL database. Label queue hand-off "enqueue / claim jobs". Do not imply the API must go through the harness to reach its database or the worker.
+- Worker invokes document ingest/OCR and background agent tasks; API chat uses the SAME agent harness. The worker and API share one Python package.
+- Ingest writes originals/PDF/metadata to the vault (dashed amber), and after verified storage the intended "document.stored" event queues classification/extraction/indexing. Show this simply without a loop of many crossed lines.
+- Harness calls the selected model service. Local-only policy excludes restricted text from optional cloud routes.
+- Embedding clients call allowed model services directly and write/read pgvector chunks in PostgreSQL. Harness/Ask uses retrieval tools to search, read, and calculate facts; the agent does not invent monetary totals. A small arrow label "search / read / SQL facts" is enough.
+- Knowledge bases reuse PostgreSQL's index and retrieval, no second vector DB; planned MCP exposes scopes to external agents.
+- Saved facts feed review/reminder jobs and notifications.
+
+Add a small configuration note with a thin dependency arrow into the application: "YAML + private overlay + env secrets" and "taxonomy / prompts / routes / mail rules".
+Footer strip: "Quality: pytest + FakeModel / evals / Playwright + axe / GitHub Actions".
+Legend: "Solid = code exists" and "Amber dashed = planned / incomplete".
+Footer caveat: "Existing code still needs real-provider and full archive acceptance."
+
+Accuracy constraints: no Redis, Celery, Elasticsearch, Qdrant, S3 primary vault, LangChain or Bedrock Knowledge Bases service. Do not imply embeddings use Strands. Do not imply all chat runs in the worker. The NAS stores files only. No private documents, secrets, personal names, addresses, sample invoices or machine paths. All required labels should be spelled correctly, be legible hand printing, and be placed with enough room for their boxes and arrows. Preserve the separate API-to-database and worker-to-database connections. Do not claim the unfinished archive or KB/MCP HTTP endpoints are production-ready.

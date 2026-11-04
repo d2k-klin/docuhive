@@ -18,6 +18,7 @@
 | [`index/`](index/) | Semantic search: chunking documents, embedding them, and finding similar documents |
 | [`ingest/`](ingest/) | Turning any incoming file into a searchable PDF: type detection, conversion, OCR, text extraction and thumbnails, with strict limits on untrusted input |
 | [`jobs/`](jobs/) | The durable job queue on PostgreSQL: registration, leases, retries and periodic schedules |
+| [`kb/`](kb/) | Saved document scopes, ownership, vocabulary validation and indexing status |
 | [`mail/`](mail/) | Email intake: Gmail, Microsoft Graph and IMAP connectors, sign-in, deterministic rules, sync and backfill |
 | [`notify/`](notify/) | Notifications to ntfy or email, and the periodic checks that trigger them |
 | [`reminders/`](reminders/) | Reminders built from extracted dates (due dates, renewals, notice deadlines), plus an iCalendar feed |

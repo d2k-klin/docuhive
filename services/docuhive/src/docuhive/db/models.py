@@ -139,11 +139,29 @@ class ApiToken(CoreBase):
     token_hash: Mapped[str] = mapped_column(Text, unique=True)
     prefix: Mapped[str] = mapped_column(Text)
     scopes: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    local_consumer: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=text("now()")
     )
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class KnowledgeBase(CoreBase):
+    __tablename__ = "knowledge_bases"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text, server_default="")
+    filters: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'"))
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    shared: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    local_only: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
 
 class Note(CoreBase):

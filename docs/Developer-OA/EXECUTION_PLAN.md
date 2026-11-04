@@ -18,6 +18,28 @@ Developer CL's documents and implementation paths remain outside this work.
 6. **OA-M4–M6:** implement permissions, authentication, API/search, web workflows and capture.
 7. **OA-M7–M8:** deploy, back up, restore, harden and validate the cloud profile.
 
+## Knowledge-base implementation (added 2026-11-04)
+
+The new [shared knowledge-base plan](../shared/knowledge-bases.md) assigns chunk
+retrieval, saved scopes and their management page to this track. Complete the
+search layer first, without selecting an ingest backend or changing the OCR gate:
+
+1. Add the shared chunk/knowledge-base models and interfaces in the written contracts.
+2. Implement one permission/filter builder, PostgreSQL full-text candidates, semantic
+   registration, rank fusion and chunk diversification. Preserve document search.
+3. Add a core migration for saved knowledge bases, owner-only changes, taxonomy
+   validation, status counts and explicit default-scope suggestions.
+4. Supply token scope/consumer metadata through the authentication contract, then
+   build knowledge-base and token management using the existing controls and API client.
+5. Add the retrieval learning note/example, contract and permission tests, and focused
+   browser/integration checks. Leave CL's retrieval/Ask/MCP endpoints and panels to CL.
+
+Real OCR in the current worker image is checked with `make ocr-smoke`. It remains
+separate from the private-corpus OCR decision. The earlier approval-service limit
+has cleared. The current worker passes real synthetic OCR and PDF/A-2 checks;
+real PostgreSQL checks also pass. Browser validation uses an isolated copy of the
+web workspace because another development server is active in this checkout.
+
 ## Verification
 
 - Run contract and unit tests without credentials or network access.

@@ -9,6 +9,7 @@
 | [`__init__.py`](__init__.py) | HTTP application |
 | [`app.py`](app.py) | FastAPI factory with fail-fast settings and optional intelligence startup |
 | [`auth.py`](auth.py) | Browser login, sessions and personal access tokens |
+| [`knowledge.py`](knowledge.py) | Knowledge-base CRUD, filter choices, suggestions and caller-visible indexing status |
 | [`routers.py`](routers.py) | Shared touchpoint: append routers without removing existing registrations |
 | [`system.py`](system.py) | Public health and protected platform operations |
 | [`users.py`](users.py) | Administrator user management; data visibility is never elevated by this role |

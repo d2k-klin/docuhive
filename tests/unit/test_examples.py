@@ -18,3 +18,16 @@ def test_job_queue_example_runs():
         env=env,
     )
     assert "one pending job" in result.stdout
+
+
+def test_hybrid_search_example_runs():
+    root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [sys.executable, str(root / "examples/learn/09_hybrid_search.py")],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=20,
+        env=dict(os.environ, DOCUHIVE_ENV="test"),
+    )
+    assert "Hybrid ranking" in result.stdout and "electricity-bill" in result.stdout

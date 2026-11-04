@@ -5,3 +5,5 @@ export const control =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:border-[var(--primary)] " +
   "disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-[var(--danger)]";
 export const controlSm = control.replace("h-control", "h-control-sm");
+export const checkbox =
+  "size-[var(--check-size)] shrink-0 accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring";

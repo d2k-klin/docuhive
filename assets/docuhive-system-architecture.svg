@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="2400" viewBox="0 0 1800 2400" role="img" aria-labelledby="title description">
+<title id="title">DocuHive system architecture: documents, agents, search and storage</title>
+<desc id="description">The browser uses a Next.js proxy to reach FastAPI. Mail connectors and durable PostgreSQL jobs feed a Python worker. Shared modules handle OCR and conversion, Strands agents, and separate embedding clients. PostgreSQL stores metadata, jobs, facts, vectors and application state. The planned NAS vault stores original files, PDFs, metadata and thumbnails. Knowledge-base management is in progress; planned retrieve/Ask HTTP APIs and MCP reuse the same index. Amber dashed borders and arrows mark planned or incomplete connections. Existing modules still need production integration and real-provider acceptance.</desc>
+<defs>
+  <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 8 4 0 8" fill="#536744"/></marker>
+  <marker id="future-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 8 4 0 8" fill="#9a681c"/></marker>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #20291c; }
+    .eyebrow { font-size: 20px; font-weight: 700; letter-spacing: 2.4px; fill: #5b6750; }
+    .hero { font-size: 53px; font-weight: 700; }
+    .section { font-size: 25px; font-weight: 700; }
+    .heading { font-size: 29px; font-weight: 700; }
+    .body { font-size: 23px; fill: #43513a; }
+    .small { font-size: 21px; fill: #536247; }
+    .pending { font-size: 22px; fill: #895b13; }
+    .edge { fill: none; stroke: #536744; stroke-width: 2.5; stroke-linejoin: round; }
+    .planned-edge { stroke: #9a681c; stroke-dasharray: 9 6; }
+  </style>
+</defs>
+<rect width="1800" height="2400" fill="#f8f7f1"/>
+
+<rect x="28" y="249" width="1744" height="386" rx="22" fill="#edf0e6"/>
+<rect x="28" y="707" width="1744" height="308" rx="22" fill="#edf0e6"/>
+<rect x="28" y="1106" width="1744" height="410" rx="22" fill="#edf0e6"/>
+<rect x="28" y="1578" width="1744" height="323" rx="22" fill="#edf0e6"/>
+<rect x="28" y="1927" width="1744" height="291" rx="22" fill="#edf0e6"/>
+<text x="56" y="57" class="eyebrow" >MR.D / DOCUHIVE</text>
+<text x="56" y="122" class="hero" >How the whole system connects</text>
+<text x="56" y="166" class="body" >One Python package, a web app, one database and a file archive on your own storage.</text>
+<rect x="58" y="197" width="26" height="20" rx="4" fill="#ffffff" stroke="#d0d7c5" stroke-width="2"/>
+<text x="98" y="215" class="small" >Code exists</text>
+<rect x="290" y="197" width="26" height="20" rx="4" fill="#ffffff" stroke="#9a681c" stroke-width="2" stroke-dasharray="10 7"/>
+<text x="330" y="215" class="small" >Planned or incomplete</text>
+<text x="652" y="215" class="small" >Connections show the design; end-to-end acceptance is still pending.</text>
+<text x="56" y="292" class="section" >01 / PEOPLE, SOURCES AND CONFIGURATION</text>
+<rect x="56" y="316" width="525" height="266" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="80" y="360" class="heading" >Browser + Next.js web</text>
+<text x="80" y="401" class="body" >React • TypeScript • Tailwind</text>
+<text x="80" y="431" class="body" >Next.js App Router + server rendering</text>
+<text x="80" y="461" class="body" >Streaming /api proxy (same origin)</text>
+<text x="80" y="491" class="body" >Typed client: openapi-fetch</text>
+<text x="80" y="521" class="pending" >Document / capture screens: incomplete</text>
+<rect x="638" y="316" width="525" height="266" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="662" y="360" class="heading" >Incoming documents</text>
+<text x="662" y="401" class="body" >Gmail API • Microsoft Graph • IMAP</text>
+<text x="662" y="431" class="body" >Sync / backfill → rules → AI triage</text>
+<text x="662" y="461" class="body" >HTTPX + OAuth / PKCE; stdlib IMAP</text>
+<text x="662" y="491" class="pending" >Uploads • phone • scanner folder • API:</text>
+<text x="662" y="521" class="pending" >planned intake entry points</text>
+<rect x="1220" y="316" width="525" height="266" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="1244" y="360" class="heading" >Runtime configuration</text>
+<text x="1244" y="401" class="body" >YAML defaults + private overlay</text>
+<text x="1244" y="431" class="body" >Taxonomy • routes • prompts • mail rules</text>
+<text x="1244" y="461" class="body" >Pydantic settings + environment secrets</text>
+<text x="1244" y="491" class="body" >Versioned prompts + plugin hooks</text>
+<text x="1244" y="521" class="body" >Private configuration stays out of Git</text>
+<path d="M319 582V766" class="edge" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<text x="91" y="675" class="small" >HTTP / JSON + streamed SSE</text>
+<path d="M900 582V766" class="edge" marker-end="url(#arrow)"/>
+<text x="930" y="675" class="small" >Mail jobs</text>
+<path d="M1482 582V766" class="edge" marker-end="url(#arrow)"/>
+<text x="1251" y="675" class="small" >Task routes / privacy policy</text>
+<text x="56" y="750" class="section" >02 / APPLICATION PROCESSES + MODEL SERVICES</text>
+<rect x="56" y="766" width="525" height="204" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="80" y="810" class="heading" >FastAPI + Uvicorn</text>
+<text x="80" y="851" class="body" >Pydantic request / response validation</text>
+<text x="80" y="881" class="body" >Sessions • API tokens • Argon2 • CSRF</text>
+<text x="80" y="911" class="body" >Chat / Ask streams in the API process</text>
+<text x="80" y="941" class="pending" >Document / search integration: pending</text>
+<rect x="638" y="766" width="525" height="204" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="662" y="810" class="heading" >Python worker + scheduler</text>
+<text x="662" y="851" class="body" >Mail • AI • indexing • reminders</text>
+<text x="662" y="881" class="body" >PostgreSQL queue, leases and retries</text>
+<text x="662" y="911" class="body" >SKIP LOCKED • dedupe • periodic jobs</text>
+<text x="662" y="941" class="body" >One package shared with the API</text>
+<rect x="1220" y="766" width="525" height="204" rx="16" fill="#e8f2ce" stroke="#c9d3ba" stroke-width="2"/>
+<text x="1244" y="810" class="heading" >Model services</text>
+<text x="1244" y="851" class="body" >Local: Ollama (host / LAN)</text>
+<text x="1244" y="881" class="body" >Optional cloud: Anthropic • OpenAI</text>
+<text x="1244" y="911" class="body" >AWS Bedrock • OpenAI-compatible APIs</text>
+<text x="1244" y="941" class="small" >Copilot via LiteLLM: experimental / off</text>
+<path d="M319 970V1165" class="edge planned-edge" marker-end="url(#future-arrow)"/>
+<text x="82" y="1080" class="small" >Ingest / document contracts</text>
+<path d="M900 970V1165" class="edge" marker-end="url(#arrow)"/>
+<text x="650" y="1080" class="small" >Background agent tasks</text>
+<path d="M581 866H611V1035H1108V1165" class="edge" marker-end="url(#arrow)"/>
+<text x="662" y="1029" class="small" >API chat uses the same harness</text>
+<path d="M1482 970V1048H1190V1250H1163" class="edge" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<text x="1260" y="1039" class="small" >Provider requests / results</text>
+<text x="56" y="1149" class="section" >03 / SHARED PYTHON MODULES (LOGICAL RESPONSIBILITIES)</text>
+<rect x="56" y="1165" width="525" height="310" rx="16" fill="#ffffff" stroke="#9a681c" stroke-width="2" stroke-dasharray="10 7"/>
+<text x="80" y="1209" class="heading" >Ingest + OCR [partial]</text>
+<text x="80" y="1250" class="body" >Byte detection • image safety checks</text>
+<text x="80" y="1280" class="body" >Gotenberg: LibreOffice / Chromium</text>
+<text x="80" y="1310" class="body" >Pillow + HEIF → img2pdf</text>
+<text x="80" y="1340" class="body" >OCRmyPDF → Tesseract / Ghostscript</text>
+<text x="80" y="1370" class="body" >pikepdf • PDFium text + thumbnails</text>
+<text x="80" y="1400" class="pending" >Staging / vault / quarantine: pending</text>
+<text x="80" y="1430" class="pending" >OCR quality gate remains open</text>
+<rect x="638" y="1165" width="525" height="310" rx="16" fill="#e8f2ce" stroke="#c9d3ba" stroke-width="2"/>
+<text x="662" y="1209" class="heading" >Agents + harness</text>
+<text x="662" y="1250" class="body" >Strands Agents + Pydantic outputs</text>
+<text x="662" y="1280" class="body" >Triage • classify • extract • Ask / analyse</text>
+<text x="662" y="1310" class="body" >Privacy → route → budget → timeout</text>
+<text x="662" y="1340" class="body" >Validation / retry → ai_runs audit</text>
+<text x="662" y="1370" class="body" >Restricted documents: local routes</text>
+<text x="662" y="1400" class="body" >Suggestions → review; manual locks</text>
+<text x="662" y="1430" class="small" >Automatic apply: off until eval gate</text>
+<rect x="1220" y="1165" width="525" height="310" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="1244" y="1209" class="heading" >Retrieval + embeddings</text>
+<text x="1244" y="1250" class="body" >Chunker → separate embedding clients</text>
+<text x="1244" y="1280" class="body" >Ollama / OpenAI / Bedrock APIs</text>
+<text x="1244" y="1310" class="body" >Default: bge-m3, 1,024 dimensions</text>
+<text x="1244" y="1340" class="body" >pgvector HNSW + visibility filters</text>
+<text x="1244" y="1370" class="body" >Ask: search • read • SQL facts • vocab</text>
+<text x="1244" y="1400" class="small" >Embeddings: own privacy + audit path</text>
+<text x="1244" y="1430" class="body" >Full-text + pg_trgm + RRF fusion</text>
+<path d="M581 1325H638" class="edge planned-edge" marker-end="url(#future-arrow)"/>
+<path d="M1163 1360H1220" class="edge" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<path d="M1710 1165V1067H1527V970" class="edge" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<text x="1551" y="1094" class="small" >Embedding API</text>
+<path d="M319 1475V1540H1482V1640" class="edge planned-edge" marker-end="url(#future-arrow)"/>
+<text x="81" y="1535" class="small" >Original + PDF + metadata + preview</text>
+<path d="M900 1475V1640" class="edge" marker-end="url(#arrow)"/>
+<text x="922" y="1550" class="small" >Audit / review / state</text>
+<path d="M1709 1475V1558H1135V1640" class="edge" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+<text x="1266" y="1550" class="small" >Chunks / vectors / SQL</text>
+<text x="56" y="1621" class="section" >04 / PERSISTENCE: DATABASE ON HOST SSD, FILES ON NAS / DISK</text>
+<rect x="56" y="1640" width="1107" height="223" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="80" y="1684" class="heading" >PostgreSQL 16 + pgvector</text>
+<text x="80" y="1725" class="body" >SQLAlchemy + psycopg • core + intel Alembic migrations</text>
+<text x="80" y="1755" class="body" >Document text / metadata / facts • users / sessions • durable jobs</text>
+<text x="80" y="1785" class="body" >Chunks / HNSW • ai_runs • review • mail cursors • chat / analyses • reminders</text>
+<text x="80" y="1815" class="body" >Permission-filtered full-text, fuzzy, vector and hybrid chunk / document retrieval</text>
+<text x="80" y="1845" class="small" >API and worker both use this database; queue hand-off is stored here</text>
+<rect x="1220" y="1640" width="525" height="223" rx="16" fill="#ffffff" stroke="#9a681c" stroke-width="2" stroke-dasharray="10 7"/>
+<text x="1244" y="1684" class="heading" >NAS vault [planned]</text>
+<text x="1244" y="1725" class="body" >NFS / SMB mount; files only</text>
+<text x="1244" y="1755" class="body" >original.* • archive.pdf</text>
+<text x="1244" y="1785" class="body" >meta.json • thumb.webp</text>
+<text x="1244" y="1815" class="pending" >Atomic writes / checksums / DB rebuild</text>
+<text x="1244" y="1845" class="pending" >Backups: pg_dump + restic [planned]</text>
+<path d="M585 1989V1863" class="edge planned-edge" marker-end="url(#future-arrow)"/>
+<text x="79" y="1920" class="small" >Same document index; saved scopes</text>
+<path d="M1090 1863V1937H1482V1989" class="edge" marker-end="url(#arrow)"/>
+<text x="1263" y="1928" class="small" >Dates → scheduled jobs</text>
+<text x="56" y="1970" class="section" >05 / KNOWLEDGE ACCESS + FOLLOW-UP ACTIONS</text>
+<rect x="56" y="1989" width="1107" height="190" rx="16" fill="#ffffff" stroke="#9a681c" stroke-width="2" stroke-dasharray="10 7"/>
+<text x="80" y="2033" class="heading" >Knowledge bases [in progress]</text>
+<text x="80" y="2074" class="body" >Named scopes / CRUD / status / management UI: implementation in progress</text>
+<text x="80" y="2104" class="pending" >Retrieve / Ask HTTP APIs + MCP tools for external agents: planned</text>
+<text x="80" y="2134" class="pending" >Token privacy policy • retrieval evals • optional local reranker: planned</text>
+<text x="80" y="2164" class="small" >Reuses the same PostgreSQL document index; no extra KB service</text>
+<rect x="1220" y="1989" width="525" height="190" rx="16" fill="#ffffff" stroke="#c9d3ba" stroke-width="2"/>
+<text x="1244" y="2033" class="heading" >Reminders + notifications</text>
+<text x="1244" y="2074" class="body" >Extracted dates → due / renewal alerts</text>
+<text x="1244" y="2104" class="body" >ntfy (HTTP) • email (SMTP) • ICS feed</text>
+<text x="1244" y="2134" class="body" >Saved analyses run as worker jobs</text>
+<text x="1244" y="2164" class="pending" >Real delivery / archive integration pending</text>
+<rect x="28" y="2245" width="1744" height="112" rx="16" fill="#20291c" stroke="none" stroke-width="2"/>
+<text x="56" y="2284" class="section" style="fill:#d8ff5f">BUILD &amp; VERIFY</text>
+<text x="328" y="2284" class="body" style="fill:#f6f5ec">uv / npm • Docker Compose • pytest / FakeModel • evals • Playwright / axe</text>
+<text x="56" y="2325" class="small" style="fill:#d5deca">Ruff / mypy / TypeScript • GitHub Actions     |     Planned operations: Tailscale HTTPS, backups and restore drills</text>
+<text x="56" y="2383" class="small" >Solid borders mean code is present, not production-ready. Real OCR, NAS, provider and full archive acceptance remain pending.</text>
+</svg>

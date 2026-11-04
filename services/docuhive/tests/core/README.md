@@ -15,6 +15,10 @@
 | [`test_conversion_integration.py`](test_conversion_integration.py) | The conversion service receives only synthetic, self-contained document bodies |
 | [`test_job_policy.py`](test_job_policy.py) | Exercise handler outcomes without a database; SQL concurrency is checked separately |
 | [`test_jobs_integration.py`](test_jobs_integration.py) | Real PostgreSQL proof for dedupe, leases, retries and scheduler leadership |
+| [`test_knowledge.py`](test_knowledge.py) | Saved-scope validation, ownership, status and token privilege checks without network |
+| [`test_knowledge_integration.py`](test_knowledge_integration.py) | Real migration, CRUD, visibility, status and pagination checks |
+| [`test_search.py`](test_search.py) | Rank fusion, chunk limits and compiled PostgreSQL query checks |
+| [`test_search_integration.py`](test_search_integration.py) | Real stemming, accents, typo fallback, permissions and chunk diversification |
 | [`test_migrations.py`](test_migrations.py) | Migration ordering is independent of each track's current head revision |
 | [`test_ocr_report.py`](test_ocr_report.py) | The spike report must preserve failed inputs and measure the actual processing result |
 | [`test_ocr_spike.py`](test_ocr_spike.py) | Synthetic parsing, conversion and OCR policy checks; no private corpus or external tools |

@@ -13,7 +13,7 @@ export default async function AppLayout({
   const response = await client.GET("/api/auth/me").catch(() => null);
   if (!response?.data) redirect("/login");
   const user = response.data;
-  const implemented = new Set(["/"]);
+  const implemented = new Set(["/", "/knowledge", "/settings/tokens"]);
   const items = visibleNav(user.role).filter(
     (item) => item.section === "intel" || implemented.has(item.href),
   );

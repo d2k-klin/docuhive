@@ -29,6 +29,7 @@ def pg(postgres, monkeypatch):
                 "(1, 'owner', '!', 'admin'), (2, 'other', '!', 'member')"
             )
         )
+        s.execute(text("SELECT setval(pg_get_serial_sequence('users', 'id'), 2)"))
     use_routing(monkeypatch)  # the hashed test embedder, no network
     routing.load()
     monkeypatch.setattr(search, "_semantic", None)
@@ -124,3 +125,15 @@ def test_retrieve_returns_chunks_with_metadata_and_respects_visibility(pg, monke
     assert first.document_date.isoformat() == "2025-11-01"
     assert first.text.startswith(("Abschnitt", "Stromrechnung"))
     assert all(h.semantic_rank is None for h in search.retrieve(OWNER, "Abschlag", ALL, mode="fts"))
+
+
+def test_chunk_fts_stems_typos_and_diversifies_before_cutoff(pg):
+    long = ["Rechnungen Strom" for _ in range(60)]
+    add_doc("long", "Stadtwerke", "Rechnungen Strom", chunks=long)
+    add_doc("short", "Brief", "Rechnung Strom", chunks=["Rechnung Strom"])
+    add_doc("hidden", "Stadtwerke", "Rechnungen Strom", owner=2, chunks=["Rechnungen Strom"])
+    hits = search.retrieve(OWNER, "Rechnung", ALL, mode="fts")
+    assert "short" in ids(hits) and "hidden" not in ids(hits)
+    assert ids(hits).count("long") == 3
+    typo = search.retrieve(OWNER, "Stadwerke", ALL, mode="fts")
+    assert ids(typo) == ["long"]
