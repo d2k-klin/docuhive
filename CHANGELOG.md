@@ -21,6 +21,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Changed
 
+- GitHub Actions (checkout, setup-node, setup-python, upload-artifact) move to v7; ESLint 10, lucide-react 1.x, openapi-fetch 0.17 and current Python dev tools.
+- Dependabot updates Python through `uv`, so `uv.lock` stays in sync; Tailwind and `@types/node` majors are done by hand.
 - The README follows the Hive project template: Mr.D hero, what DocuHive does, what you'll learn, quick start, documentation, honest project status.
 - The documentation index is organised by Using, Understanding, Learning, Extending and Planning, and the link check covers every README.
 

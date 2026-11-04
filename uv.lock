@@ -634,14 +634,14 @@ requires-dist = [{ name = "docuhive", editable = "services/docuhive" }]
 dev = [
     { name = "import-linter", specifier = ">=2,<3" },
     { name = "mypy", specifier = ">=1.15" },
-    { name = "pip-audit", specifier = ">=2.9" },
-    { name = "pip-licenses", specifier = ">=5" },
-    { name = "pre-commit", specifier = ">=4" },
+    { name = "pip-audit", specifier = ">=2.10.1" },
+    { name = "pip-licenses", specifier = ">=5.5.5" },
+    { name = "pre-commit", specifier = ">=4.7.0" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov", specifier = ">=6" },
     { name = "pytest-socket", specifier = "==0.8.1" },
-    { name = "ruff", specifier = ">=0.11" },
+    { name = "ruff", specifier = ">=0.17.3" },
     { name = "types-pyyaml" },
 ]
 
