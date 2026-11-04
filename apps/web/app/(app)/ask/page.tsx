@@ -163,7 +163,11 @@ export default function AskPage() {
   const bottom = React.useRef<HTMLDivElement>(null);
   const forced = routes.data?.local_only_forced ?? false;
 
-  React.useEffect(() => bottom.current?.scrollIntoView({ block: "end" }), [messages]);
+  // Braces matter: newer browsers return a Promise from scrollIntoView, and React treats an
+  // effect's return value as its cleanup function.
+  React.useEffect(() => {
+    bottom.current?.scrollIntoView({ block: "end" });
+  }, [messages]);
 
   async function open(s: Session) {
     setActive(s);
@@ -273,7 +277,11 @@ export default function AskPage() {
                 <p className="text-text-muted">Ask about your documents. Answers cite the documents they come from, and totals are computed from your data.</p>
                 <div className="flex flex-col gap-2">
                   {SUGGESTIONS.map((s) => (
-                    <Button key={s} variant="secondary" onClick={() => send(s)} className="justify-start whitespace-normal text-left">{s}</Button>
+                    // Controls keep one height, so a long question truncates; the title shows it in full.
+                    // `!`: cn() only joins classes, so it can't override Button's justify-center.
+                    <Button key={s} variant="secondary" onClick={() => send(s)} title={s} className="!justify-start">
+                      <span className="min-w-0 truncate">{s}</span>
+                    </Button>
                   ))}
                 </div>
               </div>

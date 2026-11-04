@@ -83,7 +83,7 @@ implementation is absent (QA-001). Mutation testing remains a separate pending g
 
 ## QA-009
 
-S3 · `bug:oa` · open · WEB-04, QAR-NF-05.
+S3 · `bug:oa` · fixed · WEB-04, QAR-NF-05.
 
 The nine implemented static production pages render Times despite the configured
 Inter token. Reproduce with `make qa-e2e`; the UI test attaches computed measurements.
@@ -91,6 +91,11 @@ On the 1280-light login page: expected family `inter`, actual family `Times`;
 controls measured 36 px and heading 20 px / 600, with no horizontal overflow.
 The font variable is applied on `body`, while the root font token resolves on
 `html`; OA should correct where the variable is available. QA has not edited UI code.
+
+**Fixed:** the font variable now sits on `<html>`, where `--font-sans` is resolved. `make qa-e2e`
+passes 72 tests at 375/768/1280 in light and dark (30 skipped for unbuilt features), including
+the font check. The same run found `/ask` overflowing at 768 px: the suggestion buttons could not
+wrap and now truncate at control height, with the full question in the tooltip.
 
 ## Triage handling
 

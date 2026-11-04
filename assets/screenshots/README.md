@@ -12,11 +12,10 @@ All accounts, model responses and usage figures are synthetic.
 | [ask-dark.png](ask-dark.png) | The same Ask screen in dark theme |
 | [ai-settings-dark.png](ai-settings-dark.png) | AI provider, routing and privacy settings in dark theme |
 
-The PNGs are unchanged browser captures from the QA production-build sweep.
-The user `alice` is the seeded synthetic administrator; the `qa` provider is a
-scripted local HTTP service. These images show the interface, not acceptance of
-the full document workflow. They preserve the known font issue recorded in the
-[verification report](../../docs/Developer-QA/reports/initial-verification.md).
+The PNGs are unchanged Playwright captures (1280 × 900) of the QA production build,
+taken after the Inter font fix (QA-009). The user `alice` is the seeded synthetic
+administrator; the `qa` provider is a scripted local HTTP service. These images show
+the interface, not acceptance of the full document workflow.
 
 ## Extending
 
