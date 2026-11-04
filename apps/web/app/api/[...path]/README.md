@@ -1,14 +1,13 @@
 # `apps/web/app/api/[...path]`
 
-**Overview.** Unbuffered backend proxy for every supported HTTP method.
+**Overview.** The streaming proxy to the Python API. It forwards the session cookie and CSRF header, and streams uploads and chat answers without buffering.
 
 ## What's here
 
-| Path                 | What it is                             |
-| -------------------- | -------------------------------------- |
-| [route.ts](route.ts) | Source, configuration or documentation |
+| Path | What it is |
+| --- | --- |
+| [`route.ts`](route.ts) | Proxy handler for every HTTP method |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Header and streaming rules live in `lib/proxy.ts`; change them there, with a test in `tests/proxy.test.ts`.

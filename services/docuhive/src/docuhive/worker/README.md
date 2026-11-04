@@ -1,15 +1,14 @@
 # `services/docuhive/src/docuhive/worker`
 
-**Overview.** Threaded worker and append-only handler registrations.
+**Overview.** The background worker that runs jobs from the queue, and the list of modules that register job handlers.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
-| [handlers.py](handlers.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Threaded worker with bounded graceful shutdown and scheduler failover |
+| [`handlers.py`](handlers.py) | Shared touchpoint: append handler modules; preserve other track registrations |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Append handler modules to `handlers.py`; never remove another module's entry.

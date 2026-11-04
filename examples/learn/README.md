@@ -1,15 +1,14 @@
 # `examples/learn`
 
-**Overview.** Small learning examples. make learn lists them; make learn EX=12 runs the job-queue example.
+**Overview.** One runnable example per concept in the [learning path](../../docs/learn/README.md). `make learn` lists them; `make learn EX=12` runs one.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [12_job_queue.py](12_job_queue.py) | Source, configuration or documentation |
-| [run.py](run.py) | Source, configuration or documentation |
+| [`12_job_queue.py`](12_job_queue.py) | A durable-work contract demonstration with a fake queue; no database or AI needed |
+| [`run.py`](run.py) | List or run a learning example by its numeric prefix |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Name examples `NN_slug.py` to match the note number; `tests/unit/test_examples.py` runs every example in CI.

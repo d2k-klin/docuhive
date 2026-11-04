@@ -1,15 +1,14 @@
 # `docs/learn`
 
-**Overview.** Learning notes. OA owns note 12 (jobs) and the future note 09 (hybrid search).
+**Overview.** The learning path: short notes on how DocuHive uses Strands agents, the agent harness, evals and retrieval, each linked to the code and to a runnable example.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [05-privacy-routing.md](05-privacy-routing.md) | How restricted documents stay on local models |
-| [12-pipelines-and-jobs.md](12-pipelines-and-jobs.md) | Source, configuration or documentation |
+| [`05-privacy-routing.md`](05-privacy-routing.md) | Privacy routing |
+| [`12-pipelines-and-jobs.md`](12-pipelines-and-jobs.md) | Pipelines and jobs |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Follow the note format in the [`learning-showcase`](../../.agents/skills/learning-showcase/SKILL.md) skill and keep the numbering.

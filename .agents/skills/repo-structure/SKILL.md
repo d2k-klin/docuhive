@@ -91,13 +91,25 @@ docuhive/
 
 ## README template (root)
 
-1. An optional mascot image (right-aligned), `# DocuHive`, and a one-line tagline as a quote.
-2. Badges: CI, License Apache-2.0, "runs locally".
-3. **What DocuHive does**, in plain language with no tool names: the numbered flow (capture → read → sort → find → ask).
-4. **What you'll learn**: Strands agents, the agent harness, evals, hybrid search (link `docs/learn/README.md`).
+Same structure as the other Hive repos (ReelHive, SentryHive, CostHive):
+
+1. **Hero:** the Mr.D mascot, right-aligned, 170 px wide, linked to `https://mr-d.dev`, loaded from `assets/brand/` by relative path (never hot-linked). Then the title `# ⬡ DocuHive`, and a one-line tagline as a quote in the house form "Point it at …, and get …, with no … wrangling."
+2. **Badges:** CI, License Apache-2.0, "runs locally", and the project status.
+3. **What DocuHive does**, in plain language with no tool names: the numbered flow (capture → read → sort → keep → find and ask → remind).
+4. **What you'll learn**: Strands agents, the agent harness, evals, retrieval (link `docs/learn/README.md`).
 5. **Quick start**: `git clone`, `make setup`, `make dev`, then open the setup wizard.
-6. **Documentation**: a table of the main guides, plus "All docs" → `docs/README.md`.
-7. Contributing (`CONTRIBUTING.md`, `SECURITY.md`, `evals/README.md`) and License.
+6. **Documentation**: a table of the main guides, plus "All documentation" → `docs/README.md`.
+7. **Project status**: an honest table of what works and what doesn't yet. No overclaiming.
+8. **Contributing** (`CONTRIBUTING.md`, `SECURITY.md`, the skills), then **License**: the code licence, plus the note that the Mr.D name and artwork are not covered by it (`assets/brand/LICENSE.md`).
+9. **Footer**, after a rule: `Created by **[Mr. D](https://mr-d.dev)**`, plus links to the other Hive repos.
+
+Never in a README: internal plan IDs (`OA-M3`, `CL-01 §1.6`), track names as owners ("owned by CL"), "TODO", or placeholder text such as "Source, configuration or documentation". Folder README rows describe what each file *is for*, in plain words.
+
+## Brand assets (`assets/brand/`)
+
+- Mr.D files come from the brand archive, supplied by Dav. Each Hive repo ships its own copy; nothing is loaded from a server.
+- Keep `manifest.json` (SHA-256 per file), `LICENSE.md` (the brand files are excluded from the code licence) and a `README.md` saying which pose is used where.
+- `tests/unit/test_brand.py` checks every file against the manifest and keeps the set under 2 MB. Never edit the files by hand.
 
 ## `.github` conventions
 

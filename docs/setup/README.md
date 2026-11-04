@@ -1,17 +1,16 @@
 # `docs/setup`
 
-**Overview.** Practical setup and operational instructions.
+**Overview.** Step-by-step guides for running DocuHive and connecting it to your storage, AI providers, email and notifications. The app's setup wizard links here.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [development.md](development.md) | Source, configuration or documentation |
-| [ai-providers.md](ai-providers.md) | Local and cloud AI providers, models per task, budgets |
-| [mail-accounts.md](mail-accounts.md) | Connecting Gmail, Outlook and IMAP accounts; backfill and rules |
-| [notifications.md](notifications.md) | ntfy and email channels, reminders, the calendar feed |
+| [`ai-providers.md`](ai-providers.md) | AI providers and models |
+| [`development.md`](development.md) | Development setup |
+| [`mail-accounts.md`](mail-accounts.md) | Email accounts |
+| [`notifications.md`](notifications.md) | Notifications and reminders |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Write for someone who has never seen the project, and keep every guide linked from the setup checks that need it.

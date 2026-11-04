@@ -1,14 +1,13 @@
 # `config`
 
-**Overview.** Public defaults and configuration documentation; private overrides stay outside Git.
+**Overview.** Public defaults for everything users can configure. Private settings live in your overlay folder (`DOCUHIVE_OVERLAY_DIR`), which overrides these files and is never committed.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [defaults](defaults/) | Directory |
+| [`defaults/`](defaults/) | Default configuration files |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Add a new defaults file under `defaults/`, load it with `docuhive.config.load_yaml`, and document every key with a comment.

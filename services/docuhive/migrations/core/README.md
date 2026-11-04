@@ -1,16 +1,15 @@
 # `services/docuhive/migrations/core`
 
-**Overview.** OA-owned core revisions. Never change an applied revision.
+**Overview.** Migrations for the platform tables (users, documents, jobs).
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [env.py](env.py) | Source, configuration or documentation |
-| [script.py.mako](script.py.mako) | Source, configuration or documentation |
-| [versions](versions/) | Directory |
+| [`versions/`](versions/) | Platform schema revisions, applied in order |
+| [`env.py`](env.py) | Core metadata only; intelligence tables are excluded from autogeneration |
+| [`script.py.mako`](script.py.mako) | Template for new revisions |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Add a new revision; never change one that has been merged.

@@ -1,14 +1,13 @@
 # `services/docuhive/migrations/core/versions`
 
-**Overview.** Frozen core schema revisions in dependency order.
+**Overview.** Platform schema revisions, applied in order.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [0001_core.py](0001_core.py) | Source, configuration or documentation |
+| [`0001_core.py`](0001_core.py) | Core baseline: extensions, unaccented FTS configurations and platform tables |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Never edit a merged revision.

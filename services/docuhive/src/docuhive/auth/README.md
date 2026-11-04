@@ -1,16 +1,15 @@
 # `services/docuhive/src/docuhive/auth`
 
-**Overview.** Passwords, sessions, scoped tokens and centralized document permissions.
+**Overview.** Sign-in, sessions, scoped API tokens, login throttling and the single document-visibility rule.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
-| [permissions.py](permissions.py) | Source, configuration or documentation |
-| [rate_limit.py](rate_limit.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Sessions, scoped API tokens and FastAPI authorization dependencies |
+| [`permissions.py`](permissions.py) | The single document visibility rule, including for administrators |
+| [`rate_limit.py`](rate_limit.py) | Failed-login windows using monotonic time and bounded cleanup |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Every document query must use `visible_docs`; never write a second visibility rule.

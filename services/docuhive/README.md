@@ -1,18 +1,18 @@
 # `services/docuhive`
 
-**Overview.** The Python platform package, migrations and synthetic tests.
+**Overview.** The Python package: the FastAPI app, the job worker, the AI agents, the email connectors and the database migrations. Installed with uv; run with `make dev`.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [Dockerfile](Dockerfile) | Source, configuration or documentation |
-| [migrations](migrations/) | Directory |
-| [pyproject.toml](pyproject.toml) | Source, configuration or documentation |
-| [src](src/) | Directory |
-| [tests](tests/) | Directory |
+| [`migrations/`](migrations/) | Two independent Alembic environments: `core` for the platform tables and `intel` for the AI, email and chat tables |
+| [`src/`](src/) | Installable Python source (src layout) |
+| [`tests/`](tests/) | Python tests: contract tests, platform tests, AI and email tests, fixtures and test doubles |
+| [`Dockerfile`](Dockerfile) | Container image with Tesseract, OCRmyPDF and Ghostscript |
+| [`hatch_build.py`](hatch_build.py) | Carry public defaults and the license through both wheel and source distributions |
+| [`pyproject.toml`](pyproject.toml) | Package definition, extras and tool settings |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Add dependencies to `pyproject.toml` (AI and mail ones in their extras) and run `uv lock`.

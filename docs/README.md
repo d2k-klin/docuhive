@@ -1,47 +1,56 @@
-# DocuHive documentation
+# `docs`
 
-**Overview.** Setup, architecture, learning and development plans for the document platform.
+**Overview.** Everything you need to use, understand and extend DocuHive, beyond the [README](../README.md), which stays a short overview. Start with the guide that matches what you're doing.
 
-## Using
+## Using DocuHive
 
-- [Development setup](setup/development.md)
-- [AI providers](setup/ai-providers.md) · [Email accounts](setup/mail-accounts.md) · [Notifications](setup/notifications.md)
-- [Security and reporting](../SECURITY.md)
+| Doc | Read it for |
+| --- | --- |
+| [setup/development.md](setup/development.md) | Running DocuHive locally, and the checks to run before a pull request |
+| [setup/ai-providers.md](setup/ai-providers.md) | Local and cloud AI, which model does what, privacy and budgets |
+| [setup/mail-accounts.md](setup/mail-accounts.md) | Connecting Gmail, Outlook and IMAP accounts, and importing old mail |
+| [setup/notifications.md](setup/notifications.md) | Push and email alerts, reminders and the calendar feed |
+| [../SECURITY.md](../SECURITY.md) | How to report a vulnerability, and what DocuHive guarantees |
 
-## Understanding
+## Understanding it
 
-- [Requirements](REQUIREMENTS.md)
-- [Architecture and implementation plan](IMPLEMENTATION_PLAN.md)
-- [Technical decisions](decisions/README.md)
-- [Pending OCR decision](decisions/0001-ocr-gate.md)
+| Doc | Read it for |
+| --- | --- |
+| [REQUIREMENTS.md](REQUIREMENTS.md) | What DocuHive must do, with requirement IDs used across tests and plans |
+| [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | The architecture: vault, ingest pipeline, AI layer, search and web app |
+| [decisions/](decisions/README.md) | Decisions with their evidence, such as the [OCR quality gate](decisions/0001-ocr-gate.md) |
+| [shared/contracts.md](shared/contracts.md) | The interfaces between the platform and the AI modules |
 
-## Learning
+## Learning from it
 
-- [Learning path](learn/README.md)
-- [Evals and auto-apply](evals/README.md)
-- [Pipelines and jobs](learn/12-pipelines-and-jobs.md)
-- [Runnable examples](../examples/learn/README.md)
-- [OCR character error measurement](../evals/ocr/README.md)
+| Doc | Read it for |
+| --- | --- |
+| [learn/](learn/README.md) | The learning path: Strands agents, the agent harness, privacy routing, jobs and retrieval |
+| [evals/](evals/README.md) | How AI quality is measured, and when automatic sorting is switched on |
+| [../examples/learn/](../examples/learn/README.md) | Runnable examples, one per learning note |
+| [../evals/ocr/](../evals/ocr/README.md) | Measuring OCR accuracy (character error rate) |
 
-## Extending
+## Extending it
 
-- [Contributing](../CONTRIBUTING.md)
-- [Project skills](../.agents/skills/README.md)
-- [Shared contracts](shared/contracts.md)
-- [Working agreement](shared/working-agreement.md)
+| Doc | Read it for |
+| --- | --- |
+| [../CONTRIBUTING.md](../CONTRIBUTING.md) | Development workflow, checks and pull-request rules |
+| [../.agents/skills/](../.agents/skills/README.md) | Project conventions for humans and coding agents: UI, repo structure, the agent harness and more |
+| [shared/working-agreement.md](shared/working-agreement.md) | Ownership, migrations, shared files and how contracts change |
 
 ## Planning
 
-- [Work split](shared/README.md)
-- [Developer OA](Developer-OA/README.md), [execution plan](Developer-OA/EXECUTION_PLAN.md), [status](Developer-OA/STATUS.md)
-- [Developer CL](Developer-CL/README.md) (owned by the other track)
+DocuHive is built by three parallel tracks. Each has a plan, an execution plan and a live status.
 
-## Extending this index
+| Track | Plan | Status |
+| --- | --- | --- |
+| Work split and integration points | [shared/README.md](shared/README.md) | — |
+| Platform (OA): storage, ingest, sign-in, search, web shell, operations | [Developer-OA/](Developer-OA/README.md) | [status](Developer-OA/STATUS.md) |
+| Intelligence (CL): AI layer, classification, email, chat, reminders | [Developer-CL/](Developer-CL/README.md) | [status](Developer-CL/STATUS.md) |
+| Quality (QA): contracts, end-to-end, non-functional checks, releases | [Developer-QA/](Developer-QA/README.md) | [status](Developer-QA/STATUS.md) |
 
-Add one topic per document and link new guides here. Keep private data outside the repository.
+QA also keeps the [traceability matrix](Developer-QA/traceability.md), [manual checks](Developer-QA/manual-checks.md), [defect register](Developer-QA/bugs.md) and [verification reports](Developer-QA/reports/README.md).
 
-## Developer QA
+## Extending the docs
 
-- [QA track](Developer-QA/README.md), [execution plan](Developer-QA/EXECUTION_PLAN.md), [status](Developer-QA/STATUS.md)
-- [Traceability](Developer-QA/traceability.md), [manual checks](Developer-QA/manual-checks.md), [defect register](Developer-QA/bugs.md)
-- [Verification reports](Developer-QA/reports/README.md)
+One topic per file, linked from this index (and from the root README's documentation table if it's a main guide). Every folder in the repository has its own README for the code in it. Relative links are checked by `tests/unit/test_docs.py`.

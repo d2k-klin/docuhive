@@ -1,16 +1,15 @@
 # `services/docuhive/tests/fakes`
 
-**Overview.** Reusable fakes of public interfaces. core.py is maintained by OA.
+**Overview.** Test doubles for the shared interfaces, used by unit tests on both sides.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
-| [core.py](core.py) | Source, configuration or documentation |
-| [intel.py](intel.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Reusable contract fakes |
+| [`core.py`](core.py) | Test doubles for the platform interfaces |
+| [`intel.py`](intel.py) | SQLite stand-ins for the platform interfaces (db, jobs, documents, ingest, auth, search) plus helpers for routing and FakeModel |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Keep fakes behaviourally identical to the real code; the contract tests check this.

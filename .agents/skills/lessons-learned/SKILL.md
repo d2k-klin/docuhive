@@ -102,6 +102,7 @@ Sources: **[rafi]** RafiHive, **[handy]** HandyHive, **[reel]** ReelHive, **[sen
 - **Pin images and plugins, and fail the build when a pinned tool is missing.** A "latest" image that changes underneath you breaks CI on a random Tuesday. [cost]
 
 ### Process and honesty
+- **Documentation is the first thing people judge.** Placeholder READMEs ("Source, configuration or documentation"), internal plan IDs and track names in public docs make a project look abandoned or amateur. Every README row says what the file is for; the root README follows the Hive template with Mr.D. [dh]
 - **Fix the root cause in the shared function** rather than patching each caller. [handy]
 - **Delete dead code and no-op aliases** found in review (dead `instanceof` branches, misleading names, redundant guards). They hide real bugs. [handy]
 - **Status must reflect reality:** `STATUS.md` says "pending, because X" rather than "done (mocked)". [dh]

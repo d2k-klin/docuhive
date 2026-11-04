@@ -1,16 +1,15 @@
 # `.github/ISSUE_TEMPLATE`
 
-**Overview.** Synthetic bug reports, feature requests and private security-report routing.
+**Overview.** Issue forms for bug reports and feature requests. Security reports go through a private advisory, never a public issue.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [bug_report.yml](bug_report.yml) | Source, configuration or documentation |
-| [config.yml](config.yml) | Source, configuration or documentation |
-| [feature_request.yml](feature_request.yml) | Source, configuration or documentation |
+| [`bug_report.yml`](bug_report.yml) | Bug report form |
+| [`config.yml`](config.yml) | Disables blank issues; links private security reporting |
+| [`feature_request.yml`](feature_request.yml) | Feature request form |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Keep forms short and never ask for real documents or personal data.

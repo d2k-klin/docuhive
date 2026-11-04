@@ -1,14 +1,13 @@
 # `services`
 
-**Overview.** Backend services and their development instructions.
+**Overview.** Backend services. DocuHive has one Python package that provides both the API and the background worker.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [docuhive](docuhive/) | Directory |
+| [`docuhive/`](docuhive/) | The Python package: the FastAPI app, the job worker, the AI agents, the email connectors and the database migrations |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Keep new backend code inside `docuhive/`.
