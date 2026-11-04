@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337 AS build
+FROM python:3.12-slim-trixie@sha256:b18b261e1b4974b4f321451ad5251ded85abb22c2b8b262da527dda1d031ab30 AS build
 WORKDIR /build
 COPY pyproject.toml uv.lock ./
 COPY LICENSE ./
@@ -10,8 +10,9 @@ RUN pip install --no-cache-dir uv==0.11.13 \
     && uv export --frozen --package docuhive --all-extras --no-dev --no-emit-workspace \
        --format requirements-txt > /requirements.txt
 
-FROM python:3.12-slim-bookworm@sha256:e697c81897302a4c4333bade000d98038fbb21eb064f8ee1fd42d02ebcd9d337 AS runtime
-# OCRmyPDF 16.13; Tesseract 5.x from Bookworm. Record actual versions with each benchmark.
+FROM python:3.12-slim-trixie@sha256:b18b261e1b4974b4f321451ad5251ded85abb22c2b8b262da527dda1d031ab30 AS runtime
+# OCRmyPDF 17 needs Ghostscript >= 10.03 (trixie ships 10.05); bookworm's 10.0.0 is refused.
+# Tesseract 5.x from trixie. Record actual versions with each benchmark.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr tesseract-ocr-deu tesseract-ocr-eng ghostscript unpaper \
     pngquant qpdf libheif1 fonts-dejavu-core \

@@ -6,8 +6,12 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Changed
 
-- TypeScript 7 for the web app's typecheck and build, uvicorn 0.54 and psycopg 3.3.
-- ocrmypdf stays on 16: version 17 refuses the base image's Ghostscript 10.0.0, so it waits for a newer base image.
+- TypeScript 7 for the web app's typecheck and build, ocrmypdf 17, uvicorn 0.54 and psycopg 3.3.
+- The worker image moves to Debian trixie (Ghostscript 10.05).
+
+### Fixed
+
+- OCR in the container: ocrmypdf refused the bookworm image's Ghostscript 10.0.0 whenever existing text was skipped, so every scan failed.
 
 ## [0.1.0] - 2026-11-04
 
