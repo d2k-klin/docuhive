@@ -64,13 +64,13 @@ def status(doc_id: str) -> str:
         return session.scalar(select(Document.status).where(Document.id == doc_id))
 
 
-def upload(client, data=PDF, name="Rechnung.pdf", **form):  # noqa: F811
-    return client.post("/api/upload", files=[("files", (name, data))], data=form, headers=CSRF)
+def upload(client, data=PDF, name="Rechnung.pdf", **params):  # noqa: F811
+    return client.post("/api/upload", files=[("files", (name, data))], params=params, headers=CSRF)
 
 
 def test_upload_stores_in_vault_and_edits_follow(core):
     response = upload(core, category="utilities/electricity", tags=["property"])
-    assert response.status_code == 201, response.text
+    assert response.status_code == 202, response.text
     doc_id = response.json()["document_id"]
     assert response.json()["status"] == "staged"
     assert upload(core).json() == {"document_id": doc_id, "status": "duplicate"}
@@ -146,10 +146,15 @@ def test_upload_stores_in_vault_and_edits_follow(core):
     assert kinds().count("document.trashed") == 1 and "document.restored" in kinds()
 
 
+def test_unknown_upload_category_is_refused(core):
+    refused = upload(core, category="nope")
+    assert refused.json()["error"]["code"] == "document_unknown_category"
+
+
 def test_rejected_uploads_leave_nothing_behind(core, monkeypatch):
     unsupported = upload(core, data=b"\x00\x01\x02\x03", name="blob.bin")
-    assert unsupported.status_code == 422
-    assert unsupported.json()["error"]["code"] == "upload_unsupported"
+    assert unsupported.status_code == 415
+    assert unsupported.json()["error"]["code"] == "unsupported_type"
     monkeypatch.setenv("DOCUHIVE_MAX_UPLOAD_MB", "1")
     from docuhive import config
 
@@ -234,8 +239,8 @@ def test_photos_combine_into_one_document(core):
         image = io.BytesIO()
         Image.new("RGB", (8, 8), colour).save(image, format="PNG")
         pages.append(("files", (f"page-{colour}.png", image.getvalue())))
-    response = core.post("/api/upload", files=pages, data={"combine": "true"}, headers=CSRF)
-    assert response.status_code == 201, response.text
+    response = core.post("/api/upload", files=pages, params={"combine": "true"}, headers=CSRF)
+    assert response.status_code == 202, response.text
     doc_id = response.json()["document_id"]
     run(doc_id)
     folder = next(vault.root().glob(f"*/{doc_id}"))
@@ -261,3 +266,38 @@ def test_vault_init_refuses_a_foreign_folder_and_write_is_verified(core, tmp_pat
     target = tmp_path / "out" / "file.bin"
     assert vault.write_atomic(target, b"abc") == vault.sha256(target)
     assert [p.name for p in target.parent.iterdir()] == ["file.bin"]
+
+
+def test_scanner_folder_is_picked_up_kept_until_stored_then_cleared(core):
+    from docuhive.ingest import consume
+
+    inbox = vault.root() / "consume" / "owner"
+    inbox.mkdir(parents=True)
+    (inbox / "scan.pdf").write_bytes(PDF)
+    (inbox / "blob.bin").write_bytes(b"\x00\x01\x02\x03")
+    ctx = JobContext(1, 1, logging.getLogger("t"))
+    for _ in range(3):  # create the ledger, observe a stable file, then pick it up
+        consume.poll({}, ctx)
+    with db.session() as session:
+        doc_id = session.scalar(select(Document.id))
+    assert doc_id and (inbox / "scan.pdf").exists()
+    rejected = list((vault.root() / "consume" / "_rejected").iterdir())
+    assert any(p.name.endswith("blob.bin") for p in rejected)
+    assert any(p.name.endswith(".reason.txt") for p in rejected)
+    run(doc_id)
+    consume.poll({}, ctx)
+    assert not (inbox / "scan.pdf").exists()
+
+
+def test_library_view_links_stored_documents(core):
+    from docuhive.vault import library
+
+    doc_id = upload(core, category="utilities/electricity").json()["document_id"]
+    run(doc_id)
+    assert library.sync() == {"ok": True, "links": 1}
+    [linked] = (vault.root() / "library").rglob("*.pdf")
+    archive = next(vault.root().glob(f"*/{doc_id}")) / "archive.pdf"
+    assert linked.samefile(archive) and "utilities" in linked.parts
+    core.post(f"/api/documents/{doc_id}/trash", headers=CSRF)
+    assert library.sync() == {"ok": True, "links": 0}
+    assert not list((vault.root() / "library").rglob("*.pdf"))

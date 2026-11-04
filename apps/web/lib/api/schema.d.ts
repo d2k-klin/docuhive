@@ -1579,28 +1579,6 @@ export interface components {
              */
             date_to: string;
         };
-        /** Body_upload_api_upload_post */
-        Body_upload_api_upload_post: {
-            /** Files */
-            files: string[];
-            /**
-             * Combine
-             * @default false
-             */
-            combine: boolean;
-            /**
-             * Shared
-             * @default true
-             */
-            shared: boolean;
-            /** Category */
-            category?: string | null;
-            /**
-             * Tags
-             * @default []
-             */
-            tags: string[];
-        };
         /** BulkEdit */
         BulkEdit: {
             /** Ids */
@@ -5781,19 +5759,21 @@ export interface operations {
     };
     upload_api_upload_post: {
         parameters: {
-            query?: never;
+            query?: {
+                combine?: boolean;
+                source?: "upload" | "mobile" | "api";
+                shared?: boolean;
+                category?: string | null;
+                tags?: string[];
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_api_upload_post"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
-            201: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

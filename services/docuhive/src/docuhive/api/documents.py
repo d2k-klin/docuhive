@@ -4,28 +4,24 @@ Every query applies the one visibility rule (`auth.visible_docs`); changing a do
 its owner only, and every change goes through `documents.apply_metadata`.
 """
 
-import uuid
 from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from docuhive import auth, db, documents, ingest, taxonomy
+from docuhive import auth, db, documents, taxonomy
 from docuhive.auth import current_user
 from docuhive.config.settings import get_settings
 from docuhive.contracts import (
     ApplyResult,
     CurrentUser,
     DocumentView,
-    IngestRequest,
-    IngestResult,
     MetadataPatch,
     SearchFilters,
-    SourceInfo,
     SourceKind,
 )
 from docuhive.db.models import AuditLog, Correspondent, Document, DocumentTag, Tag
@@ -350,49 +346,3 @@ def retry_document(doc_id: str, user: UserDependency) -> None:
         )
     if found is None or not retry(doc_id):
         raise problem(404, "document_not_quarantined", "This document is not in quarantine.")
-
-
-@router.post("/upload", response_model=IngestResult, status_code=201)
-async def upload(
-    user: UserDependency,
-    files: Annotated[list[UploadFile], File()],
-    combine: Annotated[bool, Form()] = False,
-    shared: Annotated[bool, Form()] = True,
-    category: Annotated[str | None, Form()] = None,
-    tags: Annotated[list[str], Form()] = [],  # noqa: B006
-) -> IngestResult:
-    patch = MetadataPatch(category=category or None, tags_add=[t for t in tags if t.strip()])
-    validate(patch)
-    limit = get_settings().max_upload_mb * 1024**2
-    staged: list[Path] = []
-    try:
-        total = 0
-        for item in files:
-            path = ingest.incoming_dir() / f"upload-{uuid.uuid4().hex}"
-            staged.append(path)
-            with path.open("wb") as out:
-                while block := await item.read(CHUNK):
-                    total += len(block)
-                    if total > limit:
-                        raise ingest.TooLarge("Upload exceeds the configured limit")
-                    out.write(block)
-        name = Path(files[0].filename or "upload").name[:200] or "upload"
-        result = ingest.submit(
-            staged,
-            IngestRequest(
-                owner_id=user.id,
-                shared=shared,
-                combine=combine,
-                source=SourceInfo(kind=SourceKind.upload, original_filename=name),
-            ),
-        )
-    except ingest.TooLarge as error:
-        raise problem(413, "upload_too_large", str(error)) from error
-    except ingest.IngestRejected as error:
-        raise problem(422, "upload_unsupported", str(error)) from error
-    finally:
-        for path in staged:
-            path.unlink(missing_ok=True)  # submit moved accepted files; only leftovers remain
-    if result.status == "staged" and (patch.category or patch.tags_add):
-        documents.apply_metadata(result.document_id, patch, actor=f"user:{user.id}")
-    return result

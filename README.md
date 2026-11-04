@@ -24,6 +24,10 @@ You choose where the AI runs: entirely on your own machine, with a cloud provide
 
 ## A look inside
 
+<video src="https://github.com/d2k-klin/docuhive/raw/main/docs/video.mp4" controls muted playsinline width="1280">
+  <a href="docs/video.mp4">Watch the DocuHive demo video</a>
+</video>
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/screenshots/ask-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="assets/screenshots/ask-light.png">

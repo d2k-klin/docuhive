@@ -9,13 +9,19 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Document intake: `ingest.submit` (type and size checks, per-owner dedupe, staging) and the `ingest.process` job (conversion, OCR to PDF/A, thumbnail, verified vault write, quarantine with the input kept, retry). A NAS outage leaves uploads staged until the vault is back.
 - The vault: `docuhive vault init`, an availability check against the vault id, atomic writes verified by checksum, and `meta.json` for every document, rendered from the database after each change.
 - The documents service behind the contracts: reading, metadata changes with user locks, AI provenance, audit history, weighted search vectors and `document.*` events.
-- Document API: list with filters, detail, original/archive/thumbnail files, history, edit, bulk edit, trash and restore, upload (`/api/upload`, also with an `upload` API token) and quarantine retry.
+- Document API: list with filters, detail, original/archive/thumbnail files, history, edit, bulk edit, trash and restore, and quarantine retry. Uploads can set category and tags, which count as the user's choice.
+- Tests for the scanner folder and the library view against the real document core.
 - `docuhive ingest <files> --owner <user>`.
 
 ### Changed
 
 - OCR gate waived by the owner; the native core is selected and real-document measurements move to the release gate.
 - A step that fails with a program error (not a document problem) is retried before the document is quarantined.
+
+### Fixed
+
+- The capture page's service worker, queue script and manifest load without a session; before, the sign-in redirect stopped the service worker from installing.
+- Lint, type and formatting errors from the capture change, which had turned `main`'s CI red.
 
 ## [0.2.0] - 2026-11-04
 

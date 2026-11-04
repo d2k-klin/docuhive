@@ -24,6 +24,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 def create_app() -> FastAPI:
     get_settings()
     app = FastAPI(title="DocuHive", version=__version__, lifespan=lifespan)
+    from .upload import UploadLimitMiddleware
+
+    app.add_middleware(UploadLimitMiddleware)
     for router in ROUTERS:
         app.include_router(router)
 

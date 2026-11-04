@@ -4708,18 +4708,74 @@
         ],
         "summary": "Upload",
         "operationId": "upload_api_upload_post",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_upload_api_upload_post"
-              }
+        "parameters": [
+          {
+            "name": "combine",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Combine"
             }
           },
-          "required": true
-        },
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "upload",
+                "mobile",
+                "api"
+              ],
+              "type": "string",
+              "default": "upload",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "shared",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Shared"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "default": [],
+              "title": "Tags"
+            }
+          }
+        ],
         "responses": {
-          "201": {
+          "202": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -4903,52 +4959,6 @@
           "date_to"
         ],
         "title": "BackfillIn"
-      },
-      "Body_upload_api_upload_post": {
-        "properties": {
-          "files": {
-            "items": {
-              "type": "string",
-              "contentMediaType": "application/octet-stream"
-            },
-            "type": "array",
-            "title": "Files"
-          },
-          "combine": {
-            "type": "boolean",
-            "title": "Combine",
-            "default": false
-          },
-          "shared": {
-            "type": "boolean",
-            "title": "Shared",
-            "default": true
-          },
-          "category": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category"
-          },
-          "tags": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Tags",
-            "default": []
-          }
-        },
-        "type": "object",
-        "required": [
-          "files"
-        ],
-        "title": "Body_upload_api_upload_post"
       },
       "BulkEdit": {
         "properties": {
