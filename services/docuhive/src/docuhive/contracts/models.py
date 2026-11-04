@@ -134,6 +134,20 @@ class SearchHit(BaseModel):
     semantic_rank: int | None
 
 
+class ChunkHit(BaseModel):
+    """One retrieved chunk (knowledge-base retrieve, KB-02): RRF over chunk FTS and vectors."""
+
+    document_id: str
+    chunk_no: int
+    text: str
+    score: float  # fused score
+    fts_rank: int | None  # 1-based rank in the chunk FTS list, None if absent
+    semantic_rank: int | None
+    title: str | None
+    document_date: date | None
+    category: str | None
+
+
 class CurrentUser(BaseModel):
     id: int
     username: str

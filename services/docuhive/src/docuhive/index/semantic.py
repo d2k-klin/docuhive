@@ -31,9 +31,10 @@ def _visible(user: CurrentUser, filters: SearchFilters | None) -> Select:
     )
 
 
-def _nearest(
-    base: Select, vector: list[float], k: int, exclude: str | None = None
+def _chunks(
+    base: Select, vector: list[float], limit: int, exclude: str | None = None
 ) -> list[SemanticHit]:
+    """The `limit` nearest visible chunks, best first."""
     if exclude:
         base = base.where(DocChunk.document_id != exclude)
     with db.session() as s:
@@ -45,21 +46,27 @@ def _nearest(
                 literal(vector, Vector(len(vector)))
             )
             rows: Sequence[Any] = s.execute(
-                base.add_columns((1 - dist).label("score")).order_by(dist).limit(k * 4)
+                base.add_columns((1 - dist).label("score")).order_by(dist).limit(limit)
             ).all()
         else:
             scored = [
                 (*r[:3], cosine(r[3], vector))
                 for r in s.execute(base.add_columns(DocChunk.embedding)).all()
             ]
-            rows = sorted(scored, key=lambda r: -r[3])[: k * 4]
+            rows = sorted(scored, key=lambda r: -r[3])[:limit]
+    return [
+        SemanticHit(document_id=doc_id, score=float(score), chunk_no=chunk_no, text=chunk_text)
+        for doc_id, chunk_no, chunk_text, score in rows
+    ]
+
+
+def _nearest(
+    base: Select, vector: list[float], k: int, exclude: str | None = None
+) -> list[SemanticHit]:
     best: dict[str, SemanticHit] = {}
-    for doc_id, chunk_no, chunk_text, score in rows:  # best chunk per document
-        if doc_id not in best or score > best[doc_id].score:
-            best[doc_id] = SemanticHit(
-                document_id=doc_id, score=float(score), chunk_no=chunk_no, text=chunk_text
-            )
-    return sorted(best.values(), key=lambda h: -h.score)[:k]
+    for hit in _chunks(base, vector, k * 4, exclude):  # best chunk per document
+        best.setdefault(hit.document_id, hit)  # chunks arrive best first
+    return list(best.values())[:k]
 
 
 def semantic_search(
@@ -69,6 +76,16 @@ def semantic_search(
     if emb is None or not query.strip():
         return []
     return _nearest(_visible(user, filters), emb.embed([query])[0], k)
+
+
+def semantic_chunks(
+    user: CurrentUser, query: str, filters: SearchFilters, k: int
+) -> list[SemanticHit]:
+    """Chunk-level semantic search for knowledge-base retrieval (several chunks per document)."""
+    emb = embedder()
+    if emb is None or not query.strip():
+        return []
+    return _chunks(_visible(user, filters), emb.embed([query])[0], k)
 
 
 def available() -> bool:

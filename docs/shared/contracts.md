@@ -148,6 +148,20 @@ class SearchHit(BaseModel):
     semantic_rank: int | None
 
 
+class ChunkHit(BaseModel):
+    """One retrieved chunk (knowledge-base retrieve, KB-02): RRF over chunk FTS and vectors."""
+
+    document_id: str
+    chunk_no: int
+    text: str
+    score: float  # fused score
+    fts_rank: int | None  # 1-based rank in the chunk FTS list, None if absent
+    semantic_rank: int | None
+    title: str | None
+    document_date: date | None
+    category: str | None
+
+
 class CurrentUser(BaseModel):
     id: int
     username: str
@@ -304,12 +318,16 @@ Dev mode: if `DOCUHIVE_ENV=dev` and `DOCUHIVE_AUTH_DISABLED=true`, `current_user
 ```python
 SemanticFn = Callable[[CurrentUser, str, SearchFilters, int], list[SemanticHit]]
 def register_semantic(fn: SemanticFn) -> None: ...
+def register_chunk_semantic(fn: SemanticFn) -> None: ...
 def hybrid(user: CurrentUser, query: str, filters: SearchFilters,
            limit: int = 20, mode: Literal["hybrid", "fts", "semantic"] = "hybrid") -> list[SearchHit]: ...
+def retrieve(user: CurrentUser, query: str, filters: SearchFilters,
+             k: int = 20, mode: Literal["hybrid", "fts", "semantic"] = "hybrid") -> list[ChunkHit]: ...
 ```
-- `hybrid` with no semantic function registered behaves as `fts`.
+- `hybrid` with no semantic function registered behaves as `fts`. `mode="semantic"` without one raises `SemanticUnavailable` (the API answers `400 semantic_unavailable`).
 - Fusion is RRF with `k=60` over the top 50 of each list.
-- Permissions and filters are applied in both lists. The semantic function **must** apply `visible_docs(user)` itself.
+- Permissions and filters are applied in both lists. The semantic function **must** apply `visible_docs(user)` itself. `search.filters.conditions(filters)` is the one filter builder for both sides: ORed within a field, ANDed across fields.
+- `retrieve` is the knowledge-base retrieval ([plan KB-M1](knowledge-bases.md#kb-m1-chunk-level-hybrid-retrieval-oa)): chunk FTS and the registered chunk semantic function (several chunks per document), fused, with at most 3 chunks per document. Only chunked (embedded) documents have chunks.
 
 ---
 
