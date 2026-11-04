@@ -77,7 +77,8 @@ Open <http://localhost:3000> and sign in with the account you just created. Stor
 | [Development setup](docs/setup/development.md) | Running DocuHive locally and running the checks |
 | [Learning path](docs/learn/README.md) | Strands, the agent harness, evals and retrieval, step by step |
 | [Requirements](docs/REQUIREMENTS.md) | What DocuHive must do, and why |
-| [Architecture](docs/IMPLEMENTATION_PLAN.md) | How the pieces fit: vault, pipeline, AI layer, search, web |
+| [Architecture](docs/ARCHITECTURE.md) | How it works, from the big picture to each component, user action and hosting option |
+| [Implementation plan](docs/IMPLEMENTATION_PLAN.md) | How it is built, milestone by milestone |
 | [All documentation](docs/README.md) | Everything else, including decisions and the team plans |
 
 ## Project status
