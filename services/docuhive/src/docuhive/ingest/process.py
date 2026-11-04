@@ -1,17 +1,22 @@
 """`ingest.process`: staged input → PDF → OCR → vault → `document.stored`.
 
 Lossless and repeatable: the staged input is deleted only after the vault copy is written,
-verified and committed; any failure keeps it and records a reason (quarantine).
+verified and committed; any failure keeps it and records a reason (quarantine). Every state
+change commits together with the event it implies, so a crash never separates them.
 """
 
-import json
 import shutil
+import threading
+import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from docuhive import db, jobs, vault
 from docuhive.config.settings import get_settings
@@ -19,10 +24,10 @@ from docuhive.db.models import AuditLog, DocSource, Document
 from docuhive.documents import refresh_tsv
 from docuhive.vault import meta
 
-from . import HINTS, staging_dir
+from . import inputs, saved_request, staging_dir
 from .convert import combine, to_pdf
 from .detect import detect
-from .errors import Quarantine
+from .errors import Quarantine, Transient
 from .ocr import ocr
 from .safety import StepFailed, isolated
 from .text import extract_text, page_count
@@ -30,6 +35,7 @@ from .thumbs import thumbnail
 
 MAX_ATTEMPTS = 3
 VAULT_RETRY = timedelta(minutes=2)
+HEARTBEAT_S = 60
 
 
 @dataclass
@@ -41,8 +47,25 @@ class Built:
     pages: int
 
 
-def inputs(work: Path) -> list[Path]:
-    return sorted(work.glob("input-*"), key=lambda p: int(p.name.split("-")[1].split(".")[0]))
+@contextmanager
+def keepalive(ctx: Any) -> Iterator[None]:
+    """Renew the job's lease while a long step runs, so no other worker takes it over."""
+    stop = threading.Event()
+
+    def beat() -> None:
+        while not stop.wait(HEARTBEAT_S):
+            try:
+                ctx.heartbeat()
+            except Exception:  # a missed beat only shortens the lease
+                pass
+
+    thread = threading.Thread(target=beat, daemon=True)
+    thread.start()
+    try:
+        yield
+    finally:
+        stop.set()
+        thread.join(timeout=5)
 
 
 def build(work: Path, files: list[Path]) -> Built:
@@ -74,46 +97,34 @@ def store(doc_id: str, sha: str, year: int, files: list[Path], built: Built) -> 
     target = vault.root() / rel
     if len(files) == 1:
         written = vault.write_atomic(target / f"original{files[0].suffix}", files[0])
-        if written != sha:
-            raise OSError("The staged original no longer matches its checksum")
     else:
-        for index, path in enumerate(files):
-            vault.write_atomic(target / f"original-{index}{path.suffix}", path)
+        written = vault.combined_sha256(
+            [
+                vault.write_atomic(target / f"original-{index}{path.suffix}", path)
+                for index, path in enumerate(files)
+            ]
+        )
         assert built.combined is not None
         vault.write_atomic(target / "original.pdf", built.combined)
+    if written != sha:
+        raise OSError("The staged original no longer matches its checksum")
     vault.write_atomic(target / "archive.pdf", built.archive)
     vault.write_atomic(target / "thumb.webp", built.thumb)
     return rel
 
 
-def hints_of(work: Path) -> dict:
-    """Hints are kept next to the staged input, so a retry from quarantine still has them."""
-    try:
-        return json.loads((work / HINTS).read_text())
-    except (OSError, ValueError):
-        return {}
+def _source_kind(session: Session, doc_id: str) -> str | None:
+    return session.scalar(select(DocSource.kind).where(DocSource.document_id == doc_id))
 
 
-def finish(doc_id: str, work: Path) -> None:
-    """After the commit: description, event, then the staged input may go."""
-    meta.write_or_queue(doc_id)
+def _status(doc_id: str, status: str) -> None:
     with db.session() as session:
-        doc = session.get(Document, doc_id)
-        assert doc is not None
-        kind = session.scalar(select(DocSource.kind).where(DocSource.document_id == doc_id))
-        payload = {"document_id": doc_id, "owner_id": doc.owner_id, "source_kind": kind}
-    jobs.enqueue(
-        "document.stored",
-        payload | {"hints": hints_of(work)},
-        queue="ai",
-        dedupe_key=f"document.stored:{doc_id}",
-    )
-    shutil.rmtree(work, ignore_errors=True)
+        session.get(Document, doc_id).status = status  # type: ignore[union-attr]
 
 
 def quarantine(doc_id: str, reason: str) -> None:
     with db.session() as session:
-        doc = session.get(Document, doc_id)
+        doc = session.get(Document, doc_id, with_for_update=True)
         assert doc is not None
         doc.status, doc.quarantine_reason = "quarantined", reason[:500]
         doc.updated_at = datetime.now(UTC)
@@ -125,30 +136,34 @@ def quarantine(doc_id: str, reason: str) -> None:
                 after={"reason": reason[:500]},
             )
         )
-        kind = session.scalar(select(DocSource.kind).where(DocSource.document_id == doc_id))
         payload = {
             "document_id": doc_id,
             "owner_id": doc.owner_id,
             "reason": reason,
-            "source_kind": kind,
+            "source_kind": _source_kind(session, doc_id),
         }
-    jobs.enqueue("document.quarantined", payload, queue="ai")
+        jobs.enqueue("document.quarantined", payload, queue="ai", in_session=session)
 
 
 def retry(doc_id: str) -> bool:
-    """Send a quarantined document through the pipeline again; its input was kept."""
+    """Send a quarantined document through the pipeline again; its input was kept.
+
+    Each retry is its own job: the attempt that quarantined the document may still be
+    finishing, and must not absorb the new one.
+    """
     with db.session() as session:
-        doc = session.get(Document, doc_id)
+        doc = session.get(Document, doc_id, with_for_update=True)
         if doc is None or doc.status != "quarantined":
             return False
         doc.status, doc.quarantine_reason = "staged", None
         session.add(AuditLog(actor="system", document_id=doc_id, action="ingest.retry"))
-    jobs.enqueue(
-        "ingest.process",
-        {"document_id": doc_id},
-        queue="ocr",
-        dedupe_key=f"ingest.process:{doc_id}",
-    )
+        jobs.enqueue(
+            "ingest.process",
+            {"document_id": doc_id},
+            queue="ocr",
+            dedupe_key=f"ingest.process:{doc_id}:{uuid.uuid4().hex[:12]}",
+            in_session=session,
+        )
     return True
 
 
@@ -162,9 +177,9 @@ def process(payload: dict, ctx: Any) -> None:
             return
         status, sha, year = doc.status, doc.sha256, doc.added_at.year
     if status == "stored":
-        # A crash after the commit: finish the remaining steps, nothing is stored twice.
-        if work.exists():
-            finish(doc_id, work)
+        # A crash after the commit: the event was committed with it; only tidy up.
+        meta.write_or_queue(doc_id)
+        shutil.rmtree(work, ignore_errors=True)
         return
     health = vault.check()
     if not health.ok:
@@ -173,29 +188,28 @@ def process(payload: dict, ctx: Any) -> None:
     if not files:
         quarantine(doc_id, "input_missing")
         return
-    with db.session() as session:
-        session.get(Document, doc_id).status = "processing"  # type: ignore[union-attr]
+    _status(doc_id, "processing")
     try:
-        built = build(work, files)
-        vault.require()
-        rel = store(doc_id, sha, year, files, built)
+        with keepalive(ctx):
+            built = build(work, files)
+            vault.require()
+            rel = store(doc_id, sha, year, files, built)
     except Quarantine as error:
         quarantine(doc_id, str(error))
         return
-    except vault.VaultUnavailable as error:
-        with db.session() as session:
-            session.get(Document, doc_id).status = "staged"  # type: ignore[union-attr]
-        ctx.defer(datetime.now(UTC) + VAULT_RETRY, f"vault unavailable: {error}")
+    except (vault.VaultUnavailable, Transient) as error:
+        # The NAS or the converter is away: wait without spending an attempt.
+        _status(doc_id, "staged")
+        ctx.defer(datetime.now(UTC) + VAULT_RETRY, f"waiting: {error}")
     except Exception as error:
         name = str(error) if isinstance(error, StepFailed) else type(error).__name__
         if ctx.attempt >= MAX_ATTEMPTS:
             quarantine(doc_id, f"processing_failed:{name}")
             return
-        with db.session() as session:
-            session.get(Document, doc_id).status = "staged"  # type: ignore[union-attr]
+        _status(doc_id, "staged")
         raise jobs.RetryLater(f"{name}: processing failed") from error
     with db.session() as session:
-        doc = session.get(Document, doc_id)
+        doc = session.get(Document, doc_id, with_for_update=True)
         assert doc is not None
         doc.status, doc.vault_path, doc.content = "stored", rel, built.content
         doc.pages, doc.quarantine_reason = built.pages, None
@@ -210,4 +224,18 @@ def process(payload: dict, ctx: Any) -> None:
         )
         session.flush()
         refresh_tsv(session, doc_id)
-    finish(doc_id, work)
+        jobs.enqueue(
+            "document.stored",
+            {
+                "document_id": doc_id,
+                "owner_id": doc.owner_id,
+                "source_kind": _source_kind(session, doc_id),
+                "hints": saved_request(work).get("hints") or {},
+            },
+            queue="ai",
+            dedupe_key=f"document.stored:{doc_id}",
+            in_session=session,
+        )
+        meta.queue(session, doc_id)
+    meta.write_or_queue(doc_id)
+    shutil.rmtree(work, ignore_errors=True)

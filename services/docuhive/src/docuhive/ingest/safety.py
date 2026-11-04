@@ -8,7 +8,7 @@ from collections.abc import Callable
 from multiprocessing.connection import Connection
 from typing import Any
 
-from .errors import Quarantine
+from .errors import Quarantine, Transient
 
 MAX_PAGES = 500
 MAX_IMAGE_PIXELS = 200_000_000
@@ -26,6 +26,8 @@ def _child(connection: Connection, fn: Callable, args: tuple) -> None:
         connection.send((True, fn(*args)))
     except Quarantine as error:
         connection.send((False, str(error)))
+    except Transient as error:
+        connection.send(("wait", str(error)))
     except BaseException as error:
         traceback.print_exc()
         connection.send((None, type(error).__name__))
@@ -46,6 +48,8 @@ def isolated(fn: Callable, *args: Any, timeout_s: float = 1800) -> Any:
             ok, result = parent.recv()
         except EOFError as error:
             raise Quarantine("step_crashed") from error
+        if ok == "wait":
+            raise Transient(result)
         if ok is None:
             raise StepFailed(result)
         if not ok:

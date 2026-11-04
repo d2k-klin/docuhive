@@ -10,6 +10,7 @@ from typing import Any
 
 from pydantic import BaseModel
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from docuhive import db, jobs, vault
 from docuhive.contracts import FactValue, SourceInfo
@@ -55,23 +56,28 @@ class MetaV1(BaseModel):
 
 
 def render(doc_id: str) -> MetaV1:
-    from docuhive import documents
-
-    view = documents.get(doc_id)
     with db.session() as session:
         doc = session.get(Document, doc_id)
         assert doc is not None
-        owner = session.scalar(select(User.username).where(User.id == doc.owner_id)) or ""
-        notes = [
-            NoteV1(author=author or "", body=note.body, created_at=note.created_at)
-            for note, author in session.execute(
-                select(Note, User.username)
-                .outerjoin(User, User.id == Note.user_id)
-                .where(Note.document_id == doc_id)
-                .order_by(Note.created_at, Note.id)
-            )
-        ]
-        sha, ai = doc.sha256, dict(doc.ai_provenance or {})
+        return _render(session, doc)
+
+
+def _render(session: Session, doc: Document) -> MetaV1:
+    from docuhive import documents
+
+    view = documents._view(session, doc)
+    doc_id = doc.id
+    owner = session.scalar(select(User.username).where(User.id == doc.owner_id)) or ""
+    notes = [
+        NoteV1(author=author or "", body=note.body, created_at=note.created_at)
+        for note, author in session.execute(
+            select(Note, User.username)
+            .outerjoin(User, User.id == Note.user_id)
+            .where(Note.document_id == doc_id)
+            .order_by(Note.created_at, Note.id)
+        )
+    ]
+    sha, ai = doc.sha256, dict(doc.ai_provenance or {})
     return MetaV1(
         id=view.id,
         sha256=sha,
@@ -98,13 +104,28 @@ def render(doc_id: str) -> MetaV1:
 
 
 def write(doc_id: str) -> None:
-    """Render and write `meta.json`; raises VaultUnavailable or OSError."""
-    with db.session() as session:
-        vault_path = session.scalar(select(Document.vault_path).where(Document.id == doc_id))
-    if not vault_path:
-        return  # not stored yet: ingest writes it with the files
+    """Render and write `meta.json`; raises VaultUnavailable or OSError.
+
+    The document row stays locked from render to rename, so two writers cannot put an older
+    rendering over a newer one.
+    """
     vault.require()
-    vault.write_atomic(vault.root() / vault_path / "meta.json", render(doc_id).dump())
+    with db.session() as session:
+        doc = session.get(Document, doc_id, with_for_update=True)
+        if doc is None or not doc.vault_path:
+            return  # not stored yet: ingest writes it with the files
+        target = vault.root() / doc.vault_path / "meta.json"
+        vault.write_atomic(target, _render(session, doc).dump())
+
+
+def queue(session: Session, doc_id: str) -> None:
+    """A re-render committed with the change itself, so a crash cannot leave the file stale."""
+    jobs.enqueue(
+        "vault.repair_meta",
+        {"document_id": doc_id},
+        dedupe_key=f"vault.repair_meta:{doc_id}",
+        in_session=session,
+    )
 
 
 def write_or_queue(doc_id: str) -> None:

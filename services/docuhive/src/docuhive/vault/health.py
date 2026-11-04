@@ -3,7 +3,6 @@
 The vault is the source of truth, so this never repairs or moves anything; it only reports.
 """
 
-import hashlib
 import json
 import re
 from datetime import UTC, datetime, timedelta
@@ -16,7 +15,8 @@ from sqlalchemy import select
 from docuhive import db, jobs
 from docuhive.config.settings import get_settings
 from docuhive.db.models import Document, Setting
-from docuhive.vault import sha256
+from docuhive.vault import combined_sha256, pages, sha256
+from docuhive.vault import original as find_original
 
 KEY = "vault.health"
 MAX_PROBLEMS = 200
@@ -53,12 +53,11 @@ class VaultReport(BaseModel):
         return self.problem_count == 0
 
 
-def original_sha256(originals: list[Path], folder: Path) -> str:
+def original_sha256(original: Path, folder: Path) -> str:
     """A combined photo upload is identified by the hash of its pages' hashes, in order."""
-    pages = sorted(folder.glob("original-*.*"), key=lambda p: int(p.stem.split("-")[1]))
-    if pages:
-        return hashlib.sha256("".join(sha256(p) for p in pages).encode()).hexdigest()
-    return sha256(originals[0])
+    if photos := pages(folder):
+        return combined_sha256([sha256(p) for p in photos])
+    return sha256(original)
 
 
 def folder_of(vault: Path, vault_path: str) -> Path:
@@ -91,13 +90,13 @@ def scan(full: bool = False) -> VaultReport:
         if not folder.is_dir():
             report("folder_missing", doc_id, folder)
             continue
-        originals = sorted(folder.glob("original.*"))
-        if not originals:
+        original = find_original(folder)
+        if original is None:
             report("original_missing", doc_id, folder / "original.*")
         elif full:
             hashed += 1
-            if original_sha256(originals, folder) != expected:
-                report("checksum_mismatch", doc_id, originals[0])
+            if original_sha256(original, folder) != expected:
+                report("checksum_mismatch", doc_id, original)
         if not (folder / "archive.pdf").is_file():
             report("archive_missing", doc_id, folder / "archive.pdf")
         meta = folder / "meta.json"

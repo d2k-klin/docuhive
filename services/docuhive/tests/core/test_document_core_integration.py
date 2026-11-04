@@ -35,7 +35,7 @@ def owner(postgres, monkeypatch):
     # Synthetic text is English; the host may lack German data (production images ship both).
     monkeypatch.setenv("DOCUHIVE_OCR_LANGUAGES", "eng")
     config.reload()
-    vault._checked.clear()
+    vault._probed.clear()
     vault.init()
     return create_user("qa-core", "synthetic qa password 2026")
 
