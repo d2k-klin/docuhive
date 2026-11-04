@@ -26,8 +26,9 @@ def startup() -> None:
     for name in HANDLER_MODULES:
         import_module(name)
     if get_ai_settings().enabled:
-        from docuhive.index.semantic import semantic_search
+        from docuhive.index.semantic import semantic_chunks, semantic_search
 
         search.register_semantic(semantic_search)
+        search.register_chunk_semantic(semantic_chunks)
     else:
         log.info("AI disabled: AI jobs will be skipped with the note 'AI disabled'")
