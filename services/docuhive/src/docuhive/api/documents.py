@@ -150,9 +150,7 @@ def edit(doc_id: str, body: DocumentEdit, user: CurrentUser) -> ApplyResult:
     return result
 
 
-@router.get("/documents", response_model=DocumentPage)
-def list_documents(
-    user: UserDependency,
+def query_filters(
     category: Annotated[list[str], Query()] = [],  # noqa: B006
     document_type: Annotated[list[str], Query()] = [],  # noqa: B006
     correspondent: Annotated[list[str], Query()] = [],  # noqa: B006
@@ -160,10 +158,9 @@ def list_documents(
     source: Annotated[list[SourceKind], Query()] = [],  # noqa: B006
     date_from: date | None = None,
     date_to: date | None = None,
-    limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0, le=100_000),
-) -> DocumentPage:
-    filters = SearchFilters(
+) -> SearchFilters:
+    """The same filters for the document list and search, as repeatable query parameters."""
+    return SearchFilters(
         categories=category,
         document_types=document_type,
         correspondents=correspondent,
@@ -172,7 +169,63 @@ def list_documents(
         date_from=date_from,
         date_to=date_to,
     )
+
+
+FiltersDependency = Annotated[SearchFilters, Depends(query_filters)]
+
+
+@router.get("/documents", response_model=DocumentPage)
+def list_documents(
+    user: UserDependency,
+    filters: FiltersDependency,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0, le=100_000),
+) -> DocumentPage:
     return document_page(user, filters, limit, offset)
+
+
+class SearchResult(BaseModel):
+    document_id: str
+    title: str | None
+    snippet: str | None  # plain text; highlights marked with \u0002 ... \u0003
+    score: float
+    document_date: date | None
+    correspondent: str | None
+    category: str | None
+
+
+@router.get("/search", response_model=list[SearchResult])
+def search_documents(
+    user: UserDependency,
+    filters: FiltersDependency,
+    q: str = Query(min_length=1, max_length=500),
+    limit: int = Query(20, ge=1, le=50),
+) -> list[SearchResult]:
+    """Words and meaning, fused into one ranking; only documents you may open."""
+    from docuhive import search
+
+    hits = search.hybrid(user, q, filters, limit)
+    with db.session() as session:
+        rows = {
+            r[0]: r[1:]
+            for r in session.execute(
+                select(Document.id, Document.document_date, Correspondent.name, Document.category)
+                .outerjoin(Correspondent, Correspondent.id == Document.correspondent_id)
+                .where(Document.id.in_([h.document_id for h in hits]))
+            )
+        }
+    return [
+        SearchResult(
+            document_id=h.document_id,
+            title=h.title,
+            snippet=h.snippet,
+            score=h.score,
+            document_date=rows.get(h.document_id, (None, None, None))[0],
+            correspondent=rows.get(h.document_id, (None, None, None))[1],
+            category=rows.get(h.document_id, (None, None, None))[2],
+        )
+        for h in hits
+    ]
 
 
 @router.get("/documents/pending", response_model=list[PendingDocument])

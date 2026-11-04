@@ -147,3 +147,23 @@ def test_database_rebuilt_from_vault_matches_and_is_searchable(owner):
             )
         ).all()
     assert hits == [doc_id]
+
+
+@pytest.mark.req("SRCH-01", "AUTH-03")
+def test_search_finds_stored_text_only_for_people_who_may_see_it(owner):
+    from docuhive.api.documents import search_documents
+    from docuhive.contracts import CurrentUser, SearchFilters
+
+    doc_id = ingest_file(
+        owner, "synthetic-gas.txt", b"Synthetic gas invoice from Stadtwerke Muster"
+    )
+    documents.apply_metadata(doc_id, MetadataPatch(category="utilities/gas"), actor="system")
+    me = CurrentUser(id=owner, username="qa-core", role="member")
+    [hit] = search_documents(me, SearchFilters(), q="stadtwerke gas", limit=5)
+    assert hit.document_id == doc_id and hit.category == "utilities/gas"
+    assert "\u0002" in (hit.snippet or "")
+    with db.session() as session:
+        session.get(Document, doc_id).shared = False
+    other = create_user("qa-other", "synthetic qa password 2026")
+    stranger = CurrentUser(id=other, username="qa-other", role="admin")
+    assert search_documents(stranger, SearchFilters(), q="stadtwerke gas", limit=5) == []

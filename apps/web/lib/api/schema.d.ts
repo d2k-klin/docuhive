@@ -1359,6 +1359,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Documents
+         * @description Words and meaning, fused into one ranking; only documents you may open.
+         */
+        get: operations["search_documents_api_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/documents/pending": {
         parameters: {
             query?: never;
@@ -2388,6 +2408,23 @@ export interface components {
              * @default false
              */
             include_trashed: boolean;
+        };
+        /** SearchResult */
+        SearchResult: {
+            /** Document Id */
+            document_id: string;
+            /** Title */
+            title: string | null;
+            /** Snippet */
+            snippet: string | null;
+            /** Score */
+            score: number;
+            /** Document Date */
+            document_date: string | null;
+            /** Correspondent */
+            correspondent: string | null;
+            /** Category */
+            category: string | null;
         };
         /** SessionIn */
         SessionIn: {
@@ -5570,6 +5607,8 @@ export interface operations {
     list_documents_api_documents_get: {
         parameters: {
             query?: {
+                limit?: number;
+                offset?: number;
                 category?: string[];
                 document_type?: string[];
                 correspondent?: string[];
@@ -5577,8 +5616,6 @@ export interface operations {
                 source?: components["schemas"]["SourceKind"][];
                 date_from?: string | null;
                 date_to?: string | null;
-                limit?: number;
-                offset?: number;
             };
             header?: never;
             path?: never;
@@ -5593,6 +5630,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DocumentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_documents_api_search_get: {
+        parameters: {
+            query: {
+                q: string;
+                limit?: number;
+                category?: string[];
+                document_type?: string[];
+                correspondent?: string[];
+                tag?: string[];
+                source?: components["schemas"]["SourceKind"][];
+                date_from?: string | null;
+                date_to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResult"][];
                 };
             };
             /** @description Validation Error */
