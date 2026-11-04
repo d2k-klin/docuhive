@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.12.*"
 
 [manifest]
@@ -583,7 +583,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6" },
     { name = "sqlalchemy", specifier = ">=2" },
     { name = "strands-agents", extras = ["ollama", "anthropic", "openai", "litellm"], marker = "extra == 'ai'", specifier = ">=1.63,<2" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.54.0" },
 ]
 provides-extras = ["ai", "mail", "ocr"]
 
