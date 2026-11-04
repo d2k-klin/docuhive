@@ -71,7 +71,7 @@ Open <http://localhost:3000> and sign in with the account you just created. Stor
 
 | Guide | What's in it |
 | --- | --- |
-| [Features](docs/FEATURES.md) | Every feature in one sentence, what works today, and ideas for what comes next |
+| [Features](docs/FEATURES.md) | Every feature in one sentence, and what works today |
 | [AI providers](docs/setup/ai-providers.md) | Local (Ollama) and cloud models, which model does what, privacy and budgets |
 | [Email accounts](docs/setup/mail-accounts.md) | Connecting Gmail, Outlook and IMAP; importing old mail |
 | [Notifications](docs/setup/notifications.md) | Push and email alerts, reminders, the calendar feed |

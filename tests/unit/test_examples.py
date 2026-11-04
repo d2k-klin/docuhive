@@ -31,3 +31,16 @@ def test_hybrid_search_example_runs():
         env=dict(os.environ, DOCUHIVE_ENV="test"),
     )
     assert "Hybrid ranking" in result.stdout and "electricity-bill" in result.stdout
+
+
+def test_near_duplicates_example_runs():
+    root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [sys.executable, str(root / "examples/learn/13_near_duplicates.py")],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=20,
+        env=dict(os.environ, DOCUHIVE_ENV="test"),
+    )
+    assert "next month's invoice" in result.stdout and "→ False" in result.stdout

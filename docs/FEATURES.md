@@ -7,7 +7,6 @@ States:
 - **Works**: implemented and checked against real services (PostgreSQL, Docker).
 - **Built**: code and tests exist, but it is checked only with test doubles, or it waits for the document archive.
 - **Planned**: in the requirements, not built yet.
-- **Idea**: not planned yet; proposed under [Ideas](#ideas).
 
 ## Capture
 
@@ -32,7 +31,9 @@ States:
 | Quarantine | Built | Keeps corrupt, encrypted or unsupported files with a reason, so they can be retried instead of being lost. |
 | Vault on your storage | Planned | Stores each document as a plain folder (original, archive PDF, metadata file) on your NAS or disk, readable without DocuHive. |
 | Duplicate detection | Planned | Recognises a file you already have and reports it instead of importing it again. |
+| Near-duplicate detection | Built | Flags the same document arriving twice in different forms, such as an email PDF and a paper scan, by comparing sender, amounts, dates and meaning. |
 | Rebuildable index | Planned | Rebuilds the database from the vault's metadata files alone. |
+| Vault health check | Built | A weekly, read-only check that every document's files exist, match their checksums and agree with the database, and that no folder is orphaned. |
 | Library view | Planned | An optional, read-only folder tree sorted by category, year, date and title. |
 | Parallel processing | Works | A job queue lets several workers process documents at once and recovers jobs from a crashed worker. |
 
@@ -43,6 +44,7 @@ States:
 | AI classification | Built | Sets category, type, sender, tags, title, date and language, choosing from your own vocabulary. |
 | Fact extraction | Built | Pulls out amounts, due dates, contract terms and policy numbers, and validates them (dates, currencies, IBAN checksums). |
 | Review queue | Built | Asks you about low-confidence results and proposed new tags instead of guessing. |
+| Custom fields | Built | Lets you define your own typed fields (such as a licence plate) that the AI fills in like the built-in details, with optional reminders for dates. |
 | Provenance and locks | Planned | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
 | Bulk edit with undo | Planned | Edits many documents at once, records every change and lets you undo it. |
 | Vocabulary management | Planned | Manages senders, tags, types and categories, including merging duplicates. |
@@ -59,6 +61,8 @@ States:
 | Ask | Built | Answers questions about your documents with links to the sources and totals calculated in SQL, not guessed. |
 | Saved analyses | Built | Keeps useful answers so you can rerun them later. |
 | Knowledge bases | Works | Named, shareable scopes of documents (categories, senders, dates, tags) for chat and other agents. |
+| Saved views | Built | Pins a saved filter, such as "Unpaid invoices" or "Car", to the sidebar and lists the documents it matches. |
+| Filtered export | Built | Exports the documents behind a saved view, knowledge base or filter as one ZIP with their PDFs and a CSV of their details. |
 | Document list and filters | Planned | Browses all documents with filters, sorting and pagination. |
 | Agent access (MCP) | Planned | Lets other AI agents search and ask your knowledge bases, with the same permissions. |
 
@@ -84,15 +88,3 @@ States:
 ## Not planned for the first version
 
 Document versions, a workflow engine, fine-grained per-user permissions, public share links, a native mobile app and cloud OCR. See [Requirements § Out of scope](REQUIREMENTS.md#7-out-of-scope-v1).
-
-## Ideas
-
-Five features worth adding, with the reason each fits DocuHive.
-
-| Feature | State | What it does |
-| --- | --- | --- |
-| Vault health check | Idea | A scheduled check that verifies every file's checksum, finds missing or orphaned files and reports drift between the vault and the database; the vault is the source of truth, so it needs proof that it's intact. |
-| Custom fields | Idea | Lets you define your own typed fields (warranty end, policy number, plate number) that the AI fills like the built-in facts and Ask can query. |
-| Saved views | Idea | Pins a saved filter, such as "Unpaid invoices" or "Car", to the sidebar or dashboard, reusing the filters that knowledge bases already store. |
-| Near-duplicate detection | Idea | Flags the same invoice arriving twice in different forms, such as an email PDF and a paper scan, by comparing sender, amounts, dates and meaning rather than file bytes. |
-| Filtered export | Idea | Exports the documents behind a filter or an answer (for example "2025 tax documents") as one ZIP with their PDFs and a CSV of their facts, ready for a tax adviser. |

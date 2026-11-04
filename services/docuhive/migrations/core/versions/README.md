@@ -8,6 +8,7 @@
 | --- | --- |
 | [`0001_core.py`](0001_core.py) | Core baseline: extensions, unaccented FTS configurations and platform tables |
 | [`0002_knowledge_bases.py`](0002_knowledge_bases.py) | Saved scopes and the explicit local-consumer token flag |
+| [`0003_archive_tools.py`](0003_archive_tools.py) | Custom fields, saved views and near-duplicate pairs |
 
 ## Extending
 

@@ -93,3 +93,18 @@ acceptance remain dependent on the measured OA-M1 backend decision.
 - Mr.D source and generated article/assets updated locally; build and static checks pass
   (**64 pages, 187 files**). No commit, push, deployment or live-provider/hardware acceptance
   is claimed by this documentation work.
+
+## Archive tools (2026-11-04)
+
+Plan: [archive tools](../shared/archive-tools.md). Core revision `0003_archive_tools`.
+
+- Vault health check (CLI, weekly job, admin API and `/settings/storage`), custom fields
+  (`/settings/fields`, merged into live extraction, reminders and Ask), saved views (`/views`
+  and pinned sidebar links), near-duplicate pairs (`/duplicates`, scanned after embedding) and
+  filtered ZIP/CSV export are implemented.
+- Evidence: the shared scenarios pass on the network-free store (**8 passed**) and on real
+  PostgreSQL (**6 passed**); the core migration downgrades to `0002` and re-applies cleanly.
+  A browser pass on synthetic data covered each page at desktop and 375 px, the pinned link,
+  a real export through the web proxy and the decision buttons.
+- Pending, because document intake (OA-M3) is not built: no real document has been checked,
+  deduplicated or exported yet; the near-duplicate thresholds are untuned on real data.

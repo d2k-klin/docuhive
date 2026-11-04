@@ -10,7 +10,7 @@ from typing import Any
 
 from sqlalchemy import delete, update
 
-from docuhive import db, jobs, taxonomy
+from docuhive import db, fields, jobs, taxonomy
 from docuhive.agents.base import AIDisabled, AllRoutesFailed, InvalidOutput
 from docuhive.ai.budgets import BudgetExceeded, next_month_start
 from docuhive.ai.privacy import NoAllowedRoute
@@ -86,7 +86,7 @@ def run_classify(payload: dict, ctx: Any) -> None:
     summary = guarded(doc_id, ctx, classify, doc_id, payload.get("hints"))
     if summary is None:
         return
-    dt = taxonomy.document_type(taxonomy.load(), summary["document_type"])
+    dt = fields.document_type(taxonomy.load(), summary["document_type"])
     if dt and dt.facts:
         enqueue_doc("ai.extract", doc_id, document_type=dt.id)
     else:

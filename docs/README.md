@@ -17,7 +17,7 @@
 
 | Doc | Read it for |
 | --- | --- |
-| [FEATURES.md](FEATURES.md) | Every feature in one sentence with its current state, plus ideas for what comes next |
+| [FEATURES.md](FEATURES.md) | Every feature in one sentence with its current state |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How DocuHive works, from the big picture down to each component, user action and hosting option |
 | [REQUIREMENTS.md](REQUIREMENTS.md) | What DocuHive must do, with requirement IDs used across tests and plans |
 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | The architecture: vault, ingest pipeline, AI layer, search and web app |
@@ -49,6 +49,7 @@ DocuHive is built by three parallel tracks. Each has a plan, an execution plan a
 | --- | --- | --- |
 | Work split and integration points | [shared/README.md](shared/README.md) | — |
 | Knowledge bases (all tracks): retrieve and ask APIs, MCP, evals | [shared/knowledge-bases.md](shared/knowledge-bases.md) | — |
+| Archive tools: vault health, custom fields, saved views, near-duplicates, export | [shared/archive-tools.md](shared/archive-tools.md) | — |
 | Platform (OA): storage, ingest, sign-in, search, web shell, operations | [Developer-OA/](Developer-OA/README.md) | [status](Developer-OA/STATUS.md) |
 | Intelligence (CL): AI layer, classification, email, chat, reminders | [Developer-CL/](Developer-CL/README.md) | [status](Developer-CL/STATUS.md) |
 | Quality (QA): contracts, end-to-end, non-functional checks, releases | [Developer-QA/](Developer-QA/README.md) | [status](Developer-QA/STATUS.md) |

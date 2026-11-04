@@ -164,6 +164,62 @@ class KnowledgeBase(CoreBase):
     )
 
 
+class CustomField(CoreBase):
+    __tablename__ = "custom_fields"
+    __table_args__ = (CheckConstraint("type IN ('money','date','string','number','iban')"),)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    name: Mapped[str] = mapped_column(Text, unique=True)
+    label: Mapped[str] = mapped_column(Text)
+    type: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text, server_default="")
+    document_types: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    remind_days_before: Mapped[list[int]] = mapped_column(
+        ARRAY(Integer), server_default=text("'{}'")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+
+
+class SavedView(CoreBase):
+    __tablename__ = "saved_views"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    name: Mapped[str] = mapped_column(Text)
+    filters: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'"))
+    pinned: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    shared: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+
+
+class DuplicatePair(CoreBase):
+    __tablename__ = "duplicate_pairs"
+    __table_args__ = (
+        UniqueConstraint("document_id", "other_id", name="duplicate_pairs_pair"),
+        CheckConstraint("document_id < other_id"),
+        CheckConstraint("status IN ('open','dismissed','confirmed')"),
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
+    other_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
+    score: Mapped[float]
+    reasons: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    status: Mapped[str] = mapped_column(Text, server_default="open")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
+
+
 class Note(CoreBase):
     __tablename__ = "notes"
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

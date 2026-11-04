@@ -28,6 +28,9 @@ def parser() -> argparse.ArgumentParser:
     user.add_argument("action", choices=["create", "passwd", "disable"])
     user.add_argument("username")
     user.add_argument("--admin", action="store_true")
+    vault = subs.add_parser("vault", help="Check the vault without changing it")
+    vault.add_argument("action", choices=["check"])
+    vault.add_argument("--full", action="store_true", help="Also verify every original's SHA-256")
     subs.add_parser("openapi", help="Print the OpenAPI schema")
     spike = subs.add_parser("spike", help="Measure conversion and OCR before selecting a backend")
     spike_sub = spike.add_subparsers(dest="spike_action", required=True)
@@ -69,6 +72,13 @@ def main() -> None:
             if args.action == "downgrade" and get_settings().env == "prod":
                 root.error("Database downgrades are only allowed in development/test")
             migrate(args.action, args.revision)
+        elif args.command == "vault":
+            from docuhive.vault.health import scan
+
+            result = scan(full=args.full)
+            print(result.model_dump_json(indent=2))
+            if not result.ok:
+                raise SystemExit(1)
         elif args.command == "openapi":
             from docuhive.api.app import create_app
 

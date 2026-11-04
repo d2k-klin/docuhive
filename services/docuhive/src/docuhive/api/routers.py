@@ -21,3 +21,10 @@ ROUTERS.extend(CL_ROUTERS)
 from .knowledge import router as knowledge_router  # noqa: E402
 
 ROUTERS.append(knowledge_router)
+
+from .duplicates import router as duplicates_router  # noqa: E402
+from .export import router as export_router  # noqa: E402
+from .fields import router as fields_router  # noqa: E402
+from .views import router as views_router  # noqa: E402
+
+ROUTERS.extend([fields_router, views_router, duplicates_router, export_router])
