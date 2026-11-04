@@ -468,7 +468,7 @@ def test_merged_tags_and_senders_move_documents_and_stay_resolved(core):
     )
     assert merged.json() == {"documents": 1}
     assert documents.get(second).tags == ["property"]
-    documents.apply_metadata(second, MetadataPatch(tags_add=["auto"]), actor="ai:classify")
+    documents.apply_metadata(second, MetadataPatch(tags_add=["auto"]), actor="system")
     assert documents.get(second).tags == ["property"]  # the old name resolves to the survivor
     names = [t["name"] for t in core.get("/api/vocabulary/tags").json()]
     assert "Auto" not in names
@@ -523,3 +523,50 @@ def test_html_originals_download_converter_outages_wait_and_junk_is_ignored(core
     assert original.headers["content-disposition"].startswith("attachment")
     archive = core.get(f"/api/documents/{doc_id}/file?kind=archive")
     assert archive.headers["content-disposition"].startswith("inline")
+
+
+def test_vocabulary_keeps_privacy_and_saved_filters(core):
+    from docuhive import documents
+    from docuhive.auth import create_user
+    from docuhive.contracts import MetadataPatch
+    from docuhive.db.models import SavedView
+
+    from .test_auth_integration import PASSWORD, login
+
+    doc_id = stored_document(core)
+    documents.apply_metadata(doc_id, MetadataPatch(tags_add=["private", "Auto"]), actor="system")
+    with db.session() as session:
+        session.add(SavedView(owner_id=1, name="Cars", filters={"tags": ["Auto"]}))
+    tags = {t["name"]: t["id"] for t in core.get("/api/vocabulary/tags").json()}
+    refused = core.patch(
+        f"/api/vocabulary/tags/{tags['private']}", json={"name": "personal"}, headers=CSRF
+    )
+    assert refused.json()["error"]["code"] == "vocabulary_conflict"
+    refused = core.post(
+        "/api/vocabulary/tags/merge",
+        json={"source_ids": [tags["private"]], "target_id": tags["property"]},
+        headers=CSRF,
+    )
+    assert refused.status_code == 409
+    assert "private" in documents.get(doc_id).tags
+    core.patch(f"/api/vocabulary/tags/{tags['Auto']}", json={"name": "Car"}, headers=CSRF)
+    with db.session() as session:
+        assert session.scalar(select(SavedView.filters)) == {"tags": ["Car"]}
+
+    # Another member sees no names from documents they cannot open.
+    with db.session() as session:
+        session.get(Document, doc_id).shared = False
+    create_user("member", PASSWORD)
+    core.cookies.clear()
+    login(core, "member")
+    assert core.get("/api/vocabulary/tags").json() == []
+    assert core.get("/api/vocabulary/correspondents?q=stadt").json() == []
+
+
+def test_rebuild_reports_a_folder_without_its_archive(core):
+    from docuhive.vault import rebuild
+
+    doc_id = stored_document(core)
+    (next(vault.root().glob(f"*/{doc_id}")) / "archive.pdf").unlink()
+    report = rebuild.rebuild()
+    assert report.documents == 0 and "archive.pdf is missing" in report.errors[0].error

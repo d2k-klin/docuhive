@@ -16,6 +16,6 @@
 
 The health check only reads. Repairs belong in their own commands, with a dry run first.
 
-If the database is lost, run `docuhive db upgrade`, then `docuhive vault rebuild --dry-run` and `docuhive vault rebuild`. Owners missing from the new database are created disabled; set their passwords with `docuhive user passwd`. The AI track re-indexes the documents without re-classifying them.
+If the database is lost, run `docuhive db upgrade`, then `docuhive vault init` (it reads the existing vault id and registers it in the new database), then `docuhive vault rebuild --dry-run` and `docuhive vault rebuild`. Owners missing from the new database are created disabled; set their passwords with `docuhive user passwd`. The AI track re-indexes the documents without re-classifying them.
 
 A change to `meta.json` adds a step to `MIGRATIONS` in `migrate.py` (never edit an old one), then `docuhive vault migrate` rewrites the files.

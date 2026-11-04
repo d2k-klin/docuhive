@@ -174,7 +174,11 @@ def _tag_id(session: Session, name: str) -> int:
 
 
 def _find_or_create(session: Session, query: Any, new: Any) -> Any:
-    """Two edits creating the same tag at once: the loser re-reads the winner's row."""
+    """Two edits creating the same tag at once: the loser re-reads the winner's row.
+
+    The row is share-locked, so a concurrent merge of it waits until this edit commits.
+    """
+    query = query.with_for_update(read=True)
     if (row := session.scalar(query)) is not None:
         return row
     try:

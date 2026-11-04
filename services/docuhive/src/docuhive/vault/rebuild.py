@@ -112,8 +112,10 @@ def rebuild(*, dry_run: bool = False) -> RebuildReport:
             data = meta.load(folder / "meta.json")
             if data.id != folder.name:
                 raise ValueError("meta.json id does not match its folder")
-            archive = folder / "archive.pdf"
-            content = extract_text(archive) if archive.is_file() else ""
+            # No archive means an incomplete folder, never a document with empty text.
+            if not (folder / "archive.pdf").is_file():
+                raise FileNotFoundError("archive.pdf is missing")
+            content = extract_text(folder / "archive.pdf")
         except Exception as error:  # one unreadable folder must not stop the others
             report.errors.append(RebuildError(path=rel, error=reason(error)))
             continue
@@ -136,7 +138,8 @@ def rebuild(*, dry_run: bool = False) -> RebuildReport:
                     dedupe_key=f"document.stored:{data.id}",
                     in_session=session,
                 )
-        except SQLAlchemyError as error:
+        except (SQLAlchemyError, ValueError, ArithmeticError) as error:
+            # A schema-valid but unparsable fact (money, date) rolls back this folder only.
             report.documents -= 1
             report.errors.append(RebuildError(path=rel, error=reason(error)))
             continue

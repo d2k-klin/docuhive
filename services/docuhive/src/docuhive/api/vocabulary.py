@@ -68,11 +68,13 @@ def list_items(
             .group_by(Document.correspondent_id)
         )
     sub = counts.subquery()
+    # Only names on documents you can see: a sender or tag used solely on someone else's
+    # private document must not leak through the list or the typeahead.
     query = (
-        select(model.id, model.name, func.coalesce(sub.c.n, 0))
-        .outerjoin(sub, sub.c.item == model.id)
+        select(model.id, model.name, sub.c.n)
+        .join(sub, sub.c.item == model.id)
         .where(model.merged_into.is_(None))
-        .order_by(func.coalesce(sub.c.n, 0).desc(), model.name)
+        .order_by(sub.c.n.desc(), model.name)
         .limit(limit)
     )
     if q.strip():
