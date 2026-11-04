@@ -44,7 +44,10 @@ async def upload(
     combine: bool = False,
     source: Literal["upload", "mobile", "api"] = "upload",
     shared: bool = True,
+    expected_owner_id: int | None = None,
 ) -> IngestResult:
+    if expected_owner_id is not None and expected_owner_id != user.id:
+        raise HTTPException(403, "Sign in to the account that saved this capture.")
     paths: list[Path] = []
     try:
         async with request.form(max_files=50, max_fields=4) as form:
@@ -73,7 +76,9 @@ async def upload(
                 owner_id=user.id,
                 source=SourceInfo(
                     kind=kind,
-                    original_filename=(first.filename or "upload").replace("\\", "/").rsplit("/", 1)[-1],
+                    original_filename=(first.filename or "upload")
+                    .replace("\\", "/")
+                    .rsplit("/", 1)[-1],
                 ),
                 combine=combine,
                 shared=shared,
@@ -83,11 +88,23 @@ async def upload(
 
             return await run_in_threadpool(ingest.submit, paths, req)
     except ingest.TooLarge:
-        raise HTTPException(413, {"code": "too_large", "message": "Choose smaller files.", "details": {}}) from None
+        raise HTTPException(
+            413, {"code": "too_large", "message": "Choose smaller files.", "details": {}}
+        ) from None
     except ingest.IngestRejected:
-        raise HTTPException(415, {"code": "unsupported_type", "message": "Choose a supported file type.", "details": {}}) from None
+        raise HTTPException(
+            415,
+            {"code": "unsupported_type", "message": "Choose a supported file type.", "details": {}},
+        ) from None
     except NotImplementedError:
-        raise HTTPException(503, {"code": "intake_unavailable", "message": "Document intake is unavailable. Keep your files and try again later.", "details": {}}) from None
+        raise HTTPException(
+            503,
+            {
+                "code": "intake_unavailable",
+                "message": "Document intake is unavailable. Keep your files and try again later.",
+                "details": {},
+            },
+        ) from None
     finally:
         for path in paths:
             path.unlink(missing_ok=True)

@@ -22,7 +22,11 @@ KEY = "consume:seen"
 
 def ignored(path: Path) -> bool:
     name = path.name.casefold()
-    return name.startswith((".", "~$")) or name.endswith((".part", ".tmp", ".crdownload")) or name == "thumbs.db"
+    return (
+        name.startswith((".", "~$"))
+        or name.endswith((".part", ".tmp", ".crdownload"))
+        or name == "thumbs.db"
+    )
 
 
 def signature(path: Path) -> list[int]:
@@ -51,7 +55,9 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
     if not root.is_dir() or root.is_symlink():
         return
     with session() as db:
-        users = {u.username: u.id for u in db.scalars(select(User).where(~User.pw_hash.startswith("!")))}
+        users = {
+            u.username: u.id for u in db.scalars(select(User).where(~User.pw_hash.startswith("!")))
+        }
         # A persisted observation survives worker restarts; the row lock serialises manual polls.
         row = db.scalar(select(Setting).where(Setting.key == KEY).with_for_update())
         if row is None:
@@ -81,7 +87,10 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                         folder = folder_of(settings.vault_dir, doc.vault_path).resolve()
                         originals = list(folder.glob("original.*"))
                         if folder.is_relative_to(settings.vault_dir.resolve()) and originals:
-                            if sha256(originals[0]) == old["sha256"] == sha256(path) and signature(path) == current:
+                            if (
+                                sha256(originals[0]) == old["sha256"] == sha256(path)
+                                and signature(path) == current
+                            ):
                                 path.unlink()
                                 del seen[key]
                     continue
@@ -91,11 +100,18 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                 copy = Path(name)
                 try:
                     digest = verified_copy(path, copy)
-                    result = ingest.submit([copy], IngestRequest(
-                        owner_id=users[owner],
-                        source=SourceInfo(kind=SourceKind.consume, original_filename=path.name),
-                    ))
-                    seen[key] = {"signature": current, "document_id": result.document_id, "sha256": digest}
+                    result = ingest.submit(
+                        [copy],
+                        IngestRequest(
+                            owner_id=users[owner],
+                            source=SourceInfo(kind=SourceKind.consume, original_filename=path.name),
+                        ),
+                    )
+                    seen[key] = {
+                        "signature": current,
+                        "document_id": result.document_id,
+                        "sha256": digest,
+                    }
                 except ingest.IngestRejected as error:
                     rejected = root / "_rejected"
                     rejected.mkdir(exist_ok=True)
@@ -103,7 +119,12 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                     destination = rejected / f"{copy.stem}-{path.name}"
                     os.replace(path, destination)
                     destination.with_name(destination.name + ".reason.txt").write_text(
-                        json.dumps({"reason": type(error).__name__, "action": "Check file type and size, then move the file back to retry."})
+                        json.dumps(
+                            {
+                                "reason": type(error).__name__,
+                                "action": "Check file type and size, then move the file back to retry.",
+                            }
+                        )
                     )
                     del seen[key]
                 finally:

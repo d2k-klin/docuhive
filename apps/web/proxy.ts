@@ -6,7 +6,8 @@ export function proxy(request: NextRequest) {
     path.startsWith("/api/") ||
     path === "/login" ||
     path.startsWith("/_next/") ||
-    path === "/favicon.ico"
+    path === "/favicon.ico" ||
+    ["/capture", "/manifest.webmanifest", "/sw.js", "/capture-queue.js", "/capture-192.png", "/capture-512.png"].includes(path)
   )
     return NextResponse.next();
   if (process.env.NODE_ENV !== "production" && path.startsWith("/dev/"))

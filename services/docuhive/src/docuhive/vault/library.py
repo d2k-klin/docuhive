@@ -52,15 +52,29 @@ def sync(*, retry: bool = False) -> dict:
             db.add(manifest)
         desired: dict[str, Path] = {}
         used: set[str] = set()
-        rows = db.execute(select(Document, User.username).join(User, User.id == Document.owner_id).where(
-            Document.status == "stored", Document.deleted_at.is_(None), Document.vault_path.is_not(None),
-        ).order_by(Document.id))
+        rows = db.execute(
+            select(Document, User.username)
+            .join(User, User.id == Document.owner_id)
+            .where(
+                Document.status == "stored",
+                Document.deleted_at.is_(None),
+                Document.vault_path.is_not(None),
+            )
+            .order_by(Document.id)
+        )
         for doc, username in rows:
             original = folder_of(vault, doc.vault_path) / "archive.pdf"
-            if not original.resolve().is_relative_to(vault.resolve()) or original.is_symlink() or not original.is_file():
+            if (
+                not original.resolve().is_relative_to(vault.resolve())
+                or original.is_symlink()
+                or not original.is_file()
+            ):
                 continue
             day = doc.document_date or doc.added_at.date()
-            category = [component(p, "_uncategorized") for p in (doc.category or "_uncategorized").split("/")]
+            category = [
+                component(p, "_uncategorized")
+                for p in (doc.category or "_uncategorized").split("/")
+            ]
             # Reserved roots cannot be reached through document metadata.
             if category[0].startswith("_") and category[0] != "_uncategorized":
                 category[0] = "category-" + category[0]
