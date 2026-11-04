@@ -14,3 +14,5 @@ HANDLER_MODULES += [
     "docuhive.notify.jobs",
     "docuhive.chat.jobs",
 ]
+
+HANDLER_MODULES += ["docuhive.ingest.consume", "docuhive.vault.library"]
