@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 function subscribeTheme(notify: () => void) {
@@ -41,8 +42,15 @@ export function UserActions() {
   }
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button type="button" variant="ghost" onClick={theme} aria-pressed={dark}>
-        Dark theme
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={theme}
+        aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+        title={dark ? "Light theme" : "Dark theme"}
+      >
+        {dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
       </Button>
       <Button type="button" variant="secondary" onClick={logout}>
         Sign out

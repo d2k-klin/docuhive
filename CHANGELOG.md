@@ -6,6 +6,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Changed
 
+- The theme switch in the header is a sun/moon icon button instead of a text button.
 - TypeScript 7 for the web app's typecheck and build, ocrmypdf 17, uvicorn 0.54 and psycopg 3.3.
 - The worker image moves to Debian trixie (Ghostscript 10.05).
 
@@ -15,6 +16,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Fixed
 
+- The web app uses Inter again instead of the browser's default serif: the font variable was on `<body>`, but the font stack is resolved on `<html>`.
+- The Ask page no longer crashes when a chat updates (an effect returned the Promise from `scrollIntoView`), and its suggestions no longer overflow on tablets.
 - OCR in the container: ocrmypdf refused the bookworm image's Ghostscript 10.0.0 whenever existing text was skipped, so every scan failed.
 
 ## [0.1.0] - 2026-11-04
