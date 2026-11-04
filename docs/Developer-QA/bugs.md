@@ -95,7 +95,8 @@ The font variable is applied on `body`, while the root font token resolves on
 **Fixed:** the font variable now sits on `<html>`, where `--font-sans` is resolved. `make qa-e2e`
 passes 72 tests at 375/768/1280 in light and dark (30 skipped for unbuilt features), including
 the font check. The same run found `/ask` overflowing at 768 px: the suggestion buttons could not
-wrap and now truncate at control height, with the full question in the tooltip.
+wrap. They are now wrapping controls (`data-wrap`, control height as a minimum), and the
+height check treats `data-wrap` elements as at least control height.
 
 ## Triage handling
 

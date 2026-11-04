@@ -51,6 +51,8 @@ for (const route of routes) {
             el.textContent?.trim() ||
             el.tagName,
           height: el.getBoundingClientRect().height,
+          // Wrapping controls (tag input, suggestion chips) have a min-height, not a height.
+          wrap: el.hasAttribute("data-wrap"),
           expected: ["checkbox", "radio"].includes(
             (el as HTMLInputElement).type,
           )
@@ -93,10 +95,15 @@ for (const route of routes) {
     });
     expect(measurements.overflow).toBe(false);
     for (const control of measurements.controls)
-      expect(
-        Math.abs(control.height - control.expected),
-        control.name,
-      ).toBeLessThanOrEqual(0.5);
+      if (control.wrap)
+        expect(control.height, control.name).toBeGreaterThanOrEqual(
+          control.expected - 0.5,
+        );
+      else
+        expect(
+          Math.abs(control.height - control.expected),
+          control.name,
+        ).toBeLessThanOrEqual(0.5);
     for (const heading of measurements.headings) {
       expect(heading.size).toBeLessThanOrEqual(20);
       expect(heading.weight).toBe("600");

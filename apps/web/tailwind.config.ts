@@ -41,6 +41,8 @@ export default {
         "control-sm": "var(--control-h-sm)",
         "control-lg": "var(--control-h-lg)",
       },
+      // Wrapping controls (textarea, tag input, suggestion chips) use the height as a minimum.
+      minHeight: { control: "var(--control-h)" },
       borderRadius: { DEFAULT: "var(--radius)", card: "var(--radius-card)" },
     },
   },
