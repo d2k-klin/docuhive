@@ -17,13 +17,11 @@ router = APIRouter(prefix="/api/kb", tags=["knowledge bases"])
 UserDependency = Annotated[CurrentUser, Depends(current_user)]
 
 
-class KnowledgeBaseInput(BaseModel):
+class FilterScope(BaseModel):
+    """A saved document filter, shared by knowledge bases, saved views and exports."""
+
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
-    name: str = Field(min_length=1, max_length=100)
-    description: str = Field(default="", max_length=2000)
     filters: SearchFilters = Field(default_factory=SearchFilters)
-    shared: bool = False
-    local_only: bool = True
 
     @field_validator("filters", mode="before")
     @classmethod
@@ -38,6 +36,13 @@ class KnowledgeBaseInput(BaseModel):
                 ):
                     raise ValueError("Choose at most 500 non-empty values per filter")
         return value
+
+
+class KnowledgeBaseInput(FilterScope):
+    name: str = Field(min_length=1, max_length=100)
+    description: str = Field(default="", max_length=2000)
+    shared: bool = False
+    local_only: bool = True
 
 
 class KnowledgeBasePatch(KnowledgeBaseInput):

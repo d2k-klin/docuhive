@@ -9,6 +9,10 @@ import {
   Tags,
   BookOpen,
   KeyRound,
+  Bookmark,
+  Copy,
+  HardDrive,
+  ListPlus,
 } from "lucide-react";
 import {
   BarChart3,
@@ -39,6 +43,26 @@ export const nav: NavItem[] = [
     label: "Knowledge bases",
     icon: BookOpen,
     section: "core",
+  },
+  { href: "/views", label: "Saved views", icon: Bookmark, section: "core" },
+  {
+    href: "/duplicates",
+    label: "Duplicates",
+    icon: Copy,
+    section: "core",
+  },
+  {
+    href: "/settings/fields",
+    label: "Custom fields",
+    icon: ListPlus,
+    section: "core",
+  },
+  {
+    href: "/settings/storage",
+    label: "Storage health",
+    icon: HardDrive,
+    section: "core",
+    adminOnly: true,
   },
   {
     href: "/settings/tokens",

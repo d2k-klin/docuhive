@@ -8,6 +8,7 @@
 | --- | --- |
 | [`12_job_queue.py`](12_job_queue.py) | A durable-work contract demonstration with a fake queue; no database or AI needed |
 | [`09_hybrid_search.py`](09_hybrid_search.py) | Fuse fixed word and meaning candidates with the production RRF function |
+| [`13_near_duplicates.py`](13_near_duplicates.py) | Score synthetic pairs with the production near-duplicate rules |
 | [`run.py`](run.py) | List or run a learning example by its numeric prefix |
 
 ## Extending

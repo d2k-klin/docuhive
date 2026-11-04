@@ -14,6 +14,7 @@ import { errorMessage } from "@/lib/i18n/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DocumentFilters, emptyFilters } from "./document-filters";
+import { ExportButton } from "./export-button";
 import { checkbox as checkboxClass } from "@/lib/ui/control";
 
 type Base = components["schemas"]["KnowledgeBaseView"];
@@ -382,6 +383,12 @@ export function KnowledgeBases({
                   Indexing status unavailable. Refresh to check again.
                 </p>
               )}
+              {status?.documents ? (
+                <ExportButton
+                  source={{ kb_id: base.id }}
+                  label={`Export ${base.name}`}
+                />
+              ) : null}
               {base.owner_id === userId && (
                 <div className="flex flex-wrap items-center gap-2">
                   {confirmDelete === base.id ? (

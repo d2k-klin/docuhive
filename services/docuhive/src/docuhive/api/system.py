@@ -14,6 +14,8 @@ from docuhive.auth import require_admin
 from docuhive.contracts import CurrentUser
 from docuhive.db import session
 from docuhive.db.models import Job
+from docuhive.jobs import enqueue
+from docuhive.vault import health as vault_health
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 Admin = Annotated[CurrentUser, Depends(require_admin)]
@@ -96,3 +98,14 @@ async def sse_test(user: Admin) -> StreamingResponse:
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@router.get("/vault/health", response_model=vault_health.VaultReport | None)
+def vault_report(user: Admin) -> vault_health.VaultReport | None:
+    return vault_health.last()
+
+
+@router.post("/vault/health", status_code=202)
+def queue_vault_check(user: Admin, full: bool = False) -> dict:
+    enqueue("vault.check", {"full": full}, dedupe_key="vault.check:manual")
+    return {"queued": True}

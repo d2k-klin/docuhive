@@ -513,7 +513,7 @@ wheels = [
 
 [[package]]
 name = "docuhive"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "services/docuhive" }
 dependencies = [
     { name = "alembic" },
@@ -577,7 +577,7 @@ provides-extras = ["ai", "mail", "ocr"]
 
 [[package]]
 name = "docuhive-evals"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "evals" }
 dependencies = [
     { name = "docuhive", extra = ["ai"] },
@@ -594,7 +594,7 @@ requires-dist = [
 
 [[package]]
 name = "docuhive-workspace"
-version = "0.1.0"
+version = "0.2.0"
 source = { virtual = "." }
 dependencies = [
     { name = "docuhive" },

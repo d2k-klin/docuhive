@@ -6,6 +6,7 @@
 
 | Path | What it is |
 | --- | --- |
+| [`archive-tools.spec.ts`](archive-tools.spec.ts) | Saved view create, pin and delete, plus the custom fields and duplicates pages, with responsive and accessibility checks |
 | [`auth-flow.spec.ts`](auth-flow.spec.ts) | Sign-in and sign-out flow |
 | [`controls.spec.ts`](controls.spec.ts) | Every control has the same height |
 | [`knowledge.spec.ts`](knowledge.spec.ts) | Real saved-scope CRUD and token lifecycle, with responsive and accessibility checks |

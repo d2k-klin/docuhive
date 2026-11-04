@@ -8,10 +8,12 @@
 | --- | --- |
 | [`analyses/`](analyses/) | Saved analyses |
 | [`ask/`](ask/) | Chat with your documents |
+| [`duplicates/`](duplicates/) | Possible duplicates waiting for a decision |
 | [`knowledge/`](knowledge/) | Saved document scopes and indexing status |
 | [`reminders/`](reminders/) | Upcoming deadlines |
 | [`review/`](review/) | Review queue for AI suggestions |
-| [`settings/`](settings/) | Settings: API tokens, AI providers and runs, notifications |
+| [`settings/`](settings/) | Settings: API tokens, custom fields, storage health, AI providers and runs, notifications |
+| [`views/`](views/) | Saved views and the documents each one matches |
 | [`sources/`](sources/) | Email accounts, backfills and the triage log |
 | [`layout.tsx`](layout.tsx) | The app shell: navigation, theme switch and user menu |
 | [`page.tsx`](page.tsx) | Dashboard |

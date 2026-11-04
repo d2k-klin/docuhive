@@ -8,7 +8,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import select
 
-from docuhive import auth, db, documents, taxonomy
+from docuhive import auth, db, documents, fields, taxonomy
 from docuhive.ai import coretables
 from docuhive.contracts import CurrentUser, DocumentView, Taxonomy
 from docuhive.reminders.models import Reminder
@@ -18,7 +18,7 @@ NOTICE_DAYS_BEFORE = [30, 7]
 
 def due_dates(view: DocumentView, tax: Taxonomy) -> list[tuple[str, str, date, list[int]]]:
     """(fact, label, due_on, remind_days_before) for one document."""
-    dt = taxonomy.document_type(tax, view.document_type)
+    dt = fields.document_type(tax, view.document_type)
     if dt is None:
         return []
     out: list[tuple[str, str, date, list[int]]] = []

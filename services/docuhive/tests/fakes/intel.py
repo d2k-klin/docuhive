@@ -156,6 +156,27 @@ api_tokens = Table(
     Column("scopes", JSON),
     Column("revoked_at", DateTime(timezone=True)),
 )
+custom_fields = Table(
+    "custom_fields",
+    meta,
+    Column("id", Integer, primary_key=True),
+    Column("name", Text),
+    Column("label", Text),
+    Column("type", Text),
+    Column("description", Text, default=""),
+    Column("document_types", JSON, default=list),
+    Column("remind_days_before", JSON, default=list),
+)
+duplicate_pairs = Table(
+    "duplicate_pairs",
+    meta,
+    Column("id", Integer, primary_key=True),
+    Column("document_id", String),
+    Column("other_id", String),
+    Column("score", Numeric),
+    Column("reasons", JSON, default=list),
+    Column("status", Text, default="open"),
+)
 TABLES = {t.name: t for t in meta.sorted_tables}
 
 

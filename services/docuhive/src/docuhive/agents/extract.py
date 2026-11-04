@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, Field, create_model
 
-from docuhive import documents, taxonomy
+from docuhive import documents, fields, taxonomy
 from docuhive.agents import validators
 from docuhive.agents.base import StructuredResult, run_structured
 from docuhive.agents.classify import head_tail, provenance
@@ -125,7 +125,7 @@ def run_extract(
 def extract(doc_id: str, document_type: str | None = None) -> dict:
     view = documents.get(doc_id)
     tax = taxonomy.load()
-    dt = taxonomy.document_type(tax, document_type or view.document_type)
+    dt = fields.document_type(tax, document_type or view.document_type)
     if dt is None or not dt.facts:
         return {"skipped": "document type has no facts"}
     out = run_extract(dt, documents.get_content(doc_id), tax, document=view)

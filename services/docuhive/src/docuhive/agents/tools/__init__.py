@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from sqlalchemy import or_, select
 
-from docuhive import auth, db, documents, search, taxonomy
+from docuhive import auth, db, documents, fields, search, taxonomy
 from docuhive.agents.classify import top_correspondents
 from docuhive.agents.tools.facts import Agg, GroupBy
 from docuhive.agents.tools.facts import query_facts as _query_facts
@@ -165,7 +165,10 @@ def build_tools(user: CurrentUser, scope: SearchFilters, route: Route) -> list:
         tax = taxonomy.load()
         return {
             "categories": [c.id for c in tax.categories],
-            "document_types": {t.id: [f.name for f in t.facts] for t in tax.document_types},
+            "document_types": {
+                t.id: [f.name for f in (fields.document_type(tax, t.id) or t).facts]
+                for t in tax.document_types
+            },
             "correspondents": top_correspondents(100),
             "summary": "vocabulary",
         }

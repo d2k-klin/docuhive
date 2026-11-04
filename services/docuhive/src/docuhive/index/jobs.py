@@ -9,6 +9,7 @@ from docuhive.agents.pipeline import guarded
 from docuhive.ai import privacy
 from docuhive.ai.embeddings import embedder
 from docuhive.contracts import DocStatus
+from docuhive.duplicates import queue_scan
 from docuhive.index.chunking import chunk
 from docuhive.index.models import DIMS, DocChunk
 
@@ -45,6 +46,7 @@ def embed_document(doc_id: str) -> dict:
 def run_embed(payload: dict, ctx: Any) -> None:
     doc_id = payload["document_id"]
     guarded(doc_id, ctx, embed_document, doc_id)
+    queue_scan(doc_id)  # after embedding, so content similarity is one of the signals
 
 
 def rebuild(missing_only: bool = False) -> int:

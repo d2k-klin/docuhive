@@ -4,6 +4,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-04
+
 ### Changed
 
 - The theme switch in the header is a sun/moon icon button instead of a text button.
@@ -12,10 +14,15 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- Storage health: a weekly, read-only vault check (`docuhive vault check [--full]`, `/settings/storage`) that finds missing files, unreadable descriptions, changed originals and orphan folders without touching anything.
+- Custom fields (`/settings/fields`): administrators define typed fields, optionally per document type and with date reminders; extraction, review, reminders and Ask use them like the built-in facts, while evals keep measuring the built-in taxonomy.
+- Saved views (`/views`): named, shareable filters pinned to the sidebar, each with a paged document list.
+- Near-duplicate detection (`/duplicates`): after indexing, documents are compared on sender, amount, date and meaning; pairs are only suggested, and a dismissed pair never returns. Learning note 13 and a runnable example explain the rules.
+- Filtered export: a ZIP of archive PDFs plus a CSV of details for a saved view, knowledge base or filter, capped at 1000 documents, with spreadsheet formula injection neutralised, missing files listed and every export audited.
+- `docs/FEATURES.md`: every feature in one sentence with its current state, linked from the README.
 - Saved knowledge bases with owner-only editing, shared scopes, taxonomy validation, indexing status, suggestions and the `/knowledge` manager.
 - API token settings with knowledge-base permissions and an explicit local-consumer trust flag; bearer tokens cannot grant that flag to new tokens.
 - Hybrid retrieval learning note and offline example; chunk typo fallback and candidate diversification before fusion.
-
 - System architecture illustrations covering the web/API, workers, OCR, agents, embeddings, PostgreSQL, file storage and knowledge bases, with incomplete components marked.
 - `docs/ARCHITECTURE.md`: how DocuHive works, from the basics down to components, libraries, user actions, data flows, hosting, security and current status.
 - Hybrid search: full-text (German/English stemming, accents, typo fallback) fused with semantic search by reciprocal rank fusion, with permissions and filters on both sides, and chunk-level `search.retrieve` for knowledge bases (KB-M1).
@@ -55,5 +62,6 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/d2k-klin/docuhive/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/d2k-klin/docuhive/releases/tag/v0.1.0

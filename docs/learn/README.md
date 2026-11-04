@@ -9,6 +9,7 @@
 | [`05-privacy-routing.md`](05-privacy-routing.md) | Privacy routing |
 | [`09-hybrid-search.md`](09-hybrid-search.md) | Word and meaning matches, rank fusion and saved scopes · 5 min |
 | [`12-pipelines-and-jobs.md`](12-pipelines-and-jobs.md) | Pipelines and jobs |
+| [`13-near-duplicates.md`](13-near-duplicates.md) | Spotting the same document in two forms with signals and strict rules · 4 min |
 
 ## Extending
 
