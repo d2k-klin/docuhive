@@ -4,7 +4,7 @@ DIR ?=
 OUT ?= tmp/ocr-spike
 EX ?=
 
-.PHONY: setup dev test test-ui test-integration lint fmt db-upgrade openapi gen-api spike-ocr ocr-smoke up down logs backup learn license-check
+.PHONY: setup dev test test-ui test-integration lint fmt db-upgrade openapi gen-api spike-ocr perf-search ocr-smoke up down logs backup learn license-check
 
 setup:
 	$(UV) sync --all-packages --all-extras --dev
@@ -52,6 +52,10 @@ openapi:
 gen-api:
 	$(UV) run docuhive openapi > apps/web/lib/api/openapi.json
 	$(NPM) run gen:api --workspace apps/web
+
+perf-search:
+	docker compose -f deploy/compose.test.yml up -d --wait
+	DOCUHIVE_DATABASE_URL=postgresql+psycopg://docuhive_test:docuhive_test@127.0.0.1:55432/docuhive_test $(UV) run python deploy/scripts/perf_search.py --documents 20000
 
 spike-ocr:
 	test -n "$(DIR)" || (echo 'Set DIR to the private sample folder'; exit 1)

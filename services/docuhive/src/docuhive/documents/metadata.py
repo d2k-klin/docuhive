@@ -4,6 +4,8 @@ from decimal import Decimal, InvalidOperation
 
 from docuhive.contracts import ApplyResult, DocumentView, MetadataPatch
 
+CLEARABLE = ("title", "document_date", "language", "category", "document_type", "correspondent")
+
 
 def apply_view(
     doc: DocumentView, patch: MetadataPatch, *, actor: str, force: bool = False
@@ -14,14 +16,13 @@ def apply_view(
     if patch.unlock_fields and not is_user:
         raise ValueError("Only a user can unlock manual fields")
     changes: dict = {}
-    for name in (
-        "title",
-        "document_date",
-        "language",
-        "category",
-        "document_type",
-        "correspondent",
-    ):
+    for name in patch.clear_fields:
+        if name not in CLEARABLE:
+            raise ValueError(f"Cannot clear field: {name}")
+        if getattr(patch, name) is not None:
+            raise ValueError(f"Cannot both set and clear: {name}")
+        changes[name] = None
+    for name in CLEARABLE:
         value = getattr(patch, name)
         if value is not None:
             if isinstance(value, str):

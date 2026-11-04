@@ -24,6 +24,13 @@ export default async function AppLayout({
     "/settings/storage",
     "/settings/tokens",
     "/capture",
+    "/documents",
+    "/search",
+    "/upload",
+    "/quarantine",
+    "/trash",
+    "/vocabulary",
+    "/settings/account",
   ]);
   const views = await client.GET("/api/views").catch(() => null);
   const pinned = (views?.data || []).filter((view) => view.pinned);

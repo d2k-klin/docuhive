@@ -16,7 +16,7 @@ States:
 | Email backfill | Built | Imports a chosen date range of old mail, resumable and without duplicates. |
 | Email filters and triage | Built | Skips newsletters and unwanted senders per account, then lets the AI decide which attachments are real documents. |
 | Mail stays untouched | Built | Never deletes or moves your mail; adding an "imported" label is optional. |
-| Web upload | Built | Upload one or more files, with category and tags set at upload time; the API works, the browser screen comes with the document screens. |
+| Web upload | Works | Upload one or more files by drag and drop, with category and tags set at upload time, and follow each one until it is stored. |
 | Phone capture | Built | An installable web app that takes photos, lets you reorder the pages and uploads them as one document. |
 | Scanner folder | Built | Picks up files from a NAS folder by polling, because network mounts don't support change notifications. |
 | API upload | Built | Personal API tokens let scripts and iOS Shortcuts upload documents. |
@@ -45,10 +45,10 @@ States:
 | Fact extraction | Built | Pulls out amounts, due dates, contract terms and policy numbers, and validates them (dates, currencies, IBAN checksums). |
 | Review queue | Built | Asks you about low-confidence results and proposed new tags instead of guessing. |
 | Custom fields | Built | Lets you define your own typed fields (such as a licence plate) that the AI fills in like the built-in details, with optional reminders for dates. |
-| Provenance and locks | Built | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
-| Bulk edit with undo | Planned | Edits many documents at once, records every change and lets you undo it. |
-| Vocabulary management | Built | Renames and merges senders and tags; the API works, the screen comes with the document screens. |
-| Trash | Built | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
+| Provenance and locks | Works | Shows who set each field (AI or you) and keeps AI from overwriting what you set. |
+| Bulk edit with undo | Built | Edits many documents at once and records every change; undo is not built yet. |
+| Vocabulary management | Works | Renames and merges senders and tags; saved views and knowledge bases follow, and private names stay private. |
+| Trash | Works | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
 
 ## Finding and asking
 
@@ -63,7 +63,7 @@ States:
 | Knowledge bases | Works | Named, shareable scopes of documents (categories, senders, dates, tags) for chat and other agents. |
 | Saved views | Built | Pins a saved filter, such as "Unpaid invoices" or "Car", to the sidebar and lists the documents it matches. |
 | Filtered export | Built | Exports the documents behind a saved view, knowledge base or filter as one ZIP with their PDFs and a CSV of their details. |
-| Document list and filters | Built | Browses all documents with filters, sorting and pagination. |
+| Document list and filters | Works | Browses all documents with filters and paging, and opens each one with a PDF preview, its details and its history. |
 | Agent access (MCP) | Planned | Lets other AI agents search and ask your knowledge bases, with the same permissions. |
 
 ## Reminders and notifications

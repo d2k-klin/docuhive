@@ -4,6 +4,7 @@ Both lists are fused with reciprocal rank fusion (RRF): `score = Σ 1 / (60 + ra
 lists an item appears in, using ranks only, so FTS and cosine scores never need to be compared.
 """
 
+import logging
 from collections import Counter
 from collections.abc import Callable, Hashable, Sequence
 from typing import Literal
@@ -21,8 +22,31 @@ _semantic: SemanticFn | None = None  # best chunk per document
 _chunk_semantic: SemanticFn | None = None  # several chunks per document
 
 
+log = logging.getLogger(__name__)
+
+
 class SemanticUnavailable(Exception):
     """mode="semantic" was requested, but no semantic search is registered (AI disabled)."""
+
+
+def _meaning(
+    fn: SemanticFn | None,
+    user: CurrentUser,
+    query: str,
+    filters: SearchFilters,
+    mode: str,
+) -> list[SemanticHit]:
+    """Meaning-based candidates. In hybrid mode an unreachable embedding model (Ollama down,
+    provider outage) degrades search to words only instead of failing it."""
+    if fn is None or mode == "fts":
+        return []
+    try:
+        return fn(user, query, filters, CANDIDATES)
+    except Exception:
+        if mode == "semantic":
+            raise
+        log.warning("Semantic search unavailable; using full-text only", exc_info=True)
+        return []
 
 
 def register_semantic(fn: SemanticFn) -> None:
@@ -62,7 +86,7 @@ def hybrid(
     if not query.strip() or limit <= 0:
         return []
     fts_ids = [] if mode == "semantic" else fts.documents(user, query, filters, CANDIDATES)
-    sem = _semantic(user, query, filters, CANDIDATES) if _semantic and mode != "fts" else []
+    sem = _meaning(_semantic, user, query, filters, mode)
     fused = rrf(fts_ids, [h.document_id for h in sem])[:limit]
     meta = fts.headlines([doc_id for doc_id, *_ in fused], query)
     chunk_text = {h.document_id: h.text for h in sem}
@@ -98,11 +122,7 @@ def retrieve(
     if not query.strip() or k <= 0:
         return []
     lexical = [] if mode == "semantic" else fts.chunks(user, query, filters, CANDIDATES)
-    sem = (
-        _chunk_semantic(user, query, filters, CANDIDATES)
-        if _chunk_semantic and mode != "fts"
-        else []
-    )
+    sem = _meaning(_chunk_semantic, user, query, filters, mode)
     text = {(d, n): t for d, n, t in lexical} | {(h.document_id, h.chunk_no): h.text for h in sem}
     picked: list[tuple[tuple[str, int], float, list[int | None]]] = []
     per_doc: Counter[str] = Counter()

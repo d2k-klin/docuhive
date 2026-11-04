@@ -8,6 +8,7 @@
 | --- | --- |
 | [`backup.sh`](backup.sh) | Entry point for the host backup timer |
 | [`backup.py`](backup.py) | Quiesced database/vault/staging backup with retention and status |
+| [`perf_search.py`](perf_search.py) | NFR-04: seeds synthetic documents into a `_test` database and times word search (`make perf-search`) |
 | [`upgrade.sh`](upgrade.sh) | Build a release, back up, migrate and start with a recovery boundary |
 | [`restore.md`](restore.md) | Full, database-only and single-document recovery |
 | [`check_licenses.py`](check_licenses.py) | Fail on AGPL Python distributions; subprocess tools are listed separately |

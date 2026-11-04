@@ -75,6 +75,7 @@ class MetadataPatch(BaseModel):
     tags_remove: list[str] = []
     facts: dict[str, FactValue | None] | None = None
     unlock_fields: list[str] = []  # user only: remove from manual_fields ("let AI manage again")
+    clear_fields: list[str] = []  # empty these scalar fields (None above means "leave unchanged")
 
 
 class Provenance(BaseModel):
