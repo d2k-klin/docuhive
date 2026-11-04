@@ -31,9 +31,15 @@ def heading_anchors(text: str) -> set[str]:
     return result
 
 
+def _generated(path: Path) -> bool:
+    return any(part in {"node_modules", ".next"} or part.startswith(".venv") for part in path.parts)
+
+
 def test_relative_documentation_links():
     documents = list((ROOT / "docs").rglob("*.md")) + list(ROOT.glob("*.md"))
     documents += list((ROOT / ".agents").rglob("*.md"))
+    documents += [readme for readme in ROOT.rglob("README.md") if not _generated(readme)]
+    documents = sorted(set(documents))
     failures = []
     for document in documents:
         content = re.sub(r"```.*?```", "", document.read_text(), flags=re.S)

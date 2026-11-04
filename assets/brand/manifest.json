@@ -1,0 +1,45 @@
+{
+  "files": {
+    "mr-d-laptop.webp": {
+      "sha256": "224d1cb852625e0fffa06d58a8023a2a7327d171149aecbaef8f959bd78824b9",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_47_49 PM (1).png"
+    },
+    "mr-d-laptop@2x.webp": {
+      "sha256": "1e961409158dee980fcf7bbeedf245281aa74c65afe8c11f1959c944afef7649",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_47_49 PM (1).png"
+    },
+    "mr-d-art-3.webp": {
+      "sha256": "6a905faa99847428f42987ec02b271ee7c1a346bdaa5163ccfb7e34e48f00450",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_47_49 PM (4).png"
+    },
+    "mr-d-art-3@2x.webp": {
+      "sha256": "117d29c77aa399d68ac1e48748b1b94d5b2d207cd376dc72309c44099b3033e4",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_47_49 PM (4).png"
+    },
+    "mr-d-art-5.webp": {
+      "sha256": "3eae90f3fbfb155822b31664f3a08c1656161d5d9f23502d247e3fe3fdcfba55",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_48_36 PM (2).png"
+    },
+    "mr-d-art-5@2x.webp": {
+      "sha256": "5496e879da2b440120b0271c714f4676cd48899ee3ed36642cac9b228bf82390",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_48_36 PM (2).png"
+    },
+    "mr-d-art-7.webp": {
+      "sha256": "9051028232fca2dd02f9742248eaf4aa28440ffc89a7b6bd46634257e8568b5a",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_48_37 PM (3).png"
+    },
+    "mr-d-art-7@2x.webp": {
+      "sha256": "3e5342ebc09773b2e9600ba197f98d2fff2727e16d5997e2da6703a1ee64a312",
+      "source": "ChatGPT Image Sep 12, 2026 at 10_48_37 PM (3).png"
+    },
+    "mr-d-art-9.webp": {
+      "sha256": "350e02ff07df9aba1e0a79478c959b623fbcb2679a9227296ee539e7d7c4e416",
+      "source": "ChatGPT Image Sep 14, 2026 at 07_14_51 PM.png"
+    },
+    "mr-d-art-9@2x.webp": {
+      "sha256": "d2d12f844f441735a21418cdb6b3223721348a0393e5d41a25070a60584c9d73",
+      "source": "ChatGPT Image Sep 14, 2026 at 07_14_51 PM.png"
+    }
+  },
+  "note": "Optimized supplied Mr.D artwork; no new poses generated."
+}

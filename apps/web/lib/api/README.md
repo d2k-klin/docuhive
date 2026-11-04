@@ -1,16 +1,16 @@
 # `apps/web/lib/api`
 
-**Overview.** Generated OpenAPI JSON and TypeScript types plus typed fetch helpers. Regenerate with make gen-api.
+**Overview.** The typed API client. `openapi.json` and `schema.d.ts` are generated from the Python API; `client.ts` and `server.ts` wrap them for the browser and for server components.
 
 ## What's here
 
-| Path                         | What it is                             |
-| ---------------------------- | -------------------------------------- |
-| [client.ts](client.ts)       | Source, configuration or documentation |
-| [openapi.json](openapi.json) | Source, configuration or documentation |
-| [schema.d.ts](schema.d.ts)   | Source, configuration or documentation |
+| Path | What it is |
+| --- | --- |
+| [`client.ts`](client.ts) | Typed client for the browser (adds the CSRF header) |
+| [`openapi.json`](openapi.json) | API schema exported from the Python app (generated) |
+| [`schema.d.ts`](schema.d.ts) | TypeScript types for the API (generated) |
+| [`server.ts`](server.ts) | Typed client for server components (forwards the session) |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Never edit the generated files; run `make gen-api` and commit the result.

@@ -1,14 +1,13 @@
 # `services/docuhive/src/docuhive/search`
 
-**Overview.** Public semantic registration and search contracts; production search is pending OA-M4.
+**Overview.** Full-text and hybrid search, and the registration point for semantic search.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Search contract; semantic providers register through this module |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Apply filters and visibility in every result list.

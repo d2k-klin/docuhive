@@ -1,15 +1,14 @@
 # `services/docuhive/src/docuhive/config`
 
-**Overview.** Validated settings, overlay loading, versioned prompts and plugin discovery.
+**Overview.** Settings, the private overlay, versioned prompts and plugin discovery.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
-| [settings.py](settings.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Public configuration contract: defaults, private overlays and plugin hooks |
+| [`settings.py`](settings.py) | Validated core runtime settings |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+New settings go into the settings class of the module that owns them, with a documented default in `.env.example`.

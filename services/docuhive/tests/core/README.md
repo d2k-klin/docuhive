@@ -1,18 +1,26 @@
 # `services/docuhive/tests/core`
 
-**Overview.** OA unit tests and explicitly marked PostgreSQL integration checks.
+**Overview.** Tests for the platform modules; Docker-backed ones are marked `integration`.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [test_auth.py](test_auth.py) | Source, configuration or documentation |
-| [test_config.py](test_config.py) | Source, configuration or documentation |
-| [test_jobs_integration.py](test_jobs_integration.py) | Source, configuration or documentation |
-| [test_ocr_spike.py](test_ocr_spike.py) | Source, configuration or documentation |
-| [test_platform.py](test_platform.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Package marker |
+| [`test_auth.py`](test_auth.py) | Password, request and login throttling behavior without a database |
+| [`test_auth_integration.py`](test_auth_integration.py) | Real storage tests for session lifecycle, scoped tokens and visibility SQL |
+| [`test_auth_memory.py`](test_auth_memory.py) | Run the same auth acceptance scenarios against a network-free test database |
+| [`test_cli.py`](test_cli.py) | CLI dispatch must preserve queue selection, fail-fast security and password handling |
+| [`test_config.py`](test_config.py) | Overlay safety, merge rules, cache invalidation and startup validation |
+| [`test_conversion_integration.py`](test_conversion_integration.py) | The conversion service receives only synthetic, self-contained document bodies |
+| [`test_job_policy.py`](test_job_policy.py) | Exercise handler outcomes without a database; SQL concurrency is checked separately |
+| [`test_jobs_integration.py`](test_jobs_integration.py) | Real PostgreSQL proof for dedupe, leases, retries and scheduler leadership |
+| [`test_migrations.py`](test_migrations.py) | Migration ordering is independent of each track's current head revision |
+| [`test_ocr_report.py`](test_ocr_report.py) | The spike report must preserve failed inputs and measure the actual processing result |
+| [`test_ocr_spike.py`](test_ocr_spike.py) | Synthetic parsing, conversion and OCR policy checks; no private corpus or external tools |
+| [`test_platform.py`](test_platform.py) | Key-free checks for health, CLI, transactions and extension fallback |
+| [`test_worker.py`](test_worker.py) | Shutdown, queue outages and scheduler connection ownership without external services |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Name files after the module they test.

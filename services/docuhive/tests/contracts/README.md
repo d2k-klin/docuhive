@@ -1,15 +1,17 @@
 # `services/docuhive/tests/contracts`
 
-**Overview.** Binding model and platform-fake behavior checks.
+**Overview.** Contract tests: the same assertions against the real code and the test doubles, plus a check that the contract document matches the code.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [test_fake_core.py](test_fake_core.py) | Source, configuration or documentation |
-| [test_models.py](test_models.py) | Source, configuration or documentation |
+| [`test_contract_drift.py`](test_contract_drift.py) | The documentation's binding models and function signatures must match the real source |
+| [`test_documents_parity.py`](test_documents_parity.py) | Identical assertions against the public fake and real document contracts |
+| [`test_fake_core.py`](test_fake_core.py) | Reusable contract assertions for the shared test doubles |
+| [`test_ingest_parity.py`](test_ingest_parity.py) | File ownership, synchronous rejection and per-owner dedupe for real and fake ingest |
+| [`test_models.py`](test_models.py) | The binding schema must retain a stable, JSON-friendly public surface |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Add a case here whenever a shared interface changes.

@@ -1,15 +1,16 @@
 # `apps/web/tests`
 
-**Overview.** Focused web logic and streaming-boundary regression tests.
+**Overview.** Web unit tests (Vitest) and browser checks (Playwright): auth, navigation, the streaming proxy and UI consistency.
 
 ## What's here
 
-| Path                           | What it is                             |
-| ------------------------------ | -------------------------------------- |
-| [nav.test.ts](nav.test.ts)     | Source, configuration or documentation |
-| [proxy.test.ts](proxy.test.ts) | Source, configuration or documentation |
+| Path | What it is |
+| --- | --- |
+| [`ui/`](ui/) | Playwright checks |
+| [`auth.test.ts`](auth.test.ts) | Sign-in redirect rules |
+| [`nav.test.ts`](nav.test.ts) | Navigation by role |
+| [`proxy.test.ts`](proxy.test.ts) | Proxy headers, streaming and cross-site rejection |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Test logic and boundaries, not markup; browser checks live in `ui/`.

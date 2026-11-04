@@ -1,23 +1,22 @@
 # `services/docuhive/src/docuhive/ingest`
 
-**Overview.** Isolated OCR spike primitives. Production submit awaits the measured OCR gate.
+**Overview.** Turning any incoming file into a searchable PDF: type detection, conversion, OCR, text extraction and thumbnails, with strict limits on untrusted input.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
-| [convert.py](convert.py) | Source, configuration or documentation |
-| [detect.py](detect.py) | Source, configuration or documentation |
-| [errors.py](errors.py) | Source, configuration or documentation |
-| [html.py](html.py) | Source, configuration or documentation |
-| [ocr.py](ocr.py) | Source, configuration or documentation |
-| [safety.py](safety.py) | Source, configuration or documentation |
-| [spike.py](spike.py) | Source, configuration or documentation |
-| [text.py](text.py) | Source, configuration or documentation |
-| [thumbs.py](thumbs.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Ingest contract; production backend is selected after the OCR gate |
+| [`convert.py`](convert.py) | Pure conversion steps reused by the OCR feasibility spike |
+| [`detect.py`](detect.py) | Content detection without trusting a filename or decoding arbitrary binary as text |
+| [`errors.py`](errors.py) | Explicit reasons for preserving a file for review |
+| [`html.py`](html.py) | Self-contained email rendering with a deliberately small inert HTML allowlist |
+| [`ocr.py`](ocr.py) | OCR policy and limited fallbacks, executed in an isolated process by the spike |
+| [`safety.py`](safety.py) | Bound expensive parsing and terminate the entire OCR subprocess group on timeout |
+| [`spike.py`](spike.py) | A measurable OCR experiment; never inserts documents or chooses the production backend |
+| [`text.py`](text.py) | Extract page text without invoking another OCR pass |
+| [`thumbs.py`](thumbs.py) | Render a bounded first-page preview |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Follow the [`document-pipeline`](../../../../../.agents/skills/document-pipeline/SKILL.md) skill: one entry point, nothing lost, every step repeatable.

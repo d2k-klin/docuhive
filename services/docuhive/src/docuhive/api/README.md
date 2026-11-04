@@ -1,18 +1,18 @@
 # `services/docuhive/src/docuhive/api`
 
-**Overview.** Application factory and OA HTTP routers; router registration is append-only.
+**Overview.** The FastAPI application factory and the platform's HTTP routes: sign-in, users, tokens and system status.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
-| [app.py](app.py) | Source, configuration or documentation |
-| [auth.py](auth.py) | Source, configuration or documentation |
-| [routers.py](routers.py) | Source, configuration or documentation |
-| [system.py](system.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | HTTP application |
+| [`app.py`](app.py) | FastAPI factory with fail-fast settings and optional intelligence startup |
+| [`auth.py`](auth.py) | Browser login, sessions and personal access tokens |
+| [`routers.py`](routers.py) | Shared touchpoint: append routers without removing existing registrations |
+| [`system.py`](system.py) | Public health and protected platform operations |
+| [`users.py`](users.py) | Administrator user management; data visibility is never elevated by this role |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Register a new router by appending it to `routers.py`; follow the error and pagination conventions in the contracts.

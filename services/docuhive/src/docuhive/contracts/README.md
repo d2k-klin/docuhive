@@ -1,15 +1,14 @@
 # `services/docuhive/src/docuhive/contracts`
 
-**Overview.** Shared Pydantic interfaces. Update the written contract alongside additive changes.
+**Overview.** The shared models every module agrees on. They mirror [`docs/shared/contracts.md`](../../../../../docs/shared/contracts.md), and a test fails if the two drift apart.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [__init__.py](__init__.py) | Source, configuration or documentation |
-| [models.py](models.py) | Source, configuration or documentation |
+| [`__init__.py`](__init__.py) | Binding interfaces shared by the platform and intelligence tracks |
+| [`models.py`](models.py) | The shared Pydantic models |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Change the document and the code in the same pull request.

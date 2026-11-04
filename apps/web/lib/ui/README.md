@@ -1,14 +1,13 @@
 # `apps/web/lib/ui`
 
-**Overview.** Shared control classes mapped to the product design tokens.
+**Overview.** The shared control class that gives every input, select and button the same height, border and focus ring.
 
 ## What's here
 
-| Path                     | What it is                             |
-| ------------------------ | -------------------------------------- |
-| [control.ts](control.ts) | Source, configuration or documentation |
+| Path | What it is |
+| --- | --- |
+| [`control.ts`](control.ts) | The shared control class |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Change control styling here, once, and check `/dev/ui` in light and dark.

@@ -1,14 +1,13 @@
 # `examples`
 
-**Overview.** Runnable, synthetic learning material.
+**Overview.** Runnable examples for learning how DocuHive's AI pieces work.
 
 ## What's here
 
 | Path | What it is |
 | --- | --- |
-| [learn](learn/) | Directory |
+| [`learn/`](learn/) | One runnable example per concept in the [learning path](../docs/learn/README.md) |
 
 ## Extending
 
-Keep additions within the documented ownership boundaries. Update focused tests,
-the documentation index and the owning track status when behavior changes.
+Each example is standalone and runs without keys or network by default.
