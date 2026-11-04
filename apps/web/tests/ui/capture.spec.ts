@@ -24,7 +24,8 @@ test("IndexedDB survives reload and serialises concurrent queue senders", async 
   await expect(page.getByRole("heading", { name: "Capture a document" })).toBeVisible();
   const result = await page.evaluate(async () => {
     // Load the exact module used by both the page and service worker.
-    const queue = await import(/* webpackIgnore: true */ "/capture-queue.js");
+    const modulePath = "/capture-queue.js";
+    const queue = await import(/* webpackIgnore: true */ modulePath);
     await queue.save({ id: "persistent", ownerId: 1, blobs: [new File(["%PDF-synthetic"], "letter.pdf", { type: "application/pdf" })], combine: false, createdAt: Date.now(), attempts: 0, nextAttempt: 0 });
     return (await queue.entries()).length;
   });
@@ -38,12 +39,14 @@ test("IndexedDB survives reload and serialises concurrent queue senders", async 
   await page.reload();
   await expect(page.getByText("letter.pdf", { exact: true })).toBeVisible();
   await page.evaluate(async () => {
-    const queue = await import(/* webpackIgnore: true */ "/capture-queue.js");
+    const modulePath = "/capture-queue.js";
+    const queue = await import(/* webpackIgnore: true */ modulePath);
     await Promise.all([queue.flush(), queue.flush()]);
   });
   expect(uploads).toBe(1);
   const queued = await page.evaluate(async () => {
-    const queue = await import(/* webpackIgnore: true */ "/capture-queue.js");
+    const modulePath = "/capture-queue.js";
+    const queue = await import(/* webpackIgnore: true */ modulePath);
     return queue.entries();
   });
   expect(queued).toHaveLength(1);

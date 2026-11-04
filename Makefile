@@ -60,9 +60,39 @@ ocr-smoke:
 	docker build -f services/docuhive/Dockerfile -t docuhive-worker:ocr-smoke .
 	docker run --rm -i --entrypoint python docuhive-worker:ocr-smoke - < deploy/scripts/ocr_smoke.py
 
-up down logs backup:
-	@echo 'Production deployment is pending the OCR gate and OA-M7. See docs/Developer-OA/STATUS.md.'
-	@exit 1
+PROD_ENV ?= .env.production
+PROD_COMPOSE = docker compose --env-file $(PROD_ENV) -f deploy/compose.yml
+
+up:
+	$(PROD_COMPOSE) up -d --wait
+
+down:
+	$(PROD_COMPOSE) down
+
+logs:
+	$(PROD_COMPOSE) logs --follow --tail 100
+
+backup:
+	DOCUHIVE_PROD_ENV=$(abspath $(PROD_ENV)) deploy/scripts/backup.sh
+
+.PHONY: images upgrade test-capture test-ops verify-restore
+images:
+	$(PROD_COMPOSE) build api web
+
+upgrade:
+	test -n "$(NEXT_ENV)"
+	DOCUHIVE_PROD_ENV=$(abspath $(PROD_ENV)) deploy/scripts/upgrade.sh "$(NEXT_ENV)"
+
+test-capture:
+	$(UV) run pytest services/docuhive/tests/core/test_capture_operations.py -q
+	$(NPM) test --workspace apps/web
+	$(NPM) exec --workspace apps/web -- playwright test tests/ui/capture.spec.ts
+
+test-ops:
+	$(UV) run pytest services/docuhive/tests/core/test_backup_script.py services/docuhive/tests/core/test_operations_integration.py -q
+
+verify-restore:
+	$(UV) run python deploy/drills/verify_snapshot.py "$(ORIGINAL)" "$(RESTORED)"
 
 learn:
 	$(UV) run python examples/learn/run.py "$(EX)"

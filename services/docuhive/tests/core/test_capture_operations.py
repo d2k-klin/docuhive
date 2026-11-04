@@ -45,7 +45,7 @@ def test_token_upload_uses_the_contract_and_never_accepts_another_owner(mounted,
     assert calls[0][0] == b"synthetic" and calls[0][1].source.kind == "api"
     assert calls[0][1].source.original_filename == "scan.jpg" and calls[0][1].owner_id == 1
     assert calls[0][1].combine and not list(incoming.iterdir())
-    assert mounted.get("/api/documents", headers=headers).status_code == 404  # no read route yet
+    assert mounted.get("/api/auth/me", headers=headers).status_code == 403
     assert mounted.post("/api/upload?expected_owner_id=2", files={"files": ("a.pdf", b"x")}, headers=headers).status_code == 403
     assert len(calls) == 1
     assert mounted.post("/api/upload", files={"files": ("a.pdf", b"x")}).status_code == 403

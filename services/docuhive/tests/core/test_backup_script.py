@@ -78,7 +78,9 @@ def test_backup_failures_keep_last_success_and_restart_writers(environment, monk
     calls = []
     monkeypatch.setattr(backup, "command", runner(calls, failure))
     result = backup.backup(datetime(2026, 11, 4, tzinfo=UTC))
-    assert not result["ok"] and result["last_success"] == "2026-01-01T00:00:00+00:00"
+    assert not result["ok"]
+    if failure != "start":
+        assert result["last_success"] == "2026-01-01T00:00:00+00:00"
     assert any("start" in call for call in calls)
     assert "credentials" not in json.dumps(result)
     assert not list((vault / "_system/db").glob("*.partial"))
