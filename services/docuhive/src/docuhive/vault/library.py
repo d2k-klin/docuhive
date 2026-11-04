@@ -22,7 +22,8 @@ DISABLED = "library:disabled"
 
 def component(value: str, fallback: str = "untitled") -> str:
     value = unicodedata.normalize("NFC", value)
-    value = re.sub(r'[\\/:*?"<>|\x00-\x1f\x7f]', "", value).strip(" .")[:120].rstrip(" .")
+    value = re.sub(r'[\\/:*?"<>|\x00-\x1f\x7f]', "", value).strip(" .")
+    value = value.encode("utf-8")[:120].decode("utf-8", errors="ignore").rstrip(" .")
     return value if value and value not in {".", ".."} else fallback
 
 
@@ -51,13 +52,13 @@ def sync(*, retry: bool = False) -> dict:
             manifest = Setting(key=MANIFEST, value={})
             db.add(manifest)
         desired: dict[str, Path] = {}
+        known: set[tuple[int, int]] = set()
         used: set[str] = set()
         rows = db.execute(
             select(Document, User.username)
             .join(User, User.id == Document.owner_id)
             .where(
                 Document.status == "stored",
-                Document.deleted_at.is_(None),
                 Document.vault_path.is_not(None),
             )
             .order_by(Document.id)
@@ -70,6 +71,10 @@ def sync(*, retry: bool = False) -> dict:
                 or original.is_symlink()
                 or not original.is_file()
             ):
+                continue
+            stat = original.stat()
+            known.add((stat.st_dev, stat.st_ino))
+            if doc.deleted_at is not None:
                 continue
             day = doc.document_date or doc.added_at.date()
             category = [
@@ -90,7 +95,15 @@ def sync(*, retry: bool = False) -> dict:
             used.add(relative.casefold())
             desired[relative] = original
         kept = {}
-        for relative, inode in manifest.value.items():
+        managed = dict(manifest.value)
+        inside(library, ".probe")
+        # Recover links created before a crash prevented the DB manifest commit.
+        for path in library.rglob("*.pdf"):
+            if not path.is_symlink() and path.is_file():
+                stat = path.stat()
+                if (stat.st_dev, stat.st_ino) in known:
+                    managed[str(path.relative_to(library))] = [stat.st_dev, stat.st_ino]
+        for relative, inode in managed.items():
             path = inside(library, relative)
             if path.exists():
                 stat = path.stat()

@@ -14,6 +14,10 @@
 | [`test_auth.py`](test_auth.py) | Password, request and login throttling behavior without a database |
 | [`test_auth_integration.py`](test_auth_integration.py) | Real storage tests for session lifecycle, scoped tokens and visibility SQL |
 | [`test_auth_memory.py`](test_auth_memory.py) | Run the same auth acceptance scenarios against a network-free test database |
+| [`test_capture_operations.py`](test_capture_operations.py) | Bounded upload, scanner retention, library safety and backup reporting without network |
+| [`test_capture_operations_integration.py`](test_capture_operations_integration.py) | Scanner and library scenarios on real PostgreSQL |
+| [`test_backup_script.py`](test_backup_script.py) | Backup/upgrade failure recovery, retention and snapshot verification |
+| [`test_operations_integration.py`](test_operations_integration.py) | v0.1.0-to-current upgrade preserving metadata, facts and credentials |
 | [`test_cli.py`](test_cli.py) | CLI dispatch must preserve queue selection, fail-fast security and password handling |
 | [`test_config.py`](test_config.py) | Overlay safety, merge rules, cache invalidation and startup validation |
 | [`test_conversion_integration.py`](test_conversion_integration.py) | The conversion service receives only synthetic, self-contained document bodies |

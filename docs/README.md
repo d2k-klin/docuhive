@@ -6,6 +6,10 @@
 
 | Doc | Read it for |
 | --- | --- |
+| [setup/mobile.md](setup/mobile.md) | Phone capture, offline uploads, scanner folders and personal tokens |
+| [setup/operations.md](setup/operations.md) | Production containers, nightly backups, recovery and upgrades |
+| [setup/nas-wd-ex2-ultra.md](setup/nas-wd-ex2-ultra.md) | Mounting the NAS and securing the generated library |
+| [setup/remote-access.md](setup/remote-access.md) | Private HTTPS for phones through Tailscale |
 | [setup/development.md](setup/development.md) | Running DocuHive locally, and the checks to run before a pull request |
 | [setup/knowledge-bases.md](setup/knowledge-bases.md) | Saved scopes, indexing status and API token privacy |
 | [setup/ai-providers.md](setup/ai-providers.md) | Local and cloud AI, which model does what, privacy and budgets |
@@ -47,6 +51,7 @@ DocuHive is built by three parallel tracks. Each has a plan, an execution plan a
 
 | Track | Plan | Status |
 | --- | --- | --- |
+| Production readiness phases | [shared/production-readiness.md](shared/production-readiness.md) | — |
 | Work split and integration points | [shared/README.md](shared/README.md) | — |
 | Knowledge bases (all tracks): retrieve and ask APIs, MCP, evals | [shared/knowledge-bases.md](shared/knowledge-bases.md) | — |
 | Archive tools: vault health, custom fields, saved views, near-duplicates, export | [shared/archive-tools.md](shared/archive-tools.md) | — |

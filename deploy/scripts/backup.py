@@ -38,11 +38,11 @@ def mounted(vault: Path, expected: str) -> None:
 
 def backup(now: datetime | None = None) -> dict:
     now = now or datetime.now(UTC)
-    vault = Path(os.environ["DOCUHIVE_VAULT_HOST_DIR"])
-    staging = Path(os.environ["DOCUHIVE_STAGING_HOST_DIR"])
+    vault = Path(os.environ["DOCUHIVE_VAULT_HOST_DIR"]).resolve()
+    staging = Path(os.environ["DOCUHIVE_STAGING_HOST_DIR"]).resolve()
     expected = os.environ["DOCUHIVE_VAULT_ID"]
     mounted(vault, expected)
-    if not staging.is_dir() or staging.is_relative_to(vault):
+    if not staging.is_dir() or staging.is_relative_to(vault) or vault.is_relative_to(staging):
         raise ValueError("Use the existing SSD staging directory outside the vault")
     password = Path(os.environ["RESTIC_PASSWORD_FILE"])
     if not password.is_file() or stat.S_IMODE(password.stat().st_mode) & 0o077:
@@ -50,6 +50,12 @@ def backup(now: datetime | None = None) -> dict:
     repositories = shlex.split(os.environ["RESTIC_REPOSITORIES"])
     if not repositories:
         raise ValueError("Configure at least one restic repository")
+    for repository in repositories:
+        target = Path(repository).resolve()
+        if ":" not in repository and (
+            target.is_relative_to(vault) or target.is_relative_to(staging)
+        ):
+            raise ValueError("The backup repository must be outside the source directories")
     version = command(["restic", "version"], stdout=subprocess.PIPE).stdout.decode().split()
     if version[:2] != ["restic", "0.18.1"]:
         raise ValueError("Install the pinned restic 0.18.1 before running backups")
@@ -62,7 +68,12 @@ def backup(now: datetime | None = None) -> dict:
         str(ROOT / "deploy/compose.yml"),
     ]
     status_path = vault / "_system" / "backup-status.json"
-    previous = json.loads(status_path.read_text()) if status_path.exists() else {}
+    try:
+        previous = json.loads(status_path.read_text())
+        if not isinstance(previous, dict):
+            previous = {}
+    except (OSError, ValueError):
+        previous = {}
     result = {
         "at": now.isoformat(),
         "ok": False,

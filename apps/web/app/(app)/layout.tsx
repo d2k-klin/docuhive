@@ -76,7 +76,7 @@ export default async function AppLayout({
           <span className="text-sm text-text-muted">{user.username}</span>
           <UserActions />
         </header>
-        <OperationsStatus />
+        <OperationsStatus admin={user.role === "admin"} />
         {children}
       </div>
     </div>

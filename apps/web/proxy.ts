@@ -7,7 +7,14 @@ export function proxy(request: NextRequest) {
     path === "/login" ||
     path.startsWith("/_next/") ||
     path === "/favicon.ico" ||
-    ["/capture", "/manifest.webmanifest", "/sw.js", "/capture-queue.js", "/capture-192.png", "/capture-512.png"].includes(path)
+    [
+      "/capture",
+      "/manifest.webmanifest",
+      "/sw.js",
+      "/capture-queue.js",
+      "/capture-192.png",
+      "/capture-512.png",
+    ].includes(path)
   )
     return NextResponse.next();
   if (process.env.NODE_ENV !== "production" && path.startsWith("/dev/"))
@@ -25,4 +32,5 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image).*)"] };
+// API route handlers enforce auth/CSRF themselves; avoid Next proxy's body clone/buffer.
+export const config = { matcher: ["/((?!api/|_next/static|_next/image).*)"] };

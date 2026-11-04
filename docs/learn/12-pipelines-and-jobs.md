@@ -22,10 +22,18 @@ Periodic jobs are scheduled by the worker holding a PostgreSQL advisory lock.
 The lock stays on one connection and is released when that connection closes.
 Periodic deduplication prevents an already-running task from being enqueued twice.
 
+Phone capture stores pending files in a device-local queue; browser uploads and scoped API
+tokens reach the same `ingest.submit` contract as email. The scanner source polls every
+30 seconds, remembers stable files in PostgreSQL, and keeps its source copy until the
+stored vault original passes checksum verification. A NAS outage pauses pickup. These
+source adapters are implemented; complete document-core acceptance remains separate.
+
 ## In the code
 
 - [Public job contract](../../services/docuhive/src/docuhive/jobs/__init__.py)
 - [Claim, run and reap](../../services/docuhive/src/docuhive/jobs/runner.py)
+- [Scanner source](../../services/docuhive/src/docuhive/ingest/consume.py)
+- [Upload source](../../services/docuhive/src/docuhive/api/upload.py)
 - [Scheduler leadership](../../services/docuhive/src/docuhive/jobs/scheduler.py)
 - [PostgreSQL regression checks](../../services/docuhive/tests/core/test_jobs_integration.py)
 

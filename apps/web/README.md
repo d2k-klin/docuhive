@@ -6,6 +6,8 @@
 
 | Path | What it is |
 | --- | --- |
+| [`Dockerfile`](Dockerfile) | Multi-stage non-root standalone production image |
+| [`public/`](public/) | Public capture shell assets and persistent upload queue |
 | [`app/`](app/) | Routes and layouts |
 | [`components/`](components/) | React components |
 | [`lib/`](lib/) | Shared web helpers: the typed API client, the proxy rules, navigation, auth helpers, UI strings and control classes |
@@ -16,6 +18,7 @@
 | [`next-env.d.ts`](next-env.d.ts) | Next.js type declarations (generated) |
 | [`next.config.ts`](next.config.ts) | Next.js configuration |
 | [`package.json`](package.json) | Web workspace scripts and dependencies |
+| [`playwright.capture.config.ts`](playwright.capture.config.ts) | Production-mode browser checks for offline capture |
 | [`playwright.config.ts`](playwright.config.ts) | Playwright configuration for the browser checks |
 | [`postcss.config.mjs`](postcss.config.mjs) | PostCSS configuration for Tailwind |
 | [`proxy.ts`](proxy.ts) | Redirects signed-out visitors to the sign-in page |

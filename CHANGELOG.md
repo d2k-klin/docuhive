@@ -15,6 +15,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - `docuhive vault rebuild [--dry-run]`: recreates the database from the vault's `meta.json` files and archive copies, reporting unreadable folders instead of stopping. Missing owners are created disabled.
 - `meta.json` schema versioning, `docuhive vault migrate`, and `meta.schema.json` in the vault.
 - Vocabulary API (`/api/vocabulary/tags`, `/api/vocabulary/correspondents`): typeahead lists, and rename and merge for administrators; merged names keep resolving to the survivor.
+- Phone capture with oriented/downscaled images, page ordering and an account-bound offline upload queue; scoped-token upload and durable scanner polling.
+- Production containers, NAS/HTTPS guides, quiesced restic backups with a timer, backup warnings, managed library hardlinks and recovery/upgrade runbooks. Target-hardware acceptance remains pending.
 
 ### Changed
 

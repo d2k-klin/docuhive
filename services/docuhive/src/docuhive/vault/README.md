@@ -10,6 +10,9 @@
 | [`migrate.py`](migrate.py) | `meta.json` schema versions: ordered upgrades applied whenever a file is read |
 | [`rebuild.py`](rebuild.py) | `docuhive vault rebuild [--dry-run]` recreates the database from the vault; `docuhive vault migrate` rewrites old `meta.json` files |
 | [`meta.py`](meta.py) | `meta.json`, rendered from the database after every change, with a retried repair job when the vault is away |
+| [`availability.py`](availability.py) | Refuses scanner/library operations against a missing or mismatched vault |
+| [`backup.py`](backup.py) | Sanitised backup evidence and 48-hour freshness check |
+| [`library.py`](library.py) | Managed hardlink view with sanitised names and private folders |
 | [`health.py`](health.py) | Checks that each stored document's files exist, parse and match the database, finds orphan folders, stores the last report and runs weekly |
 
 ## Extending

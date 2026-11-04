@@ -13,6 +13,7 @@
 | [`nav.ts`](nav.ts) | Navigation entries |
 | [`proxy.ts`](proxy.ts) | Proxy rules: which headers reach the API, and streaming without buffering |
 | [`utils.ts`](utils.ts) | Class-name helper |
+| [capture/](capture/) | EXIF-aware image preparation and page ordering |
 
 ## Extending
 

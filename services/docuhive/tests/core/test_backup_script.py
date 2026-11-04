@@ -72,7 +72,7 @@ def test_backup_quiesces_validates_dumps_checks_targets_and_restarts(environment
     assert json.loads((vault / "_system/backup-status.json").read_text())["ok"]
 
 
-@pytest.mark.parametrize("failure", ["pg_dump", "backup", "start"])
+@pytest.mark.parametrize("failure", ["stop", "pg_dump", "backup", "start"])
 def test_backup_failures_keep_last_success_and_restart_writers(environment, monkeypatch, failure):
     vault, _, _ = environment
     (vault / "_system/backup-status.json").write_text(
@@ -101,3 +101,61 @@ def test_backup_refuses_unmounted_vault_and_public_password_file(environment, mo
     with pytest.raises(ValueError, match="registered vault"):
         backup.backup()
     assert not calls
+
+
+@pytest.mark.parametrize("failure", ["", "stop", "backup", "migrate"])
+def test_upgrade_failure_boundary(tmp_path, monkeypatch, failure):
+    import os
+    import shutil
+
+    scripts = tmp_path / "scripts"
+    scripts.mkdir()
+    shutil.copy(ROOT / "deploy/scripts/upgrade.sh", scripts / "upgrade.sh")
+    log = tmp_path / "commands.jsonl"
+    monkeypatch.setenv("UPGRADE_LOG", str(log))
+    monkeypatch.setenv("UPGRADE_FAILURE", failure)
+    monkeypatch.setenv("DOCUHIVE_PROD_ENV", "old.env")
+    monkeypatch.setenv("PATH", f"{scripts}:{os.environ['PATH']}")
+    stub = """#!/usr/bin/env python3
+import json, os, sys
+with open(os.environ["UPGRADE_LOG"], "a") as out:
+    out.write(json.dumps(sys.argv) + "\\n")
+fail = os.environ["UPGRADE_FAILURE"]
+failed = ((fail == "migrate" and "run" in sys.argv) or (fail == "stop" and "stop" in sys.argv) or
+          (fail == "backup" and sys.argv[0].endswith("backup.sh")))
+sys.exit(1 if failed else 0)
+"""
+    for name in ["docker", "backup.sh"]:
+        (scripts / name).write_text(stub)
+        (scripts / name).chmod(0o755)
+    result = subprocess.run([str(scripts / "upgrade.sh"), "new.env"], capture_output=True)
+    calls = [json.loads(line) for line in log.read_text().splitlines()]
+    assert any("build" in call for call in calls)
+    assert result.returncode == (1 if failure else 0)
+    if failure in {"backup", "stop"}:
+        assert any("start" in call and "old.env" in call for call in calls)
+        assert not any("run" in call for call in calls)
+    elif failure == "migrate":
+        assert not any("start" in call for call in calls)
+        assert any("stop" in call and "new.env" in call for call in calls)
+    else:
+        assert any("up" in call and "new.env" in call for call in calls)
+
+
+def test_snapshot_verifier_refuses_empty_or_changed_document_bytes(tmp_path):
+    import runpy
+
+    verify = runpy.run_path(str(ROOT / "deploy/drills/verify_snapshot.py"))["verify"]
+    source, restored = tmp_path / "source", tmp_path / "restored"
+    source.mkdir()
+    restored.mkdir()
+    with pytest.raises(ValueError, match="no documents"):
+        verify(source, restored)
+    for root in [source, restored]:
+        (root / "2026/synthetic").mkdir(parents=True)
+        (root / "2026/synthetic/meta.json").write_text('{"id":"synthetic"}')
+        (root / "2026/synthetic/original.pdf").write_bytes(b"synthetic")
+    verify(source, restored)
+    (restored / "2026/synthetic/original.pdf").write_bytes(b"changed")
+    with pytest.raises(ValueError, match="differ"):
+        verify(source, restored)
