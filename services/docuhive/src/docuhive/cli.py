@@ -1,13 +1,36 @@
 """Command-line entry points for the platform and optional intelligence extensions."""
 
 import argparse
+import copy
 import getpass
 import json
 import logging
+import re
 from importlib import import_module
 
 from docuhive import __version__
 from docuhive.config.settings import get_settings
+
+# A key that names a secret, then `=` or `:`, then the value (`password=…`, `"token": "…"`,
+# `Authorization: Bearer …`, `dh_session=…`).
+SECRET = re.compile(
+    r"(?i)\b(\w*(?:password|passwd|token|secret|authorization|api_?key|session|cookie))\b"
+    r"(\"?'?\s*[:=]\s*[\"']?(?:bearer\s+)?)([^\s\"',;&}]+)"
+)
+
+
+class Redact(logging.Filter):
+    """Masks secret values in every log line before any handler writes it.
+
+    ponytail: the message only, not tracebacks; scrub exc_text too if a secret ever shows up there.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        message = record.getMessage()
+        clean = SECRET.sub(r"\1\2[redacted]", message)
+        if clean != message:
+            record.msg, record.args = clean, None
+        return True
 
 
 def parser() -> argparse.ArgumentParser:
@@ -56,17 +79,26 @@ def main() -> None:
     root = parser()
     args = root.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(Redact())
     try:
         get_settings()
         if args.command == "api":
             import uvicorn
+            from uvicorn.config import LOGGING_CONFIG
 
+            # uvicorn installs its own handlers (also in --reload children); filter those too.
+            log_config = copy.deepcopy(LOGGING_CONFIG)
+            log_config["filters"] = {"redact": {"()": Redact}}
+            for handler in log_config["handlers"].values():
+                handler["filters"] = ["redact"]
             uvicorn.run(
                 "docuhive.api.app:create_app",
                 factory=True,
                 host=args.host,
                 port=args.port,
                 reload=args.reload,
+                log_config=log_config,
             )
         elif args.command == "worker":
             from docuhive.worker import serve

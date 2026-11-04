@@ -58,6 +58,8 @@ The security checklist ticked item by item (sessions, CSRF, headers and CSP, upl
 
 Progress (2026-11-04): word search at 20,000 synthetic documents (`make perf-search`, development Mac, PostgreSQL 16 in Docker): median 174 ms, p95 206 ms, max 292 ms. Still to measure on the target host, and with the meaning-based half once an embedding model runs there.
 
+Progress (2026-11-04): the [security checklist](../security-checklist.md) is ticked item by item with its evidence. New: log redaction on every handler, a generated hostile-file corpus through the real pipeline, a permission matrix over every API route, and the host port check in the operations guide. Ingest time (`make perf-ingest`, development Mac, English-only OCR): a scanned 1-page PDF is stored in 4.5 s median (max 4.9 s), a 5-page one in 7.6 s (max 7.7 s), against 60 s. Still open: an OWASP ZAP baseline scan, and both timings on the target host with German and English OCR.
+
 ### 6. Real-world verification and 1.0
 
 Real provider and mailbox runs, a golden evaluation set and the auto-apply gate, the end-to-end journeys, the restore drill on the target hardware, then the QA release gate. On GO: version 1.0.0, and the README badge and status section say so.

@@ -59,6 +59,16 @@ and Gotenberg's UID 1001 differ from the app's UID 1000; all are non-root. API/w
 outbound networking for configured providers; the converter and database have only the
 internal network. Roots are read-only, with explicit writable volumes/tmpfs.
 
+Check what the host exposes after every install or upgrade:
+
+```bash
+sudo ss -tlnp
+```
+
+DocuHive's only listener is `127.0.0.1:3000` (the web app). Anything else on `0.0.0.0` or
+`[::]` must be a service you chose, such as SSH or Tailscale. A DocuHive port there means
+the Compose file was changed; put it back on loopback.
+
 `make logs` follows logs; `make down` stops the stack without deleting data. No production
 command removes volumes. Production database downgrades are refused.
 

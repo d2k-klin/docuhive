@@ -6,6 +6,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- Security checklist (`docs/security-checklist.md`) with evidence for every item; a hostile-file corpus and a route permission matrix in the integration tests; `make perf-ingest` for upload-to-stored timing.
 - Document screens: documents list with filters and bulk edit, document detail (PDF preview, editing with "set by you"/AI badges and unlock, facts, history, downloads, trash), search with highlighted snippets (`GET /api/search`), drag-and-drop upload that follows each file until it is stored, quarantine with plain-language reasons and retry, trash, vocabulary, account settings and the dashboard setup checklist.
 - Document intake: `ingest.submit` (type and size checks, per-owner dedupe, staging) and the `ingest.process` job (conversion, OCR to PDF/A, thumbnail, verified vault write, quarantine with the input kept, retry). A NAS outage leaves uploads staged until the vault is back.
 - The vault: `docuhive vault init`, an availability check against the vault id, atomic writes verified by checksum, and `meta.json` for every document, rendered from the database after each change.
@@ -90,6 +91,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Security
 
+- Log lines no longer carry passwords, tokens, session cookies or `Authorization` values; every handler, uvicorn's included, masks them.
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 

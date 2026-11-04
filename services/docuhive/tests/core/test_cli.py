@@ -1,6 +1,7 @@
 """CLI dispatch must preserve queue selection, fail-fast security and password handling."""
 
 import json
+import logging
 import sys
 
 import pytest
@@ -54,3 +55,28 @@ def test_user_password_mismatch_never_creates_user(monkeypatch):
     with pytest.raises(SystemExit):
         cli.main()
     assert called == []
+
+
+@pytest.mark.parametrize(
+    ("line", "secret"),
+    [
+        ("login password=hunter2 user=a", "hunter2"),
+        ('{"token": "dh_abc123", "user": "a"}', "dh_abc123"),
+        ("Authorization: Bearer eyJ.secret.value", "eyJ.secret.value"),
+        ("cookie: dh_session=abcdef; theme=dark", "abcdef"),
+        ("GET /api/capture?api_key=k123&page=2", "k123"),
+    ],
+)
+def test_log_lines_never_carry_secret_values(line, secret):
+    record = logging.LogRecord("x", logging.INFO, __file__, 1, "%s", (line,), None)
+    assert cli.Redact().filter(record)
+    assert "[redacted]" in record.getMessage()
+    assert secret not in record.getMessage()
+
+
+def test_redaction_leaves_ordinary_lines_alone():
+    record = logging.LogRecord(
+        "x", logging.INFO, __file__, 1, "session expired for %s", ("a",), None
+    )
+    cli.Redact().filter(record)
+    assert record.getMessage() == "session expired for a"
