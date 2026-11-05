@@ -1,5 +1,7 @@
 "use client";
 
+import { CategorySettings } from "@/components/intel/CategorySettings";
+
 import { useState } from "react";
 import { Merge, Pencil, Tags } from "lucide-react";
 import type { components } from "@/lib/api/schema";
@@ -259,10 +261,11 @@ export function VocabularyPage({ admin }: { admin: boolean }) {
         title="Vocabulary"
         description={
           admin
-            ? "Rename tags and senders, or merge duplicates into one. Documents follow automatically."
+            ? "Choose categories for your archive, and manage tags and senders."
             : "The tags and senders on documents you can see. An administrator can rename or merge them."
         }
       />
+      <CategorySettings admin={admin} />
       <div className="grid gap-6 lg:grid-cols-2">
         <VocabularyList kind="tags" title="Tags" admin={admin} />
         <VocabularyList kind="correspondents" title="Senders" admin={admin} />

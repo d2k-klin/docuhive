@@ -1,6 +1,8 @@
 "use client";
 
 import type { components } from "@/lib/api/schema";
+import { Button } from "@/components/ui/button";
+import { documentPeriod } from "@/lib/ui/document-periods";
 import { Input } from "@/components/ui/input";
 import { checkbox as checkboxClass } from "@/lib/ui/control";
 
@@ -15,6 +17,45 @@ export const emptyFilters: Filters = {
   document_ids: [],
   include_trashed: false,
 };
+
+export function DateShortcuts({
+  value,
+  onChange,
+}: {
+  value: { date_from?: string | null; date_to?: string | null };
+  onChange: (range: { date_from: string; date_to: string }) => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Quick date ranges"
+      className="flex flex-wrap gap-2"
+    >
+      {(
+        [
+          ["last_month", "Last month"],
+          ["last_quarter", "Last quarter"],
+        ] as const
+      ).map(([period, label]) => {
+        const range = documentPeriod(period);
+        return (
+          <Button
+            key={period}
+            type="button"
+            variant="secondary"
+            aria-pressed={
+              value.date_from === range.date_from &&
+              value.date_to === range.date_to
+            }
+            onClick={() => onChange(range)}
+          >
+            {label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function DocumentFilters({
   value,
@@ -92,6 +133,14 @@ export function DocumentFilters({
           placeholder="Names, separated by commas"
         />
       </label>
+      <DateShortcuts
+        value={value}
+        onChange={(range) => onChange({ ...value, ...range })}
+      />
+      <p className="text-xs text-text-muted">
+        Uses the date on the document, or the upload date when no document date
+        is available.
+      </p>
       <div className="grid gap-4 lg:grid-cols-2">
         <label className="block space-y-1.5 text-sm font-medium">
           From date

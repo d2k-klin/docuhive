@@ -14,6 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { checkbox, control } from "@/lib/ui/control";
 import { errorMessage } from "@/lib/i18n/errors";
+import {
+  DocumentAIStatus,
+  useAIStatuses,
+} from "@/components/intel/DocumentAIStatus";
 import { reasonText } from "./document-queues";
 import {
   api,
@@ -46,6 +50,12 @@ export function UploadPage() {
   const [combine, setCombine] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
+
+  const ai = useAIStatuses(
+    items
+      .filter((item) => item.state === "stored" && item.id)
+      .map((item) => item.id!),
+  );
 
   const update = (key: string, change: Partial<Item>) =>
     setItems((all) =>
@@ -138,11 +148,13 @@ export function UploadPage() {
               onChange={(e) => setCategory(e.target.value)}
             >
               <option value="">Let the AI decide</option>
-              {taxonomy.data?.categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
+              {taxonomy.data?.categories
+                .filter((c) => c.enabled !== false)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
             </select>
           </Field>
           <Field label="Tags" help="Optional, separated by commas.">
@@ -199,7 +211,15 @@ export function UploadPage() {
                 className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-border bg-surface p-3"
               >
                 <span className="min-w-0 break-words">{item.name}</span>
-                <Status item={item} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Status item={item} />
+                  {item.state === "stored" && item.id && (
+                    <DocumentAIStatus
+                      status={ai.items[item.id]}
+                      unavailable={ai.error}
+                    />
+                  )}
+                </div>
               </li>
             ))}
           </ul>

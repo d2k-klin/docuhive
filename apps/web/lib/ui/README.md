@@ -6,6 +6,7 @@
 
 | Path | What it is |
 | --- | --- |
+| [`document-periods.ts`](document-periods.ts) | Previous complete month and quarter date ranges |
 | [`control.ts`](control.ts) | The shared control class |
 
 ## Extending

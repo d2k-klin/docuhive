@@ -57,19 +57,24 @@ def list_accounts(user: User) -> dict:
         "triage_local": triage_is_local(),
         # Which "Sign in with …" buttons can work; otherwise the UI asks for an app password.
         "oauth": {"google": oauth.configured("google"), "microsoft": oauth.configured("microsoft")},
+        "connection": {
+            "credentials_ready": get_mail_settings().token_key is not None,
+            "sync_every_min": get_mail_settings().sync_every_min,
+            "oauth_redirects": {name: oauth.redirect_uri(name) for name in ("google", "microsoft")},
+        },
         "next_cursor": None,
     }
 
 
 class ImapIn(BaseModel):
     provider: str = "imap"
-    host: str
-    port: int = 993
+    host: str = Field(min_length=1)
+    port: int = Field(default=993, ge=1, le=65535)
     ssl: bool = True
-    username: str
+    username: str = Field(min_length=1)
     password: str = Field(min_length=1)
     address: str | None = None
-    folders: list[str] = ["INBOX"]
+    folders: list[str] = Field(default=["INBOX"], min_length=1)
     default_shared: bool = True
 
 
@@ -81,12 +86,12 @@ def login_problem(error: Exception, host: str) -> str:
     if isinstance(error, socket.gaierror):
         return (
             f"The mail server {host} can't be found. "
-            "Check the address, or set the server under Advanced."
+            "Check the address, or set the server under Server settings."
         )
     if isinstance(error, TimeoutError | ConnectionError | ssl.SSLError):
         return (
             f"The mail server {host} didn't answer on that port. "
-            "Check the server and port under Advanced."
+            "Check the server and port under Server settings."
         )
     if isinstance(error, imaplib.IMAP4.error):
         reply = str(error).removeprefix("b'").removeprefix('b"').rstrip("'\"")
@@ -95,7 +100,9 @@ def login_problem(error: Exception, host: str) -> str:
             "Yahoo need an app password, and GMX and WEB.DE need IMAP turned on in their settings."
             + (f" The server said: {reply}" if reply else "")
         )
-    return f"Could not log in: {type(error).__name__}: {error}"
+    if isinstance(error, LookupError):
+        return "A selected mail folder wasn't found. Check the folder names under Server settings."
+    return "The mailbox couldn't be connected. Check the server settings and try again."
 
 
 @router.post("/accounts")
@@ -105,13 +112,6 @@ def create_imap(body: ImapIn, user: User) -> dict:
     if body.host.strip().lower() in APP_PASSWORD_HOSTS:
         # Shown as "abcd efgh ijkl mnop"; the spaces are not part of the password.
         body.password = "".join(body.password.split())
-    try:
-        conn = Imap(
-            body.host, body.port, body.username, body.password, ssl=body.ssl, folders=body.folders
-        )
-        conn.test_login()  # test before saving
-    except Exception as e:  # noqa: BLE001 - shown to the user
-        fail(400, "imap_login_failed", login_problem(e, body.host))
     try:
         blob = accounts.encrypt(
             {
@@ -125,6 +125,13 @@ def create_imap(body: ImapIn, user: User) -> dict:
         )
     except MissingKey as e:
         fail(409, "missing_key", str(e))
+    try:
+        conn = Imap(
+            body.host, body.port, body.username, body.password, ssl=body.ssl, folders=body.folders
+        )
+        conn.test_login()  # test before saving
+    except Exception as e:  # noqa: BLE001 - mapped to actionable copy
+        fail(400, "imap_login_failed", login_problem(e, body.host))
     with db.session() as s:
         address = (body.address or body.username).lower()
         if s.scalar(
@@ -143,7 +150,11 @@ def create_imap(body: ImapIn, user: User) -> dict:
         )
         s.add(a)
         s.flush()
-        return _acc_out(a) | {"triage_local": triage_is_local()}
+        out = _acc_out(a) | {"triage_local": triage_is_local()}
+    jobs.enqueue(
+        "mail.sync", {"account_id": out["id"]}, queue="mail", dedupe_key=f"mail.sync:{out['id']}"
+    )
+    return out
 
 
 class AccountPatch(BaseModel):

@@ -541,3 +541,35 @@ def test_export_cells_and_names():
     first = filename(Row, used)
     assert "/" not in first and first.startswith("undated ") and first.endswith(").pdf")
     assert filename(Row, used) != first
+
+
+def test_date_groups_use_document_date_then_upload_date(tools):
+    from sqlalchemy import update
+
+    for id, category, day, added in (
+        ("dated", "finance/banking", date(2026, 10, 4), datetime(2026, 11, 1, tzinfo=UTC)),
+        ("undated", "finance/tax", None, datetime(2026, 10, 31, 23, 59, tzinfo=UTC)),
+        ("prior-quarter", "finance/banking", date(2026, 9, 30), datetime(2026, 10, 15, tzinfo=UTC)),
+        ("other", "utilities", date(2026, 10, 4), datetime(2026, 10, 4, tzinfo=UTC)),
+    ):
+        add(id, category=category, day=day, vault=tools.vault)
+        with db.session() as session:
+            session.execute(update(Document).where(Document.id == id).values(added_at=added))
+    month = tools.get("/api/documents?category=finance&date_from=2026-10-01&date_to=2026-10-31")
+    assert month.status_code == 200
+    assert {d["id"] for d in month.json()["items"]} == {"dated", "undated"}
+    quarter = tools.post(
+        "/api/views",
+        headers=CSRF,
+        json={
+            "name": "Finance Q3",
+            "filters": {
+                "categories": ["finance"],
+                "date_from": "2026-07-01",
+                "date_to": "2026-09-30",
+            },
+        },
+    )
+    assert quarter.status_code == 201
+    saved = tools.get(f"/api/views/{quarter.json()['id']}/documents")
+    assert [d["id"] for d in saved.json()["items"]] == ["prior-quarter"]

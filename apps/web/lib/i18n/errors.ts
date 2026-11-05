@@ -1,4 +1,14 @@
 export const errors: Record<string, string> = {
+  document_disabled_category:
+    "This category is no longer enabled. Choose another category, or ask an administrator to enable it.",
+  category_unknown: "A category changed. Reload the list and choose again.",
+  category_required: "Choose at least one category for your documents.",
+  category_name_required: "Give your category a name.",
+  category_exists:
+    "That category already exists here. Choose it from the list.",
+  category_parent_unknown: "Choose an enabled parent category, or no parent.",
+  category_limit:
+    "You can have up to 500 categories. Use an existing category.",
   too_large:
     "These files are too large. Choose fewer pages or smaller files and try again.",
   intake_unavailable:

@@ -147,3 +147,12 @@ Plan: [archive tools](../shared/archive-tools.md). Core revision `0003_archive_t
   intake/document stubs), physical phone/scanner/NAS journeys, vault-only rebuild and
   host-loss drills, NAS share ACLs and three consecutive successful nightly backups.
   No production data, real provider/mailbox or release GO is claimed.
+
+## Shared categories, AI progress and document groups (2026-11-05)
+
+- Added public runtime JSON preferences through the existing settings table and a read-only document-job progress accessor. No database migration or new dependency is needed.
+- Documents now supports complete previous-month/quarter shortcuts, category descendants and saving the current group to the sidebar. Date filters share the printed-date/upload-date fallback across document lists, search and saved views. Upload and metadata category pickers use enabled choices while preserving existing assignments.
+- AI progress is visible in uploads, document lists, saved views and the existing intelligence detail panel. The detail panel is now mounted in the document screen. Corrected description-list markup and notice contrast found by axe during the new journeys.
+- Evidence: **362 service tests passed**, **68 integration tests deselected**; **10 web unit tests**, **4 learning-example tests**, and **30 browser checks** passed. Browser checks cover 375/768/1280 in light/dark, axe, no overflow and shared control dimensions. ESLint, TypeScript, focused mypy and Ruff pass. The 40-case FakeModel classification gate passes for the oracle fixture; the deliberately noisy fixture fails as expected. Changed documentation has **118 valid relative links**.
+- Both Docker images build. The local Colima API, both workers and web were rebuilt and restarted with the new images. HTTP health, served feature bundles and backend source hashes match this workspace. Existing mounts, seven documents and two users are preserved. A read-only live PostgreSQL check confirms the category loader, date grouping SQL and seven `needs_review` statuses.
+- Pending: real-provider quality for newly chosen custom categories and target-hardware acceptance. Existing documents were not automatically reclassified. The full documentation checker still has the previously recorded unrelated worktree-cache link failures; changed documentation links pass.

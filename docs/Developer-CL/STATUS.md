@@ -33,3 +33,17 @@ Update this file whenever a milestone or a contract item changes state (working 
 ## Model selection (CL-M3)
 - Decision: _pending_ (needs golden set + real models; see `docs/decisions/0004-model-selection.md`)
 - `apply.auto`: **false** until the gate passes
+
+## Mailbox connection experience (2026-11-05)
+
+- Sources now starts with provider selection, prioritises Google/Microsoft sign-in when configured, and shows app-password help or actionable one-time server setup instructions. Custom IMAP servers, separate usernames and folder scope remain available.
+- Successful IMAP connections enqueue their first sync after commit, and both IMAP and OAuth connections offer an explicit history range. Import progress and activity refresh while mailboxes are active. Login failures save nothing; server connections have a 20-second timeout.
+- Evidence: the intelligence suite passes **164 tests**, with **4 integration tests skipped**. Web unit tests pass **8 tests**; ESLint, TypeScript, focused mypy and Ruff pass. The production Next.js build passes. Synthetic mailbox browser journeys pass **24 checks** at 375/768/1280 in light/dark, including axe, no overflow, failed-login retry, missing configuration and OAuth return. Shared control-height and foundation checks pass **12 tests**. Desktop/light and mobile/dark screenshots were inspected.
+- Limits: the UI journeys use synthetic account/source responses, not real provider consent or mailbox fetching. The local Colima instance at localhost:3000 was rebuilt and restarted from this workspace (API, both workers, web); live HTTP health and the deployed mailbox UI bundle pass, and persistent mounts and archive/user row counts are unchanged. Mail encryption is ready; Google/Microsoft app registrations remain unconfigured. `make test-ui` itself is blocked by the host's unaccepted Xcode license; the build and relevant browser checks were run directly. The full docs link checker fails on four pre-existing links inside `.claude/worktrees/feat-archive-tools/tmp/qa/uv-cache`; changed documentation links are valid.
+
+## Category choices and visible AI progress (2026-11-05)
+
+- Administrators can enable predefined categories and add custom ones in Vocabulary. Classification receives only enabled choices; the full taxonomy retains disabled categories and their privacy restrictions. Database preferences are read fresh by API and workers, and a setup check links to category choices.
+- A permission-scoped batch endpoint derives current progress from queue records, AI runs and pending review. Re-runs supersede previous completion, failed extraction is not reported as successful completion, and a category suggestion is not reported as applied. Uploads, document tables, saved groups and document details poll real status. The detail panel exposes category acceptance and the existing run trace.
+- Evidence: **362 service tests**, **10 web unit tests**, **4 learning examples**, **30 browser checks** and the 40-case FakeModel oracle gate pass; deliberately noisy category outputs fail their gate as expected. Builds, lint, type checks and 118 changed-document links pass. Learning note/example 02 and note 12 explain the choices and progress model.
+- The local Colima instance is running the new images, with storage mounts and all seven documents/two users preserved. Live read-only checks return 35 categories and seven `needs_review` documents. Real-model accuracy for custom categories remains unmeasured; no existing document was automatically reclassified.

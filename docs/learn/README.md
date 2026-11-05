@@ -6,6 +6,7 @@
 
 | Path | What it is |
 | --- | --- |
+| [`02-structured-output.md`](02-structured-output.md) | Enabled and custom categories, structured validation and preserved privacy · 4 min |
 | [`05-privacy-routing.md`](05-privacy-routing.md) | Privacy routing |
 | [`09-hybrid-search.md`](09-hybrid-search.md) | Word and meaning matches, rank fusion and saved scopes · 5 min |
 | [`12-pipelines-and-jobs.md`](12-pipelines-and-jobs.md) | Pipelines and jobs |

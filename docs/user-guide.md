@@ -123,3 +123,23 @@ Answers only use documents you are allowed to see.
 - Notes on a document.
 - A compact menu for phones.
 - Letting other AI agents use your knowledge bases (MCP).
+
+## Choose your categories
+
+Open **Documents → Categories** (the Vocabulary page). An administrator can select the predefined categories used by the whole archive and add custom ones. Give a custom category a name and, optionally, a parent and a description of what belongs there. **Local AI only** keeps documents in that category on local models.
+
+Choose **Save category choices** after changing the selection. These choices appear in upload and edit controls and are used by the next AI analysis. Existing documents keep their categories, and disabling a category preserves its local-only privacy rule. **Other** remains available for documents that do not fit your chosen categories.
+
+## Follow AI analysis
+
+Uploaded documents, the document list and each document's **AI analysis** panel show real progress: queued, categorising, extracting details, making searchable, completed, or needing attention. An analysis waiting for a budget reset or retry says so.
+
+A suggested category is not an applied category. **Completed · needs review** means analysis finished and your decision is needed; accept the category suggestion on the document page. Your existing automatic-filing policy still applies. Open a run in AI history to see how the result was produced.
+
+## Group documents by category and period
+
+On **Documents**, choose a category such as **Finance**, then **Last month** or **Last quarter**. Categories include their subcategories. These shortcuts select the previous complete calendar month or quarter. You can also set exact From and To dates.
+
+Dates use the date printed on the document. If it has no document date, the upload date is used instead, including the whole final day of the range. A document without a printed date is labelled **Upload date** in the list.
+
+Choose **Save this view** to pin the selected category and date range to the sidebar. Saved dates stay fixed; choose a new period when you want a different month or quarter. Saving a view does not move, copy or change documents.

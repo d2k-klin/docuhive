@@ -6,10 +6,14 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Changed
 
-- **Connect a mailbox** asks only for your email address and password. The server is found from the address for common services, the form explains app passwords where they are needed (Gmail, iCloud, Yahoo), and Outlook points to Microsoft sign-in. Server, port and folders move under Advanced. **Sign in with Google / Microsoft** appears only when that sign-in app is set up (`oauth` in `GET /api/sources/accounts`).
+- **Sources** guides you through choosing a provider, connecting securely, and importing existing attachments. Google and Microsoft sign-in are the primary paths when configured; app-password guidance and one-time server setup instructions are shown in the page. Custom mailboxes have explicit server, username and folder settings. Successful connections offer a history range immediately, with live import progress and email activity.
 - Mailbox login failures are explained in plain words: server not found, no answer on that port, or login refused, with the app-password hint.
 
 ### Added
+
+- Shared document categories: select predefined categories and add custom ones in Vocabulary. Choices apply to uploads, edits and AI classification; disabling a category preserves existing documents and privacy rules.
+- Live AI progress on uploads, document lists and document details, including queued work, analysis, review, completion, retries and failures.
+- Last month and last quarter document filters, with a shortcut to save the current group in the sidebar. Date filtering uses the printed date, falling back to the upload date when missing.
 
 - **Change storage** on Storage health: admins choose the vault folder on a mounted share or disk, or create one. The folder must be inside the storage root that Compose mounts at install (`DOCUHIVE_STORAGE_ROOT_HOST_DIR`, default `/srv/docuhive/storage`, created if missing). Only safe switches are allowed: a new vault in an empty folder while the archive is empty, or the archive's own vault at a new place. Other files, another archive's vault, symlinks and paths outside the root are refused, and nothing is moved or deleted.
 
@@ -26,6 +30,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Fixed
 
+- IMAP connections queue their first sync immediately. Mail-server connections time out after 20 seconds; failed logins save no account and unexpected errors show actionable copy.
 - Connecting Gmail or Outlook before its sign-in app was set up showed raw JSON. It now returns to **Sources** with a plain reason and a pointer to the setup guide, and suggests IMAP with an app password for Gmail. The OAuth callback's error message is now URL-encoded.
 
 ## [0.4.0] - 2026-11-05

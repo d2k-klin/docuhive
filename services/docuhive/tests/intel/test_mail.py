@@ -167,6 +167,18 @@ def test_imap_peek_paging_and_parse(tmp_path):
     assert (tmp_path / "a.pdf").read_bytes().startswith(b"%PDF-1.4")
 
 
+def test_imap_connection_has_a_timeout(monkeypatch):
+    calls = []
+
+    def connect(host, port, **kwargs):
+        calls.append(kwargs)
+        return FakeIMAP(host, port)
+
+    monkeypatch.setattr("docuhive.mail.imap.imaplib.IMAP4_SSL", connect)
+    Imap("imap.example.org", 993, "user", "password").test_login()
+    assert calls == [{"timeout": 20}]
+
+
 def test_expired_token_sets_needs_reauth(core, mailkey):
     with core.session() as s:
         acc = MailAccount(

@@ -6,6 +6,9 @@
 
 | Path | What it is |
 | --- | --- |
+| [`ConnectMailbox.tsx`](ConnectMailbox.tsx) | Provider selection, secure mailbox connection and inline setup guidance |
+| [`CategorySettings.tsx`](CategorySettings.tsx) | Shared predefined and custom document categories |
+| [`DocumentAIStatus.tsx`](DocumentAIStatus.tsx) | Batched live AI status for uploads, document lists and details |
 | [`common.tsx`](common.tsx) | Shared helpers for the AI and email screens |
 | [`DashboardWidgets.tsx`](DashboardWidgets.tsx) | Dashboard widgets: review count, email status, deadlines |
 | [`DocumentAIPanel.tsx`](DocumentAIPanel.tsx) | AI suggestions and history on a document page |

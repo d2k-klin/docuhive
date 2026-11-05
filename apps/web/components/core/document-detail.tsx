@@ -32,6 +32,7 @@ import {
   Skeleton,
   useApi,
 } from "@/components/intel/common";
+import { DocumentAIPanel } from "@/components/intel/DocumentAIPanel";
 import { reasonText } from "./document-queues";
 import { labelsOf } from "./documents";
 
@@ -365,11 +366,13 @@ export function DocumentDetailView({
                     onChange={set("category")}
                   >
                     <option value="">Not set</option>
-                    {taxonomy.data?.categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.label}
-                      </option>
-                    ))}
+                    {taxonomy.data?.categories
+                      .filter((c) => c.enabled !== false || c.id === d.category)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
                   </select>
                 </Field>
                 <Field label="Type">
@@ -441,22 +444,21 @@ export function DocumentDetailView({
                     ["tags", d.tags.join(", ")],
                   ] as const
                 ).map(([field, value]) => (
-                  <div
-                    key={field}
-                    className="flex flex-wrap items-center justify-between gap-2"
-                  >
-                    <div className="min-w-0">
-                      <dt className="text-sm text-text-muted">
-                        {fieldLabel(field)}
-                      </dt>
-                      <dd className="break-words">{value || "—"}</dd>
-                    </div>
-                    <Provenance
-                      doc={d}
-                      field={field}
-                      owner={owner}
-                      onUnlock={unlock}
-                    />
+                  <div key={field}>
+                    <dt className="text-sm text-text-muted">
+                      {fieldLabel(field)}
+                    </dt>
+                    <dd className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="min-w-0 break-words">
+                        {value || "—"}
+                      </span>
+                      <Provenance
+                        doc={d}
+                        field={field}
+                        owner={owner}
+                        onUnlock={unlock}
+                      />
+                    </dd>
                   </div>
                 ))}
                 <div>
@@ -468,32 +470,34 @@ export function DocumentDetailView({
               </dl>
             )}
           </Card>
+          <DocumentAIPanel
+            documentId={id}
+            canEdit={owner}
+            onComplete={doc.reload}
+          />
           <Card title="Details found in the document">
             {Object.keys(d.facts).length ? (
               <dl className="space-y-3">
                 {Object.entries(d.facts).map(([key, fact]) => (
-                  <div
-                    key={key}
-                    className="flex flex-wrap items-center justify-between gap-2"
-                  >
-                    <div>
-                      <dt className="text-sm text-text-muted">
-                        {fieldLabel(key)}
-                      </dt>
-                      <dd className="tabular">
+                  <div key={key}>
+                    <dt className="text-sm text-text-muted">
+                      {fieldLabel(key)}
+                    </dt>
+                    <dd className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="tabular">
                         {fact.type === "money"
                           ? formatMoney(fact.value, fact.currency)
                           : fact.type === "date"
                             ? formatDate(fact.value)
                             : fact.value}
-                      </dd>
-                    </div>
-                    <Provenance
-                      doc={d}
-                      field={`facts.${key}`}
-                      owner={owner}
-                      onUnlock={unlock}
-                    />
+                      </span>
+                      <Provenance
+                        doc={d}
+                        field={`facts.${key}`}
+                        owner={owner}
+                        onUnlock={unlock}
+                      />
+                    </dd>
                   </div>
                 ))}
               </dl>

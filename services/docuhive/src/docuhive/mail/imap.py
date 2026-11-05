@@ -74,7 +74,9 @@ class Imap:
     ):
         self.host, self.port, self.username, self.password = host, port, username, password
         self.folders = folders or ["INBOX"]
-        self.factory = factory or (imaplib.IMAP4_SSL if ssl else imaplib.IMAP4)
+        self.factory = factory or (
+            lambda h, p: (imaplib.IMAP4_SSL if ssl else imaplib.IMAP4)(h, p, timeout=20)
+        )
         self._conn: Any = None
 
     def conn(self):  # type: ignore[no-untyped-def]

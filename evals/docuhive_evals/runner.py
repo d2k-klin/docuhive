@@ -26,7 +26,7 @@ from docuhive.agents.extract import run_extract
 from docuhive.ai import routing
 from docuhive.ai.models import AIRun
 from docuhive.contracts import DocStatus, DocumentView, SourceInfo, SourceKind
-from sqlalchemy import create_engine, select
+from sqlalchemy import JSON, Column, MetaData, String, Table, create_engine, select
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -45,6 +45,9 @@ def eval_env(task: str, route: str, fakes: dict | None = None) -> Iterator[None]
         "sqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False}
     )
     IntelBase.metadata.create_all(engine)
+    Table(
+        "settings", MetaData(), Column("key", String, primary_key=True), Column("value", JSON)
+    ).create(engine)
     lock = threading.Lock()
 
     @contextmanager

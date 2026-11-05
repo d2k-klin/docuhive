@@ -98,7 +98,10 @@ def document_page(
             )
             .outerjoin(Correspondent, Correspondent.id == Document.correspondent_id)
             .where(Document.id.in_(select(scope.c.id)))
-            .order_by(Document.document_date.desc().nulls_last(), Document.id.desc())
+            .order_by(
+                func.coalesce(Document.document_date, func.date(Document.added_at)).desc(),
+                Document.id.desc(),
+            )
             .limit(limit)
             .offset(offset)
         ).all()

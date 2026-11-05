@@ -6,6 +6,7 @@ from copy import deepcopy
 from functools import lru_cache
 from importlib import metadata
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -97,3 +98,28 @@ def reload() -> None:
     get_settings.cache_clear()
     _load_yaml.cache_clear()
     prompt.cache_clear()
+
+
+def get_setting(key: str) -> Any:
+    """Shared runtime preferences, uncached so API and worker processes agree."""
+    from sqlalchemy import select
+
+    from docuhive import db
+    from docuhive.db.models import Setting
+
+    with db.session() as session:
+        return session.scalar(select(Setting.value).where(Setting.key == key))
+
+
+def set_setting(key: str, value: Any) -> None:
+    """Persist a JSON preference. The owning API must authorise and validate it first."""
+    from sqlalchemy.dialects.postgresql import insert
+
+    from docuhive import db
+    from docuhive.db.models import Setting
+
+    statement = insert(Setting).values(key=key, value=value)
+    with db.session() as session:
+        session.execute(
+            statement.on_conflict_do_update(index_elements=[Setting.key], set_={"value": value})
+        )

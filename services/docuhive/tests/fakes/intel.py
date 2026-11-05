@@ -177,6 +177,7 @@ duplicate_pairs = Table(
     Column("reasons", JSON, default=list),
     Column("status", Text, default="open"),
 )
+settings = Table("settings", meta, Column("key", String, primary_key=True), Column("value", JSON))
 TABLES = {t.name: t for t in meta.sorted_tables}
 
 
@@ -233,6 +234,21 @@ class Ctx:
 class FakeJobs:
     def __init__(self) -> None:
         self.all: list[Job] = []
+
+    def document_jobs(self, document_ids: list[str]) -> list[dict]:
+        return [
+            {
+                "id": j.id,
+                "kind": j.kind,
+                "status": j.status,
+                "document_id": j.payload["document_id"],
+                "run_after": j.run_after,
+                "paused": j.status == "deferred",
+            }
+            for j in reversed(self.all)
+            if j.payload.get("document_id") in document_ids
+            and j.kind in ("document.stored", "ai.classify", "ai.extract", "index.embed")
+        ]
 
     def enqueue(
         self,
@@ -651,6 +667,7 @@ class FakeCore:
 
         mp.setattr(db, "session", self.session)
         mp.setattr(jobs, "enqueue", self.jobs.enqueue)
+        mp.setattr(jobs, "document_jobs", self.jobs.document_jobs)
         mp.setattr(coretables, "table", lambda name: TABLES[name])
         mods = {
             name: _module(f"docuhive.{name}") for name in ("documents", "ingest", "auth", "search")

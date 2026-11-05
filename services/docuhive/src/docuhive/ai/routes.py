@@ -11,12 +11,15 @@ from docuhive import config, db, documents
 from docuhive.ai import budgets, routing
 from docuhive.ai.http import User, fail
 from docuhive.ai.models import AIRun
+from docuhive.ai.progress import document_status
 from docuhive.ai.router import parse_route
 from docuhive.ai.settings import get_ai_settings
 from docuhive.contracts import CurrentUser, SetupCheck
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 _reach: dict[str, tuple[float, bool, str]] = {}
+
+router.add_api_route("/documents/status", document_status, methods=["POST"])
 LEARN = {
     "classify": "docs/learn/02-structured-output.md",
     "extract": "docs/learn/02-structured-output.md",
@@ -257,8 +260,24 @@ def get_run(run_id: int, user: User) -> dict:
 def setup_checks() -> list[SetupCheck]:
     cfg, s = routing.load(), get_ai_settings()
     checks: list[SetupCheck] = []
+    categories_chosen = config.get_setting("taxonomy.categories") is not None
+    checks.append(
+        SetupCheck(
+            id="ai.categories",
+            area="ai",
+            title="Document categories",
+            status="ok" if categories_chosen else "optional",
+            message="Your shared category list is saved."
+            if categories_chosen
+            else "Using the predefined categories. Choose the ones you need or add your own.",
+            action_label="Choose categories",
+            action_href="/vocabulary#categories",
+            help_doc="docs/user-guide.md",
+        )
+    )
     if not s.enabled:
         return [
+            *checks,
             SetupCheck(
                 id="ai.enabled",
                 area="ai",
@@ -266,7 +285,7 @@ def setup_checks() -> list[SetupCheck]:
                 status="optional",
                 message="AI is switched off (DOCUHIVE_AI_ENABLED=false).",
                 help_doc="docs/setup/ai-providers.md",
-            )
+            ),
         ]
     used = {
         parse_route(r, cfg).provider for t in cfg.tasks.values() for r in [t.route, *t.fallback]

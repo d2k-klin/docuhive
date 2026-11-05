@@ -15,3 +15,7 @@
 ## Extending
 
 Add new controls to `/dev/ui` so `controls.spec.ts` covers them.
+
+`sources.spec.ts` checks provider sign-in, app-password login failures and retries, explicit history imports, custom servers, missing setup, accessibility and responsive layout. It uses synthetic source responses and requires the same isolated test login as the other authenticated journeys.
+
+`organisation.spec.ts` covers shared category selection and custom categories, Finance month/quarter groups and saved views, and queued/running/review/applied AI status with synthetic responses, accessibility and responsive screenshots.

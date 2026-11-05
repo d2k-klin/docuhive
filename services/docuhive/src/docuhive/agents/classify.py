@@ -74,6 +74,7 @@ def variables(
         "categories": "\n".join(
             f"- {c.id} — {c.label}" + (f": {c.description}" if c.description else "")
             for c in tax.categories
+            if c.enabled
         ),
         "document_types": "\n".join(f"- {t.id} — {t.label}" for t in tax.document_types),
         "tags": ", ".join(tax.tags) or "(none)",
@@ -88,7 +89,7 @@ def variables(
 
 
 def make_validator(tax: Taxonomy, known: list[str], today: date | None = None):  # type: ignore[no-untyped-def]
-    categories = {c.id for c in tax.categories}
+    categories = {c.id for c in tax.categories if c.enabled}
     types = {t.id for t in tax.document_types}
 
     def validate(out: ClassifyOut) -> ClassifyOut:

@@ -4,7 +4,7 @@ Tables come from `coretables.table` so the SQLite fakes in tests can swap them i
 field the values are ORed (any of the tags, any of the categories); fields are ANDed.
 """
 
-from sqlalchemy import ColumnElement, and_, exists, or_, select
+from sqlalchemy import ColumnElement, and_, exists, func, or_, select
 
 from docuhive.ai import coretables
 from docuhive.contracts import SearchFilters
@@ -23,10 +23,11 @@ def conditions(f: SearchFilters | None) -> list[ColumnElement[bool]]:
         out.append(d.c.document_type.in_(f.document_types))
     if f.document_ids:
         out.append(d.c.id.in_(f.document_ids))
+    effective_date = func.coalesce(d.c.document_date, func.date(d.c.added_at))
     if f.date_from:
-        out.append(d.c.document_date >= f.date_from)
+        out.append(effective_date >= f.date_from)
     if f.date_to:
-        out.append(d.c.document_date <= f.date_to)
+        out.append(effective_date <= f.date_to)
     if f.correspondents:
         c = coretables.table("correspondents")
         out.append(d.c.correspondent_id.in_(select(c.c.id).where(c.c.name.in_(f.correspondents))))

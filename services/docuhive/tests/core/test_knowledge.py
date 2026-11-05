@@ -11,6 +11,7 @@ from docuhive.db.models import (
     DocumentTag,
     Job,
     KnowledgeBase,
+    Setting,
     Tag,
 )
 from sqlalchemy import BigInteger, DateTime, Integer, String, insert, text
@@ -33,6 +34,7 @@ def knowledge(client):
         DocumentTag.__table__,
         DocSource.__table__,
         KnowledgeBase.__table__,
+        Setting.__table__,
     ]
     originals = [(c, c.type, c.server_default) for t in tables for c in t.columns]
     engine = db.get_engine()

@@ -112,7 +112,7 @@ class SearchFilters(BaseModel):
     document_types: list[str] = []
     correspondents: list[str] = []
     tags: list[str] = []
-    date_from: date | None = None  # on document_date
+    date_from: date | None = None  # document_date, falling back to the upload date
     date_to: date | None = None
     source_kinds: list[SourceKind] = []
     document_ids: list[str] = []  # restrict to these documents ("Ask about this document")
@@ -199,6 +199,7 @@ class Category(BaseModel):
     label: str
     description: str = ""
     restricted: bool = False  # privacy: local AI only
+    enabled: bool = True
 
 
 class DocumentType(BaseModel):

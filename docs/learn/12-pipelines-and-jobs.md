@@ -62,3 +62,9 @@ must not be released back into a pool while the scheduler is running.
 
 [PostgreSQL row locking](https://www.postgresql.org/docs/16/sql-select.html#SQL-FOR-UPDATE-SHARE)
 and [advisory locks](https://www.postgresql.org/docs/16/explicit-locking.html#ADVISORY-LOCKS).
+
+## Visible AI progress
+
+The [progress endpoint](../../services/docuhive/src/docuhive/ai/progress.py) combines the latest document jobs with AI runs and pending review items. A new queued re-run takes precedence over an older successful run. The UI polls while work is active, then slows down after completion. Status responses are scoped to documents the caller can see; they exclude job payloads and internal error strings.
+
+A completed model run is not proof that its category was applied. Progress shows an unapplied suggestion separately and keeps the result in review until the existing approval policy applies it.

@@ -56,12 +56,20 @@ def validate(raw: dict) -> Taxonomy:
 
 
 @lru_cache
-def load() -> Taxonomy:
+def defaults() -> Taxonomy:
     return validate(config.load_yaml("taxonomy.yaml"))
 
 
+def load() -> Taxonomy:
+    tax = defaults().model_copy(deep=True)
+    categories = config.get_setting("taxonomy.categories")
+    return (
+        validate(tax.model_dump() | {"categories": categories}) if categories is not None else tax
+    )
+
+
 def reload() -> None:
-    load.cache_clear()
+    defaults.cache_clear()
 
 
 def tree(categories: list[Category]) -> list[dict]:

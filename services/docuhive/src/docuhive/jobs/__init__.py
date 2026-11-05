@@ -45,6 +45,30 @@ HANDLERS: dict[str, Handler] = {}
 PERIODICS: dict[str, Periodic] = {}
 
 
+def document_jobs(document_ids: list[str]) -> list[dict]:
+    """Read progress without exposing job payloads or internal errors to the browser."""
+    with session() as db:
+        rows = db.execute(
+            select(Job.id, Job.kind, Job.status, Job.payload, Job.run_after, Job.note)
+            .where(
+                Job.kind.in_(("document.stored", "ai.classify", "ai.extract", "index.embed")),
+                Job.payload["document_id"].as_string().in_(document_ids),
+            )
+            .order_by(Job.id.desc())
+        )
+        return [
+            {
+                "id": r.id,
+                "kind": r.kind,
+                "status": r.status,
+                "document_id": r.payload["document_id"],
+                "run_after": r.run_after,
+                "paused": bool(r.note and r.note.startswith("budget:")),
+            }
+            for r in rows
+        ]
+
+
 def handler(
     kind: str, *, queue: str = "default", max_attempts: int = 5, timeout_s: int = 600
 ) -> Callable:

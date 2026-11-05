@@ -12,3 +12,5 @@
 ## Extending
 
 New settings go into the settings class of the module that owns them, with a documented default in `.env.example`.
+
+`get_setting` and `set_setting` store validated non-secret runtime preferences in the settings table. They are uncached so API and worker processes see category changes immediately; the owning API enforces permissions.

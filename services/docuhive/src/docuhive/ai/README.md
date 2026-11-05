@@ -17,6 +17,7 @@
 | [`privacy.py`](privacy.py) | Privacy gate: restricted documents are only ever sent to local models |
 | [`router.py`](router.py) | Task -> ordered routes (primary, fallbacks), filtered by privacy; route -> Strands model |
 | [`routers.py`](routers.py) | All AI routers, appended to docuhive.api.routers.ROUTERS (shared touchpoint) |
+| [`progress.py`](progress.py) | Permission-scoped document progress from jobs, runs and review |
 | [`routes.py`](routes.py) | /api/ai: providers, routing, usage, runs ("How was this made?"), setup status |
 | [`routing.py`](routing.py) | routing.yaml: the validated description of providers, task routes, privacy, budgets, pricing |
 | [`runs.py`](runs.py) | Write ai_runs rows |

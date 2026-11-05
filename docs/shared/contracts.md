@@ -211,6 +211,7 @@ class Category(BaseModel):
     label: str
     description: str = ""
     restricted: bool = False    # privacy: local AI only
+    enabled: bool = True
 
 
 class DocumentType(BaseModel):
@@ -489,6 +490,13 @@ The base path is `/api`. There is one FastAPI app. Routers are listed in `docuhi
 | `/api/notifications/*` | CL |
 | `GET /api/system/setup-status`, `GET /api/ai/setup-status`, `GET /api/sources/setup-status`, `GET /api/notifications/setup-status` | each owner → `list[SetupCheck]` (OA's `/setup` page and dashboard merge all four) |
 
+`GET /api/sources/accounts` also returns `oauth: {google, microsoft}` and
+`connection: {credentials_ready, sync_every_min, oauth_redirects: {google, microsoft}}`.
+These contain readiness flags, the mail sync interval and public callback URLs only; no
+credentials are returned. `POST /api/sources/accounts` verifies IMAP login and folders,
+saves encrypted credentials, then queues `mail.sync` after the account transaction commits.
+History imports remain a separate, explicit `POST /api/sources/accounts/{id}/backfills`.
+
 **Conventions** (both tracks):
 - JSON bodies with `snake_case`. ISO-8601 dates. Document ids are ULID strings; other ids are integers.
 - Errors: HTTP status + `{"error": {"code": "not_found", "message": "…", "details": {}}}`.
@@ -537,6 +545,23 @@ OA creates each file in OA-M5 as `export function X() { return null }`. From the
 ---
 
 ## 8. Environment variables
+
+### Runtime document preferences and progress
+
+- `config.get_setting(key)` and `config.set_setting(key, value)` read/write JSON preferences
+  in the existing settings table. Callers enforce administrator access; workers read fresh
+  values so changes do not require a restart. `taxonomy.categories` stores category choices.
+- `Category.enabled` defaults to true. Disabled categories keep their labels and privacy
+  restrictions for existing documents; new classification and manual assignments use enabled
+  choices. `GET /api/taxonomy` returns the complete list. Administrator-only
+  `PUT /api/taxonomy/categories` selects enabled IDs, and `POST /api/taxonomy/categories`
+  creates a named custom category with optional parent, description and local-only restriction.
+- `jobs.document_jobs(document_ids)` returns the existing document/AI queue records for
+  progress reporting. `POST /api/ai/documents/status` accepts up to 500 document IDs and returns
+  progress only for documents visible to the caller. Status is derived from jobs, runs and
+  pending review; it never reports an unapplied category suggestion as applied.
+- Date filters use the document date, falling back to the upload date when it is absent.
+  The upper bound includes the whole day. Saved views and search share this rule.
 
 | Prefix | Owner | Examples |
 |--------|-------|----------|

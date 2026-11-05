@@ -113,11 +113,21 @@ def file_path(folder: Path, kind: str) -> Path | None:
     return path if path.is_file() else None
 
 
-def validate(patch: MetadataPatch) -> None:
+def validate(patch: MetadataPatch, current_category: str | None = None) -> None:
     """Category and type ids are checked here; the documents service does not (contracts §2.5)."""
     vocab = taxonomy.load()
     if patch.category and patch.category not in {c.id for c in vocab.categories}:
         raise problem(422, "document_unknown_category", "That category does not exist.")
+    if (
+        patch.category
+        and patch.category != current_category
+        and patch.category not in {c.id for c in vocab.categories if c.enabled}
+    ):
+        raise problem(
+            422,
+            "document_disabled_category",
+            "Choose an enabled category from your archive settings.",
+        )
     if patch.document_type and patch.document_type not in {t.id for t in vocab.document_types}:
         raise problem(422, "document_unknown_type", "That document type does not exist.")
 
@@ -370,8 +380,8 @@ def history(doc_id: str, user: UserDependency) -> list[HistoryEntry]:
 
 @router.patch("/documents/{doc_id}", response_model=EditResult)
 def edit_document(doc_id: str, body: DocumentEdit, user: UserDependency) -> EditResult:
-    owned(doc_id, user)
-    validate(body)
+    view = owned(doc_id, user)
+    validate(body, current_category=view.category)
     result = edit(doc_id, body, user)
     return EditResult(document=detail(documents.get(doc_id)), result=result)
 

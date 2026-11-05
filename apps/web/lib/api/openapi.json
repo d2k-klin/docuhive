@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "DocuHive",
-    "version": "0.4.1"
+    "version": "0.2.0"
   },
   "paths": {
     "/api/system/health": {
@@ -866,6 +866,133 @@
                   "additionalProperties": true,
                   "type": "object",
                   "title": "Response Get Taxonomy Api Taxonomy Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/taxonomy/categories": {
+      "put": {
+        "tags": [
+          "taxonomy"
+        ],
+        "summary": "Choose Categories",
+        "operationId": "choose_categories_api_taxonomy_categories_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryChoices"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Choose Categories Api Taxonomy Categories Put"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "taxonomy"
+        ],
+        "summary": "Create Category",
+        "operationId": "create_category_api_taxonomy_categories_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomCategory"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Create Category Api Taxonomy Categories Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai/documents/status": {
+      "post": {
+        "tags": [
+          "ai"
+        ],
+        "summary": "Document Status",
+        "operationId": "document_status_api_ai_documents_status_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgressRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Document Status Api Ai Documents Status Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -5653,6 +5780,11 @@
             "type": "boolean",
             "title": "Restricted",
             "default": false
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
           }
         },
         "type": "object",
@@ -5661,6 +5793,23 @@
           "label"
         ],
         "title": "Category"
+      },
+      "CategoryChoices": {
+        "properties": {
+          "enabled_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Enabled Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "enabled_ids"
+        ],
+        "title": "CategoryChoices"
       },
       "Changed": {
         "properties": {
@@ -5783,6 +5932,43 @@
           "role"
         ],
         "title": "CurrentUser"
+      },
+      "CustomCategory": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 400,
+            "title": "Description",
+            "default": ""
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "restricted": {
+            "type": "boolean",
+            "title": "Restricted",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "title": "CustomCategory"
       },
       "CustomFieldInput": {
         "properties": {
@@ -6808,10 +6994,13 @@
           },
           "host": {
             "type": "string",
+            "minLength": 1,
             "title": "Host"
           },
           "port": {
             "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
             "title": "Port",
             "default": 993
           },
@@ -6822,6 +7011,7 @@
           },
           "username": {
             "type": "string",
+            "minLength": 1,
             "title": "Username"
           },
           "password": {
@@ -6845,6 +7035,7 @@
               "type": "string"
             },
             "type": "array",
+            "minItems": 1,
             "title": "Folders",
             "default": [
               "INBOX"
@@ -7294,6 +7485,25 @@
           "added_at"
         ],
         "title": "PendingDocument"
+      },
+      "ProgressRequest": {
+        "properties": {
+          "document_ids": {
+            "items": {
+              "type": "string",
+              "maxLength": 26,
+              "minLength": 1
+            },
+            "type": "array",
+            "maxItems": 500,
+            "title": "Document Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_ids"
+        ],
+        "title": "ProgressRequest"
       },
       "Reclassify": {
         "properties": {

@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { DateShortcuts } from "./document-filters";
+import {
+  DocumentAIStatus,
+  isAIWorking,
+  useAIStatuses,
+} from "@/components/intel/DocumentAIStatus";
 import { FileText, LoaderCircle, ShieldAlert, Upload } from "lucide-react";
 import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
@@ -137,6 +144,7 @@ export function DocumentTable({
   onSelect,
   labels = {},
   link = true,
+  onAIComplete,
 }: {
   items: DocumentPage["items"];
   selected?: Set<string>;
@@ -144,7 +152,15 @@ export function DocumentTable({
   labels?: Record<string, string>;
   /** Trashed documents have no detail page until they are restored. */
   link?: boolean;
+  onAIComplete?: () => void;
 }) {
+  const progress = useAIStatuses(link ? items.map((d) => d.id) : []);
+  const active = Object.values(progress.items).some(isAIWorking);
+  const wasActive = useRef(false);
+  useEffect(() => {
+    if (wasActive.current && !active) onAIComplete?.();
+    wasActive.current = active;
+  }, [active, onAIComplete]);
   const toggle = (id: string) => {
     if (!selected || !onSelect) return;
     const next = new Set(selected);
@@ -155,6 +171,14 @@ export function DocumentTable({
   return (
     <div className="overflow-x-auto rounded-card border border-border bg-surface">
       <table className="w-full text-left text-base">
+        {link && progress.error && (
+          <caption className="p-3 text-left text-sm">
+            AI progress could not be refreshed.{" "}
+            <Button variant="ghost" size="sm" onClick={progress.reload}>
+              Retry status
+            </Button>
+          </caption>
+        )}
         <thead className="text-xs font-medium tracking-[0.02em] text-text-muted">
           <tr className="h-9 border-b border-border">
             {onSelect && (
@@ -181,6 +205,11 @@ export function DocumentTable({
                 {label}
               </th>
             ))}
+            {link && (
+              <th scope="col" className="px-3 font-medium">
+                AI status
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -218,15 +247,29 @@ export function DocumentTable({
                 )}
               </td>
               <td className="whitespace-nowrap px-3 tabular">
-                {doc.document_date ? formatDate(doc.document_date) : "No date"}
+                {formatDate(doc.document_date || doc.added_at.slice(0, 10))}
+                {!doc.document_date && (
+                  <span className="block text-xs text-text-muted">
+                    Upload date
+                  </span>
+                )}
               </td>
               <td className="break-words px-3">{doc.correspondent || "—"}</td>
               <td className="break-words px-3">
-                {doc.category ? labels[doc.category] || doc.category : "—"}
+                {progress.items[doc.id]?.category_label ||
+                  (doc.category ? labels[doc.category] || doc.category : "—")}
               </td>
               <td className="break-words px-3 text-sm text-text-muted">
                 {doc.tags.join(", ") || "—"}
               </td>
+              {link && (
+                <td className="px-3 py-2">
+                  <DocumentAIStatus
+                    status={progress.items[doc.id]}
+                    unavailable={progress.error}
+                  />
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -341,11 +384,13 @@ function BulkEdit({
           onChange={(e) => setCategory(e.target.value)}
         >
           <option value="">Keep category</option>
-          {taxonomy?.categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.label}
-            </option>
-          ))}
+          {taxonomy?.categories
+            .filter((c) => c.enabled !== false)
+            .map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
         </select>
       </label>
       <label className="w-full sm:w-40">
@@ -380,6 +425,10 @@ function BulkEdit({
 }
 
 export function Documents() {
+  const router = useRouter();
+  const [viewName, setViewName] = useState<string | null>(null);
+  const [savingView, setSavingView] = useState(false);
+  const [viewError, setViewError] = useState<ApiError | null>(null);
   const [filters, setFilters] = useState<ListFilters>(noFilters);
   const [offset, setOffset] = useState(0);
   const [extra, setExtra] = useState<DocumentPage["items"]>([]);
@@ -394,6 +443,20 @@ export function Documents() {
     ? [...extra, ...(page.data?.items || [])]
     : page.data?.items || [];
   const filtered = Object.values(filters).some(Boolean);
+  const { reload: reloadPage } = page;
+  const { reload: reloadPending } = pending;
+  const hasPending = !!pending.data?.length;
+  const hadPending = useRef(false);
+  useEffect(() => {
+    if (hadPending.current && !hasPending) reloadPage();
+    hadPending.current = hasPending;
+    if (!hasPending) return;
+    const timer = setInterval(() => {
+      reloadPage();
+      reloadPending();
+    }, 2500);
+    return () => clearInterval(timer);
+  }, [hasPending, reloadPage, reloadPending]);
   function changeFilters(next: ListFilters) {
     setFilters(next);
     setOffset(0);
@@ -406,16 +469,21 @@ export function Documents() {
         title="Documents"
         description={
           page.data
-            ? `${page.data.total} documents in your archive`
+            ? `${page.data.total} ${filtered ? "matching documents" : "documents in your archive"}`
             : "Your archive"
         }
         actions={
-          <Button asChild>
-            <Link href="/upload">
-              <Upload aria-hidden="true" />
-              Upload
-            </Link>
-          </Button>
+          <>
+            <Button asChild variant="secondary">
+              <Link href="/vocabulary#categories">Categories</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/upload">
+                <Upload aria-hidden="true" />
+                Upload
+              </Link>
+            </Button>
+          </>
         }
       />
       <div className="space-y-4">
@@ -425,8 +493,89 @@ export function Documents() {
           taxonomy={taxonomy.data}
           onChange={changeFilters}
         />
+        <div className="flex flex-wrap items-center gap-2">
+          <DateShortcuts
+            value={filters}
+            onChange={(range) => changeFilters({ ...filters, ...range })}
+          />
+          {filtered && (
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setViewName(
+                  `${labelsOf(taxonomy.data)[filters.category] || "Documents"}${filters.date_from ? ` · ${filters.date_from} to ${filters.date_to}` : ""}`,
+                )
+              }
+            >
+              Save this view
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-text-muted">
+          Categories include their subcategories. Dates use the date on the
+          document, or the upload date if missing.
+        </p>
+        {viewError && <ErrorBox error={viewError} />}
+        {viewName !== null && (
+          <form
+            className="flex flex-wrap items-end gap-3 rounded-card border border-border bg-surface p-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setSavingView(true);
+              setViewError(null);
+              try {
+                await api("/api/views", {
+                  method: "POST",
+                  json: {
+                    name: viewName,
+                    pinned: true,
+                    shared: false,
+                    filters: {
+                      categories: filters.category ? [filters.category] : [],
+                      document_types: filters.document_type
+                        ? [filters.document_type]
+                        : [],
+                      tags: filters.tag ? [filters.tag] : [],
+                      date_from: filters.date_from || null,
+                      date_to: filters.date_to || null,
+                    },
+                  },
+                });
+                setViewName(null);
+                setNotice(
+                  "View saved. Open it from the sidebar whenever you need it.",
+                );
+                router.refresh();
+              } catch (err) {
+                setViewError(err as ApiError);
+              } finally {
+                setSavingView(false);
+              }
+            }}
+          >
+            <Field label="View name">
+              <Input
+                required
+                maxLength={100}
+                value={viewName}
+                onChange={(e) => setViewName(e.target.value)}
+              />
+            </Field>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={savingView}
+              onClick={() => setViewName(null)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={savingView || !viewName.trim()}>
+              {savingView ? "Saving…" : "Save view"}
+            </Button>
+          </form>
+        )}
         {notice && (
-          <p role="status" className="text-sm text-success">
+          <p role="status" className="text-sm text-text">
             {notice}
           </p>
         )}
@@ -476,6 +625,7 @@ export function Documents() {
             selected={selected}
             onSelect={setSelected}
             labels={labelsOf(taxonomy.data)}
+            onAIComplete={page.reload}
           />
         )}
         {page.data?.next_offset != null && (

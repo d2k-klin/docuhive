@@ -2,15 +2,21 @@
 
 DocuHive reads your mailbox **read-only**, finds attachments that are real documents (invoices, contracts, statements), and archives them. It never deletes or moves your emails. Labelling imported mail is optional and off by default.
 
-## The quick way: email address and app password
+## Connect a mailbox
 
-On **Sources → Connect a mailbox**, enter your email address and password, then choose **Connect**. DocuHive finds the server from the address (Gmail, iCloud, Yahoo, GMX, WEB.DE, Posteo, mailbox.org, T-Online; otherwise `imap.<domain>`, which you can change under **Advanced**). It tests the login before saving anything.
+Open **Sources** and choose **Gmail**, **Outlook**, **iCloud Mail**, or **Other email**.
+The connection guide opens automatically when you have no mailboxes.
 
-- **Gmail, iCloud and Yahoo** don't accept your normal password from apps. Create an **app password** in the account's security settings; the form links to the page.
-- **GMX and WEB.DE** take your normal password once POP3/IMAP access is turned on in their settings.
-- **Outlook.com, Hotmail and Live** accept only Microsoft sign-in, which needs the app registration in section 3.
+1. **Choose your provider.** Gmail and Outlook offer their normal provider sign-in when the server is configured. Your provider password stays with Google or Microsoft.
+2. **Connect securely.** If Google sign-in is unavailable, use a Google app password. iCloud and Yahoo also require app passwords; the form links to account security settings. For other providers, enter your address and password. Known servers are filled in automatically. For custom domains, enter the actual mail server under **Server settings**; DocuHive does not guess it from your domain. You can also specify a different username and the folders to watch. Connections use encrypted IMAP on port 993 by default. The login and selected folders are tested before the connection is saved.
+3. **Import attachments.** The first sync is queued immediately. Choose the last 30 days, last year, last three years, or custom dates to import older attachments, then choose **Import attachments**. **Skip for now** leaves the connection watching new mail. You can reopen **Import history** at any time.
 
-Sections 2 and 3 set up **Sign in with Google / Microsoft** instead, which needs no app password; the server admin does this once.
+- **Gmail, iCloud and Yahoo:** use an app password, not your normal account password. Google requires 2-Step Verification before app passwords are available; some managed accounts do not allow them.
+- **GMX and WEB.DE:** enable POP3/IMAP in your provider settings first.
+- **Outlook, Hotmail and Live:** use Microsoft sign-in. Password-only connections are not offered for these accounts.
+- **Only a few emails?** Create a dedicated folder such as `Documents` in your existing mailbox, select it under **Folders to watch**, and move or forward the mail you want to archive into it. DocuHive only reads that folder. There is no separate DocuHive email intake address.
+
+If provider sign-in is unavailable, expand **Set up Google/Microsoft sign-in on this server** for the registration steps and your server's exact callback address. The encryption-key prerequisite also appears before you connect. These are one-time administrator tasks, described below.
 
 ## 1. Create the encryption key (once)
 
@@ -41,15 +47,15 @@ You create your own small Google app, so that only you have access.
 
 ## 4. Other providers (IMAP)
 
-For mailboxes such as GMX, Web.de or Fastmail, create an **app password** in your provider's security settings. Then choose **Connect IMAP** in DocuHive and enter the server, the port (usually 993) and the app password. Outlook.com no longer accepts IMAP passwords; use the Microsoft option instead.
+For mailboxes such as GMX, Web.de or Fastmail, create an **app password** in your provider's security settings. Then choose **Other email** in DocuHive and enter the server under **Server settings**, the port (usually 993) and the app password. Outlook.com no longer accepts IMAP passwords; use the Microsoft option instead.
 
 ## 5. Connect and choose what to import
 
-In the app, go to **Sources → Connect**. After connecting:
+After connecting:
 - **Rules:** the defaults skip newsletters, promotions, small logos and inline images. Your private overlay's `mail-rules.yaml` can allow or deny specific senders.
 - **Backfill:** pick a date range for older mail (for example "last 3 years"). Progress is shown, and you can pause, resume or cancel it. Running it again never imports duplicates.
 - **New mail** is checked every 15 minutes (`DOCUHIVE_MAIL_SYNC_EVERY_MIN`).
-- **Triage log:** shows every email that was skipped, and why. "Import anyway" imports a skipped message.
+- **Email activity:** shows every email that was skipped, and why. "Import anyway" imports a skipped message.
 
 ## Troubleshooting
 
@@ -59,3 +65,7 @@ In the app, go to **Sources → Connect**. After connecting:
 | Google access expires after a week | the Google app is still in "Testing": publish it (step 2.3) |
 | `redirect_uri_mismatch` | the redirect URI at Google/Microsoft must match your DocuHive address exactly, including `https` |
 | Encryption key missing | complete step 1 |
+
+## Why this flow
+
+[Paperless-ngx](https://docs.paperless-ngx.com/usage/#incoming-mail) separates mail accounts from import rules, including folder scope and attachment filters. [Docspell](https://docspell.org/docs/webapp/scanmailbox/) separates mailbox setup from scanning. DocuHive uses the same account-and-import distinction, with a provider chooser and an explicit history range. [Papra](https://docs.papra.app/) also offers forwarding to a generated intake address; DocuHive currently connects directly to your mailbox instead.

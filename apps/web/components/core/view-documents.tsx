@@ -5,6 +5,7 @@ import { FileText, TriangleAlert } from "lucide-react";
 import { browserClient } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
+import { DocumentTable } from "./documents";
 import { ExportButton } from "./export-button";
 
 type View = components["schemas"]["SavedViewView"];
@@ -81,43 +82,7 @@ export function ViewDocuments({
         </div>
       )}
       {items.length > 0 && (
-        <div className="overflow-x-auto rounded-card border border-border bg-surface">
-          <table className="w-full text-left text-base">
-            <thead className="text-xs font-medium tracking-[0.02em] text-text-muted">
-              <tr className="h-9 border-b border-border">
-                {["Title", "Date", "Sender", "Category", "Tags"].map(
-                  (label) => (
-                    <th key={label} scope="col" className="px-3 font-medium">
-                      {label}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((doc) => (
-                <tr
-                  key={doc.id}
-                  className="h-11 border-b border-border last:border-0 hover:bg-surface-2"
-                >
-                  <td className="max-w-80 break-words px-3">
-                    {doc.title || "Untitled document"}
-                  </td>
-                  <td className="whitespace-nowrap px-3 tabular">
-                    {doc.document_date || "No date"}
-                  </td>
-                  <td className="break-words px-3">
-                    {doc.correspondent || "—"}
-                  </td>
-                  <td className="break-words px-3">{doc.category || "—"}</td>
-                  <td className="break-words px-3 text-sm text-text-muted">
-                    {doc.tags.join(", ") || "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DocumentTable items={items} onAIComplete={() => void more(0)} />
       )}
       {next !== null && (
         <Button

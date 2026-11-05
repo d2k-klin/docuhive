@@ -35,6 +35,7 @@
 
 | Doc | Read it for |
 | --- | --- |
+| [learn/02-structured-output.md](learn/02-structured-output.md) | Shared category choices, structured validation and AI progress |
 | [learn/](learn/README.md) | The learning path: Strands agents, the agent harness, privacy routing, jobs and retrieval |
 | [evals/](evals/README.md) | How AI quality is measured, and when automatic sorting is switched on |
 | [../examples/learn/](../examples/learn/README.md) | Runnable examples, one per learning note |

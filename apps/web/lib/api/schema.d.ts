@@ -374,6 +374,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/taxonomy/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Choose Categories */
+        put: operations["choose_categories_api_taxonomy_categories_put"];
+        /** Create Category */
+        post: operations["create_category_api_taxonomy_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/documents/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Document Status */
+        post: operations["document_status_api_ai_documents_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/ai/providers": {
         parameters: {
             query?: never;
@@ -1796,6 +1831,16 @@ export interface components {
              * @default false
              */
             restricted: boolean;
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+        };
+        /** CategoryChoices */
+        CategoryChoices: {
+            /** Enabled Ids */
+            enabled_ids: string[];
         };
         /** Changed */
         Changed: {
@@ -1841,6 +1886,23 @@ export interface components {
              * @enum {string}
              */
             role: "admin" | "member";
+        };
+        /** CustomCategory */
+        CustomCategory: {
+            /** Label */
+            label: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Parent Id */
+            parent_id?: string | null;
+            /**
+             * Restricted
+             * @default false
+             */
+            restricted: boolean;
         };
         /** CustomFieldInput */
         CustomFieldInput: {
@@ -2392,6 +2454,11 @@ export interface components {
              * Format: date-time
              */
             added_at: string;
+        };
+        /** ProgressRequest */
+        ProgressRequest: {
+            /** Document Ids */
+            document_ids: string[];
         };
         /** Reclassify */
         Reclassify: {
@@ -3469,6 +3536,111 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    choose_categories_api_taxonomy_categories_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryChoices"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_category_api_taxonomy_categories_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomCategory"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    document_status_api_ai_documents_status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
