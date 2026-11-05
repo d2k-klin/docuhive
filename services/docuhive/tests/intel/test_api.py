@@ -100,6 +100,18 @@ def test_routing_providers_setup_status(client):
     assert client.get("/api/sources/setup-status").json()[0]["id"] == "mail.key"
 
 
+def test_mailbox_login_problems_in_plain_words():
+    import imaplib
+    import socket
+
+    from docuhive.mail.routes import login_problem
+
+    assert "can't be found" in login_problem(socket.gaierror(-2, "x"), "imap.example.invalid")
+    assert "didn't answer" in login_problem(TimeoutError(), "imap.example.org")
+    refused = login_problem(imaplib.IMAP4.error("AUTHENTICATIONFAILED"), "imap.gmail.com")
+    assert "refused the login" in refused and "app password" in refused
+
+
 def test_unconfigured_oauth_returns_to_sources_with_a_reason(client, monkeypatch):
     from urllib.parse import parse_qs, urlsplit
 
@@ -109,6 +121,10 @@ def test_unconfigured_oauth_returns_to_sources_with_a_reason(client, monkeypatch
         raise LookupError("not set")
 
     monkeypatch.setattr(oauth, "start_url", missing)
+    assert client.get("/api/sources/accounts").json()["oauth"] == {
+        "google": False,
+        "microsoft": False,
+    }
     r = client.get("/api/sources/oauth/google/start", follow_redirects=False)
     assert r.status_code == 302
     url = urlsplit(r.headers["location"])

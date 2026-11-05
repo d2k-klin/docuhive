@@ -2,6 +2,16 @@
 
 DocuHive reads your mailbox **read-only**, finds attachments that are real documents (invoices, contracts, statements), and archives them. It never deletes or moves your emails. Labelling imported mail is optional and off by default.
 
+## The quick way: email address and app password
+
+On **Sources → Connect a mailbox**, enter your email address and password, then choose **Connect**. DocuHive finds the server from the address (Gmail, iCloud, Yahoo, GMX, WEB.DE, Posteo, mailbox.org, T-Online; otherwise `imap.<domain>`, which you can change under **Advanced**). It tests the login before saving anything.
+
+- **Gmail, iCloud and Yahoo** don't accept your normal password from apps. Create an **app password** in the account's security settings; the form links to the page.
+- **GMX and WEB.DE** take your normal password once POP3/IMAP access is turned on in their settings.
+- **Outlook.com, Hotmail and Live** accept only Microsoft sign-in, which needs the app registration in section 3.
+
+Sections 2 and 3 set up **Sign in with Google / Microsoft** instead, which needs no app password; the server admin does this once.
+
 ## 1. Create the encryption key (once)
 
 Mail passwords and sign-in tokens are stored encrypted. Generate a key, then add it to `.env`:

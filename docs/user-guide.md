@@ -24,7 +24,7 @@ Change it on the document page under **Details**. Health and identity documents 
 | Upload | **Upload** | Files on your computer: PDFs, photos, Office files, emails (`.eml`) and HTML |
 | Phone | **Capture**, installed on the home screen | Photographing paper, several pages as one document, also offline; see [capture](setup/mobile.md) |
 | Scanner folder | `consume/<your user name>/` on the NAS | A scanner that saves to a network folder; see [scanner folder](setup/mobile.md#scanner-folder) |
-| Email | **Sources** | Invoices and statements arriving by mail; see [email accounts](setup/mail-accounts.md) |
+| Email | **Sources** | Invoices and statements arriving by mail: enter your address and an app password, see [email accounts](setup/mail-accounts.md) |
 | Scripts and Shortcuts | **API tokens** | Uploads from other tools; see [token upload](setup/mobile.md#personal-token-upload) |
 
 All of them do exactly the same thing with a file. On **Upload**, drop files on the page or choose them, and optionally set a category and tags. Your choices are locked against the AI. Each file then shows its progress, from **Waiting to be read…** and **Reading text…** to **Stored**. Scans can take several seconds per page.
