@@ -18,9 +18,10 @@ from docuhive.auth import current_user, require_admin
 from docuhive.config.settings import get_settings
 from docuhive.contracts import CurrentUser, SetupCheck
 from docuhive.db import session
-from docuhive.db.models import Document, Job
+from docuhive.db.models import AuditLog, Document, Job
 from docuhive.jobs import enqueue
 from docuhive.vault import health as vault_health
+from docuhive.vault import storage
 from docuhive.vault.availability import available
 from docuhive.vault.backup import BackupStatus
 from docuhive.vault.backup import status as backup_status
@@ -128,6 +129,7 @@ class StorageInfo(BaseModel):
     documents: int
     waiting: int  # accepted uploads still in local staging
     staging_location: str
+    choosable: bool  # a storage root is mounted, so admins can choose the vault folder
     free_bytes: int | None
     total_bytes: int | None
 
@@ -163,7 +165,7 @@ def storage_kind(path: Path, mountinfo: str | None = None) -> Literal["network",
 def storage_info(user: Admin) -> StorageInfo:
     """Which storage DocuHive uses: the vault's location, identity, size and free space."""
     settings = get_settings()
-    root = settings.vault_dir
+    root = vault.root()
     try:
         vault_id: str | None = (root / "_system" / "VAULT_ID").read_text().strip()
     except OSError:
@@ -185,8 +187,14 @@ def storage_info(user: Admin) -> StorageInfo:
             .select_from(Document)
             .where(Document.status.in_(["staged", "processing"]))
         )
+    location = settings.vault_label or str(root)
+    if root != settings.vault_dir:  # chosen on this page, inside the storage root
+        try:
+            location = storage.label(root.resolve())
+        except (storage.Refused, ValueError):
+            location = str(root)
     return StorageInfo(
-        location=settings.vault_label or str(root),
+        location=location,
         vault_id=vault_id,
         available=status.ok,
         reason=status.reason,
@@ -196,7 +204,55 @@ def storage_info(user: Admin) -> StorageInfo:
         staging_location=settings.staging_label or str(settings.staging_dir),
         free_bytes=free,
         total_bytes=total,
+        choosable=settings.storage_root is not None and settings.storage_root.is_dir(),
     )
+
+
+def _refused(error: storage.Refused) -> HTTPException:
+    status = 404 if error.code == "not_found" else 409
+    return HTTPException(status, detail={"code": error.code, "message": str(error), "details": {}})
+
+
+@router.get("/storage/folders", response_model=storage.Listing)
+def storage_folders(user: Admin, path: str = "") -> storage.Listing:
+    """Folders inside the storage root, each with what choosing it would do."""
+    try:
+        return storage.listing(path)
+    except storage.Refused as error:
+        raise _refused(error) from None
+
+
+class NewFolder(BaseModel):
+    path: str = ""
+    name: str
+
+
+@router.post("/storage/folders", response_model=storage.Folder, status_code=201)
+def storage_new_folder(user: Admin, body: NewFolder) -> storage.Folder:
+    try:
+        return storage.create(body.path, body.name)
+    except storage.Refused as error:
+        raise _refused(error) from None
+
+
+class ChooseStorage(BaseModel):
+    path: str
+
+
+@router.post("/storage/choose", response_model=StorageInfo)
+def storage_choose(user: Admin, body: ChooseStorage) -> StorageInfo:
+    """Make a folder inside the storage root the vault (only the safe cases, see vault.storage)."""
+    try:
+        storage.choose(body.path)
+    except storage.Refused as error:
+        raise _refused(error) from None
+    with session() as db:
+        db.add(
+            AuditLog(
+                actor=f"user:{user.id}", action="vault.storage_chosen", after={"path": body.path}
+            )
+        )
+    return storage_info(user)
 
 
 @router.get("/backup", response_model=BackupStatus)
@@ -209,7 +265,7 @@ def setup_status(user: Annotated[CurrentUser, Depends(current_user)]) -> list[Se
     settings = get_settings()
     vault_ok = available()
     backup = backup_status()
-    consume = settings.consume_dir or settings.vault_dir / "consume"
+    consume = settings.consume_dir or vault.root() / "consume"
     https = settings.public_url.startswith("https://")
     return [
         SetupCheck(

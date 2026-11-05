@@ -31,8 +31,30 @@ class VaultStatus(BaseModel):
     reason: str | None = None  # not_initialised | id_mismatch | not_writable
 
 
+PATH_KEY = "vault.path"
+CHOSEN_TTL_S = 10
+_chosen: tuple[float, Path | None] = (float("-inf"), None)
+
+
 def root() -> Path:
-    return get_settings().vault_dir
+    """The vault folder: the one chosen on Storage health, else DOCUHIVE_VAULT_DIR.
+
+    Read from the database at most every 10 s per process. A worker still holding the old
+    folder cannot write there: every write first checks the vault ID the database is bound to.
+    """
+    global _chosen
+    at, chosen = _chosen
+    if time.monotonic() - at >= CHOSEN_TTL_S:
+        with db.session() as session:
+            value = session.scalar(select(Setting.value).where(Setting.key == PATH_KEY))
+        chosen = Path(value) if value else None
+        _chosen = (time.monotonic(), chosen)
+    return chosen or get_settings().vault_dir
+
+
+def forget_chosen() -> None:
+    global _chosen
+    _chosen = (float("-inf"), None)
 
 
 SKELETON = {"_system", "consume", "library"}

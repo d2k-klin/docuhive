@@ -13,9 +13,8 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from docuhive import db, jobs
-from docuhive.config.settings import get_settings
 from docuhive.db.models import Document, Setting
-from docuhive.vault import combined_sha256, pages, sha256
+from docuhive.vault import combined_sha256, pages, root, sha256
 from docuhive.vault import original as find_original
 
 KEY = "vault.health"
@@ -66,7 +65,7 @@ def folder_of(vault: Path, vault_path: str) -> Path:
 
 
 def scan(full: bool = False) -> VaultReport:
-    vault = get_settings().vault_dir
+    vault = root()
     problems: list[VaultProblem] = []
     hashed = 0
 

@@ -19,7 +19,6 @@ from sqlalchemy import select
 
 from docuhive import db, kb
 from docuhive.auth import current_user
-from docuhive.config.settings import get_settings
 from docuhive.contracts import CurrentUser, SearchFilters
 from docuhive.db.models import (
     AuditLog,
@@ -30,6 +29,7 @@ from docuhive.db.models import (
     DocumentTag,
     Tag,
 )
+from docuhive.vault import root as vault_root
 from docuhive.vault.health import folder_of
 
 from .knowledge import FilterScope
@@ -147,7 +147,7 @@ def collect(user: CurrentUser, filters: SearchFilters) -> tuple[list[Any], dict,
 
 
 def build(rows: list[Any], tags: dict, facts: dict, fields: list[str]) -> Any:
-    vault = get_settings().vault_dir.resolve()
+    vault = vault_root().resolve()
     spool = tempfile.SpooledTemporaryFile(max_size=32 << 20)
     used: set[str] = set()
     missing: list[str] = []

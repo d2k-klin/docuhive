@@ -47,7 +47,7 @@ block filesystem I/O during an outage; recovery time must be measured on the act
 
 ## Register the mounted vault
 
-Run `docuhive vault init` once against the mounted share (in production, through
+Either mount the share under the storage folder and choose it on **Storage health → Change storage**, or run `docuhive vault init` once against the mounted share (in production, through
 `docker compose ... run --rm api vault init`; see the [installation guide](installation.md#5-create-the-first-administrator-and-register-the-vault)). It creates `_system/VAULT_ID` and registers that ID in the
 database. Capture polling, library sync and backups refuse a missing or different marker.
 Keep the host mount point empty and unwritable to the application when the NAS is absent.

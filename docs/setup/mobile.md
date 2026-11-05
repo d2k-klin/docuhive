@@ -31,7 +31,7 @@ Browser storage is device-local and may be cleared by the browser; keep original
 
 The OCR worker polls every 30 seconds; it uses no filesystem notification service.
 
-- Default path: `DOCUHIVE_VAULT_DIR/consume`. Set `DOCUHIVE_CONSUME_DIR` to an existing
+- Default path: the vault's `consume` folder (it follows the vault chosen on Storage health). Set `DOCUHIVE_CONSUME_DIR` to an existing
   alternative share. A blank value means the default, never the current directory.
 - `consume/<username>/scan.pdf` belongs to that active user. Loose files belong to
   `DOCUHIVE_CONSUME_DEFAULT_OWNER`; without it, loose files are ignored.
