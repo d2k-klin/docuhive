@@ -73,6 +73,9 @@ class ImapIn(BaseModel):
     default_shared: bool = True
 
 
+APP_PASSWORD_HOSTS = {"imap.gmail.com", "imap.mail.me.com", "imap.mail.yahoo.com"}
+
+
 def login_problem(error: Exception, host: str) -> str:
     """What went wrong connecting to a mailbox, in words a person can act on."""
     if isinstance(error, socket.gaierror):
@@ -86,9 +89,11 @@ def login_problem(error: Exception, host: str) -> str:
             "Check the server and port under Advanced."
         )
     if isinstance(error, imaplib.IMAP4.error):
+        reply = str(error).removeprefix("b'").removeprefix('b"').rstrip("'\"")
         return (
             "The mail server refused the login. Check the address and password; Gmail, iCloud and "
             "Yahoo need an app password, and GMX and WEB.DE need IMAP turned on in their settings."
+            + (f" The server said: {reply}" if reply else "")
         )
     return f"Could not log in: {type(error).__name__}: {error}"
 
@@ -97,6 +102,9 @@ def login_problem(error: Exception, host: str) -> str:
 def create_imap(body: ImapIn, user: User) -> dict:
     if body.provider != "imap":
         fail(400, "use_oauth", "Gmail and Microsoft accounts connect through OAuth")
+    if body.host.strip().lower() in APP_PASSWORD_HOSTS:
+        # Shown as "abcd efgh ijkl mnop"; the spaces are not part of the password.
+        body.password = "".join(body.password.split())
     try:
         conn = Imap(
             body.host, body.port, body.username, body.password, ssl=body.ssl, folders=body.folders

@@ -108,8 +108,37 @@ def test_mailbox_login_problems_in_plain_words():
 
     assert "can't be found" in login_problem(socket.gaierror(-2, "x"), "imap.example.invalid")
     assert "didn't answer" in login_problem(TimeoutError(), "imap.example.org")
-    refused = login_problem(imaplib.IMAP4.error("AUTHENTICATIONFAILED"), "imap.gmail.com")
+    refused = login_problem(
+        imaplib.IMAP4.error("b'[AUTHENTICATIONFAILED] Invalid credentials (Failure)'"),
+        "imap.gmail.com",
+    )
     assert "refused the login" in refused and "app password" in refused
+    assert refused.endswith("The server said: [AUTHENTICATIONFAILED] Invalid credentials (Failure)")
+
+
+def test_app_password_spaces_are_removed_for_gmail(client, monkeypatch):
+    from docuhive.mail import routes
+
+    seen = {}
+
+    class Recorder:
+        def __init__(self, host, port, username, password, **kwargs):
+            seen["password"] = password
+
+        def test_login(self):
+            raise routes.imaplib.IMAP4.error("stop here")
+
+    monkeypatch.setattr(routes, "Imap", Recorder)
+    body = {
+        "host": "imap.gmail.com",
+        "username": "me@gmail.com",
+        "password": " abcd efgh ijkl mnop ",
+    }
+    assert client.post("/api/sources/accounts", json=body).status_code == 400
+    assert seen["password"] == "abcdefghijklmnop"
+    other = {**body, "host": "imap.gmx.net"}  # a real password may contain spaces
+    client.post("/api/sources/accounts", json=other)
+    assert seen["password"] == " abcd efgh ijkl mnop "
 
 
 def test_unconfigured_oauth_returns_to_sources_with_a_reason(client, monkeypatch):
