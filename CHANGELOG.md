@@ -4,6 +4,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-05
+
 ### Changed
 
 - Local AI defaults, measured on the synthetic set ([decision 0004](docs/decisions/0004-model-selection.md)):
@@ -139,7 +141,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/d2k-klin/docuhive/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/d2k-klin/docuhive/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/d2k-klin/docuhive/compare/v0.2.0...v0.3.0
