@@ -8,6 +8,10 @@ x-backend: &backend
   security_opt: [no-new-privileges:true]
   cap_drop: [ALL]
   tmpfs: ["/tmp:uid=1000,gid=1000,mode=1777,size=1g"]
+  # AI keys, mail OAuth apps and other private settings; the values below always win.
+  env_file:
+    - path: ${DOCUHIVE_APP_ENV:-/etc/docuhive/app.env}
+      required: false
   environment: &environment
     DOCUHIVE_ENV: prod
     DOCUHIVE_AUTH_DISABLED: "false"

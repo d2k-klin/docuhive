@@ -54,7 +54,7 @@ DocuHive is also a worked example of building a real AI product. The code, the [
 - **Evals:** golden sets, per-field scoring and a gate before automation is switched on
 - **Retrieval:** chunking, embeddings, full-text plus vector search, answers with citations and SQL-computed numbers
 
-Every model call is recorded with its model, prompt version, tools, tokens and cost. The AI settings page shows routing, privacy and usage today; a per-result *How was this made?* view is in progress.
+Every model call is recorded with its model, prompt version, tools, tokens and cost. The AI settings page shows routing, privacy and usage, and every AI-set value links to a *How was this made?* page with its prompt, output and retries.
 
 ## Quick start
 
@@ -69,12 +69,14 @@ uv run docuhive user create admin --admin
 make dev
 ```
 
-Open <http://localhost:3000> and sign in with the account you just created. Storage, AI providers, email and notifications are configured with the guides below; a guided setup wizard is planned. For details, see [Development setup](docs/setup/development.md).
+Open <http://localhost:3000> and sign in with the account you just created. The dashboard's setup checklist lists what is still missing. For details, see [Development setup](docs/setup/development.md). To install it on a home server, follow the [installation guide](docs/setup/installation.md).
 
 ## Documentation
 
 | Guide | What's in it |
 | --- | --- |
+| [Installation guide](docs/setup/installation.md) | From an empty Linux host to a signed-in household archive, step by step |
+| [User guide](docs/user-guide.md) | Adding, finding, correcting and asking about documents, day to day |
 | [Features](docs/FEATURES.md) | Every feature in one sentence, and what works today |
 | [AI providers](docs/setup/ai-providers.md) | Local (Ollama) and cloud models, which model does what, privacy and budgets |
 | [Email accounts](docs/setup/mail-accounts.md) | Connecting Gmail, Outlook and IMAP; importing old mail |
@@ -96,9 +98,10 @@ DocuHive is in early development and not ready for real documents yet.
 | --- | --- |
 | Platform: settings, database, job queue, sign-in | working, tested |
 | AI layer, classification, review queue, email connectors, chat | working against test doubles; real-provider runs pending |
-| Document intake and archive (OCR, vault) | waiting on the [OCR quality gate](docs/decisions/0001-ocr-gate.md) |
-| Web app | pages for review, chat, sources and settings; document pages in progress |
-| Phone, scanner and token capture | implemented; offline/browser and PostgreSQL checks pass, full archive integration pending |
+| Document intake and archive (OCR, vault) | working, tested with synthetic files; real-document OCR measurements pending ([OCR gate](docs/decisions/0001-ocr-gate.md)) |
+| Web app | all document, review, chat, source and settings pages; undo, notes and a compact phone menu pending |
+| Security hardening | [checklist](docs/security-checklist.md) ticked with evidence; OWASP ZAP scan pending |
+| Phone, scanner and token capture | working through the same intake as uploads; real-phone and NAS checks pending |
 | Deployment and recovery | production stack and real synthetic backup/restore tested locally; target hardware and nightly-run acceptance pending |
 
 Progress is tracked in the [team plans](docs/shared/README.md).

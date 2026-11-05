@@ -506,7 +506,7 @@ It costs more and has more moving parts. It is not needed for personal use.
   - the Ask agent masks restricted documents when it runs on a cloud model
 - **Secrets:**
   - mail tokens are encrypted with Fernet (`cryptography`), keyed by `DOCUHIVE_MAIL_TOKEN_KEY`
-  - API keys come from environment variables, never from config files
+  - API keys come from environment variables, never from config files; in production they live in a private `app.env` (mode 600) that every backend container reads, and the stack's own values win over it
   - gitleaks runs in pre-commit and CI
   - every log handler masks values after secret-looking keys (`password=`, `token`, `Authorization`, `dh_session`…)
 - **Network:** designed for LAN and Tailscale. The browser talks to one origin.

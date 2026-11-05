@@ -6,7 +6,7 @@ backups and a full host-loss rehearsal remain release gates, not results implied
 
 ## Prepare a Linux host
 
-Use Docker Engine with Compose v2 or newer, a supported Python 3, Tailscale, and the pinned
+Use Docker Engine with Compose 2.24 or newer, a supported Python 3, Tailscale, and the pinned
 [restic 0.18.1 release](https://github.com/restic/restic/releases/tag/v0.18.1). Verify its
 published SHA-256 before installing it; the backup script refuses other versions. No
 installer is downloaded or run by this repository. Docker builds use digest-pinned bases
@@ -43,17 +43,19 @@ DOCUHIVE_CONSUME_DEFAULT_OWNER=
 
 Replace every placeholder. `POSTGRES_PASSWORD` and the password embedded in the URL must
 match. Compose fails on missing required values. Keep immutable image references; use a
-new SHA tag for each checkout rather than overwriting one tag. The AI/email environment
-belongs in the private Compose override, using the existing provider setup guides.
+new SHA tag for each checkout rather than overwriting one tag. AI keys, mail OAuth apps and
+notification settings go in `/etc/docuhive/app.env` (mode 600, or the path in
+`DOCUHIVE_APP_ENV`), which every backend container reads; the values above always win. The
+[installation guide](installation.md#3-write-the-configuration) lists what goes there.
 
 ```sh
 make images PROD_ENV=.env.production
 make up PROD_ENV=.env.production
 ```
 
-Migrations run before API and workers. Create the first administrator with the image's
-interactive `docuhive user create` command, initialise the mounted vault when document-core
-integration is available, then use [private HTTPS](remote-access.md). API, workers, converter
+Migrations run before API and workers. Create the first administrator with
+`docker compose --env-file .env.production -f deploy/compose.yml run --rm api user create <name> --admin`,
+register the mounted vault with `... run --rm api vault init`, then use [private HTTPS](remote-access.md). API, workers, converter
 and database have no published ports. Web binds loopback. PostgreSQL's image-owned UID 999
 and Gotenberg's UID 1001 differ from the app's UID 1000; all are non-root. API/workers have
 outbound networking for configured providers; the converter and database have only the

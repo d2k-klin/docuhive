@@ -6,6 +6,7 @@
 
 | Path | What it is |
 | --- | --- |
+| [`installation.md`](installation.md) | The whole install, in order, linking to the guides below |
 | [`ai-providers.md`](ai-providers.md) | AI providers and models |
 | [`development.md`](development.md) | Development setup |
 | [`knowledge-bases.md`](knowledge-bases.md) | Save document scopes, inspect indexing and issue scoped tokens |

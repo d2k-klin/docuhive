@@ -6,6 +6,8 @@
 
 | Doc | Read it for |
 | --- | --- |
+| [setup/installation.md](setup/installation.md) | Installing DocuHive on a home server, in order, from host to first sign-in |
+| [user-guide.md](user-guide.md) | Using DocuHive day to day: adding, finding, correcting and asking |
 | [setup/mobile.md](setup/mobile.md) | Phone capture, offline uploads, scanner folders and personal tokens |
 | [setup/operations.md](setup/operations.md) | Production containers, nightly backups, recovery and upgrades |
 | [setup/nas-wd-ex2-ultra.md](setup/nas-wd-ex2-ultra.md) | Mounting the NAS and securing the generated library |

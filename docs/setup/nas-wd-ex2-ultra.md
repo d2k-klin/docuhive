@@ -47,8 +47,8 @@ block filesystem I/O during an outage; recovery time must be measured on the act
 
 ## Register the mounted vault
 
-Document-core integration must provide `docuhive vault init`. Once that command is available,
-run it against the mounted share. It creates `_system/VAULT_ID` and registers that ID in the
+Run `docuhive vault init` once against the mounted share (in production, through
+`docker compose ... run --rm api vault init`; see the [installation guide](installation.md#5-create-the-first-administrator-and-register-the-vault)). It creates `_system/VAULT_ID` and registers that ID in the
 database. Capture polling, library sync and backups refuse a missing or different marker.
 Keep the host mount point empty and unwritable to the application when the NAS is absent.
 Production bind mounts use `create_host_path: false`; they never manufacture missing paths.

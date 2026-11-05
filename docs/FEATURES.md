@@ -48,7 +48,7 @@ States:
 | Provenance and locks | Works | Shows whether a person or the AI set each field, with the AI's confidence where it has one, keeps AI from overwriting what a person set, and lets you clear a field or hand it back to the AI. |
 | Bulk edit with undo | Built | Edits many documents at once and records every change; undo is not built yet. |
 | Vocabulary management | Works | Renames and merges senders and tags; saved views and knowledge bases follow, and private names stay private. |
-| Trash | Works | Deleted documents go to a trash you can restore from; permanent removal is an admin-only command. |
+| Trash | Works | Deleted documents go to a trash you can restore from, keeping their files; permanent removal is not built yet. |
 
 ## Finding and asking
 
