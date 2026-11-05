@@ -1,0 +1,43 @@
+name: release
+
+# A push to main that changes the version publishes its release: tag v<version> on that
+# commit, with the notes from CHANGELOG.md. Pushes that leave the version alone do nothing,
+# so a release is never published from a later commit. No concurrency group: a queued run
+# could be replaced by a newer push and its version would never be published.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish the release for a new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          read_version() { python3 -c "import sys, tomllib; print(tomllib.loads(sys.stdin.read())['project']['version'])"; }
+          version=$(read_version < pyproject.toml)
+          previous=$(gh api "repos/$GITHUB_REPOSITORY/contents/pyproject.toml?ref=$BEFORE" \
+            --jq .content 2>/dev/null | base64 -d | read_version 2>/dev/null || true)
+          if [ "$version" = "$previous" ]; then
+            echo "Version $version unchanged in this push"
+            exit 0
+          fi
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "v$version is already released"
+            exit 0
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "::error::Tag v$version exists without a release; check what it points to and publish it by hand"
+            exit 1
+          fi
+          python3 deploy/scripts/release_notes.py "$version" > notes.md
+          gh release create "v$version" --target "$GITHUB_SHA" --title "DocuHive $version" \
+            --notes-file notes.md --latest \
+            || gh release view "v$version" >/dev/null  # a parallel run published it first

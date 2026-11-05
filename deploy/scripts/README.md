@@ -9,6 +9,7 @@
 | [`backup.sh`](backup.sh) | Entry point for the host backup timer |
 | [`backup.py`](backup.py) | Quiesced database/vault/staging backup with retention and status |
 | [`perf_ingest.py`](perf_ingest.py) | NFR-04: times synthetic scanned PDFs from upload to stored through a real worker; empties the `_test` database and uses a temporary vault (`make perf-ingest`) |
+| [`release_notes.py`](release_notes.py) | Prints one version's CHANGELOG section as release notes, with links made absolute (used by the release workflow) |
 | [`perf_search.py`](perf_search.py) | NFR-04: seeds synthetic documents into a `_test` database and times word search (`make perf-search`) |
 | [`upgrade.sh`](upgrade.sh) | Build a release, back up, migrate and start with a recovery boundary |
 | [`restore.md`](restore.md) | Full, database-only and single-document recovery |
