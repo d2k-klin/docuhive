@@ -49,33 +49,106 @@ function isoDaysAgo(years: number) {
   return d.toISOString().slice(0, 10);
 }
 
-function ImapForm({ onDone }: { onDone: () => void }) {
-  const [f, setF] = React.useState({ host: "", port: "993", username: "", password: "", folders: "INBOX" });
+type Oauth = { google: boolean; microsoft: boolean };
+type Known = { name: string; domains: string[]; host?: string; oauth?: keyof Oauth; appPassword?: boolean; hint?: string; href?: string };
+
+// Mail services whose IMAP server follows from the address. Outlook.com takes no IMAP passwords.
+const KNOWN: Known[] = [
+  { name: "Gmail", domains: ["gmail.com", "googlemail.com"], host: "imap.gmail.com", oauth: "google", appPassword: true,
+    hint: "Gmail needs an app password, not your Google password. Turn on 2-Step Verification, then create one named DocuHive.",
+    href: "https://myaccount.google.com/apppasswords" },
+  { name: "Outlook", domains: ["outlook.com", "hotmail.com", "live.com", "msn.com", "outlook.de", "hotmail.de"], oauth: "microsoft" },
+  { name: "iCloud Mail", domains: ["icloud.com", "me.com", "mac.com"], host: "imap.mail.me.com", appPassword: true,
+    hint: "iCloud needs an app-specific password from your Apple Account, not your Apple password.",
+    href: "https://account.apple.com/account/manage" },
+  { name: "Yahoo Mail", domains: ["yahoo.com", "yahoo.de"], host: "imap.mail.yahoo.com", appPassword: true,
+    hint: "Yahoo needs an app password from your Yahoo account security settings." },
+  { name: "GMX", domains: ["gmx.de", "gmx.net", "gmx.at", "gmx.ch"], host: "imap.gmx.net",
+    hint: "Use your GMX password. Turn on POP3/IMAP access in the GMX settings first." },
+  { name: "WEB.DE", domains: ["web.de"], host: "imap.web.de",
+    hint: "Use your WEB.DE password. Turn on POP3/IMAP access in the WEB.DE settings first." },
+  { name: "Posteo", domains: ["posteo.de", "posteo.net"], host: "posteo.de" },
+  { name: "mailbox.org", domains: ["mailbox.org"], host: "imap.mailbox.org" },
+  { name: "T-Online", domains: ["t-online.de", "magenta.de"], host: "secureimap.t-online.de",
+    hint: "Use the separate password for e-mail programs from the T-Online e-mail settings." },
+];
+
+function known(address: string): Known | null {
+  const domain = address.split("@")[1]?.trim().toLowerCase() ?? "";
+  return KNOWN.find((k) => k.domains.includes(domain)) ?? null;
+}
+
+function ConnectForm({ oauth, onDone }: { oauth: Oauth | undefined; onDone: () => void }) {
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [advanced, setAdvanced] = React.useState(false);
+  const [custom, setCustom] = React.useState({ host: "", port: "993", folders: "INBOX" });
   const [error, setError] = React.useState<ApiError | null>(null);
   const [busy, setBusy] = React.useState(false);
+  const domain = email.includes("@") ? email.split("@")[1].trim().toLowerCase() : "";
+  const service = known(email);
+  const host = custom.host || service?.host || (domain ? `imap.${domain}` : "");
+  const signIn = service?.oauth && oauth?.[service.oauth];
+
+  if (service?.oauth === "microsoft") {
+    return (
+      <div className="space-y-3">
+        <Field label="Email address"><Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+        {signIn ? (
+          /* eslint-disable-next-line @next/next/no-html-link-for-pages */
+          <Button asChild><a href="/api/sources/oauth/microsoft/start">Sign in with Microsoft</a></Button>
+        ) : (
+          <p className="text-sm text-text-muted">Outlook.com only lets apps in through Microsoft sign-in, and that isn’t set up on this server yet. An administrator registers it once (docs/setup/mail-accounts.md).</p>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <form className="grid gap-4 md:grid-cols-2" onSubmit={async (e) => {
+    <form className="space-y-4" onSubmit={async (e) => {
       e.preventDefault();
       setBusy(true);
       setError(null);
       const ok = await api("/api/sources/accounts", { method: "POST", json: {
-        provider: "imap", host: f.host, port: Number(f.port), username: f.username, password: f.password,
-        folders: f.folders.split(",").map((x) => x.trim()).filter(Boolean),
+        provider: "imap", host, port: Number(custom.port), username: email.trim(), password, address: email.trim(),
+        folders: custom.folders.split(",").map((x) => x.trim()).filter(Boolean),
       } }).then(() => true).catch((err) => (setError(err), false));
       setBusy(false);
       if (ok) onDone();
     }}>
-      <Field label="Server"><Input required placeholder="imap.example.org" value={f.host} onChange={(e) => setF({ ...f, host: e.target.value })} /></Field>
-      <Field label="Port"><Input required inputMode="numeric" value={f.port} onChange={(e) => setF({ ...f, port: e.target.value })} /></Field>
-      <Field label="User name"><Input required autoComplete="username" value={f.username} onChange={(e) => setF({ ...f, username: e.target.value })} /></Field>
-      <Field label="App password" help="Use an app password, not your main password. It is stored encrypted.">
-        <Input required type="password" autoComplete="current-password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />
-      </Field>
-      <Field label="Folders" help="Comma-separated, e.g. INBOX, Rechnungen"><Input value={f.folders} onChange={(e) => setF({ ...f, folders: e.target.value })} /></Field>
-      <div className="flex items-end justify-end gap-2">
-        <Button type="submit" disabled={busy}>{busy ? "Testing login…" : "Test and connect"}</Button>
+      <div className="grid gap-4 md:grid-cols-2">
+        <Field label="Email address"><Input required type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+        <Field label={service?.appPassword ? "App password" : "Password"} help="Stored encrypted. DocuHive only reads mail; it never sends, moves or deletes.">
+          <Input required type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
       </div>
-      {error && <div className="md:col-span-2"><ErrorBox error={error} /></div>}
+      {service?.hint && (
+        <p className="text-sm text-text-muted">
+          {service.hint}{" "}
+          {service.href && <a href={service.href} target="_blank" rel="noreferrer" className="text-primary underline">Open the page</a>}
+        </p>
+      )}
+      {signIn && (
+        <p className="text-sm">
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          Or <a href="/api/sources/oauth/google/start" className="text-primary underline">sign in with Google</a> instead.
+        </p>
+      )}
+      {domain && !service && !advanced && (
+        <p className="text-sm text-text-muted">Server: <span className="font-mono">{host}</span>. Not right? <button type="button" className="text-primary underline" onClick={() => setAdvanced(true)}>Change it</button></p>
+      )}
+      <details open={advanced} onToggle={(e) => setAdvanced((e.target as HTMLDetailsElement).open)}>
+        <summary className="cursor-pointer text-sm text-text-muted">Advanced: server, port and folders</summary>
+        <div className="mt-3 grid gap-4 md:grid-cols-3">
+          <Field label="Server"><Input placeholder={host || "imap.example.org"} value={custom.host} onChange={(e) => setCustom({ ...custom, host: e.target.value })} /></Field>
+          <Field label="Port"><Input inputMode="numeric" value={custom.port} onChange={(e) => setCustom({ ...custom, port: e.target.value })} /></Field>
+          <Field label="Folders" help="Comma-separated, e.g. INBOX, Rechnungen"><Input value={custom.folders} onChange={(e) => setCustom({ ...custom, folders: e.target.value })} /></Field>
+        </div>
+      </details>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={busy || !host}>{busy ? "Checking the login…" : "Connect"}</Button>
+      </div>
+      {error && <ErrorBox error={error} />}
     </form>
   );
 }
@@ -106,7 +179,7 @@ function BackfillCard({ b, onChange }: { b: Backfill; onChange: () => void }) {
 
 function SourcesPage() {
   const params = useSearchParams();
-  const accounts = useApi<{ items: Account[]; triage_local: boolean }>("/api/sources/accounts");
+  const accounts = useApi<{ items: Account[]; triage_local: boolean; oauth?: Oauth }>("/api/sources/accounts");
   const backfills = useApi<{ items: Backfill[] }>("/api/sources/backfills");
   const [status, setStatus] = React.useState("");
   const log = useApi<{ items: Msg[] }>(`/api/sources/messages?limit=50${status ? `&status=${status}` : ""}`);
@@ -141,16 +214,7 @@ function SourcesPage() {
               <li className="flex items-center gap-2 text-warning"><Badge tone="warn">Cloud</Badge> Email sender, subject and a short text snippet are checked by a cloud model. Set a local triage model in Settings → AI to keep them on this server.</li>
             )}
           </ul>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {/* Full-page navigation on purpose: the API answers with a redirect to the provider. */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <Button asChild><a href="/api/sources/oauth/google/start">Connect Gmail</a></Button>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <Button asChild><a href="/api/sources/oauth/microsoft/start">Connect Outlook</a></Button>
-            <Button variant="secondary" onClick={() => setConnect("imap")}>Other (IMAP)</Button>
-          </div>
-          {connect === "imap" && <ImapForm onDone={() => { setConnect(null); accounts.reload(); }} />}
-          <p className="text-xs text-text-muted">Gmail and Outlook need a one-time app registration. See docs/setup/mail-accounts.md.</p>
+          <ConnectForm oauth={accounts.data?.oauth} onDone={() => { setConnect(null); accounts.reload(); }} />
         </Card>
       )}
 

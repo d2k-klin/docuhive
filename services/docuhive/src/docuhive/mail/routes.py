@@ -1,5 +1,8 @@
 """/api/sources: mail accounts, OAuth, backfills, the triage log. Owner-scoped throughout."""
 
+import imaplib
+import socket
+import ssl
 from datetime import date
 from urllib.parse import urlencode
 
@@ -49,7 +52,13 @@ def list_accounts(user: User) -> dict:
         )
         items = [_acc_out(a) for a in rows]
     # Email snippets are sensitive: the UI warns at connect time if triage runs in the cloud.
-    return {"items": items, "triage_local": triage_is_local(), "next_cursor": None}
+    return {
+        "items": items,
+        "triage_local": triage_is_local(),
+        # Which "Sign in with …" buttons can work; otherwise the UI asks for an app password.
+        "oauth": {"google": oauth.configured("google"), "microsoft": oauth.configured("microsoft")},
+        "next_cursor": None,
+    }
 
 
 class ImapIn(BaseModel):
@@ -64,6 +73,26 @@ class ImapIn(BaseModel):
     default_shared: bool = True
 
 
+def login_problem(error: Exception, host: str) -> str:
+    """What went wrong connecting to a mailbox, in words a person can act on."""
+    if isinstance(error, socket.gaierror):
+        return (
+            f"The mail server {host} can't be found. "
+            "Check the address, or set the server under Advanced."
+        )
+    if isinstance(error, TimeoutError | ConnectionError | ssl.SSLError):
+        return (
+            f"The mail server {host} didn't answer on that port. "
+            "Check the server and port under Advanced."
+        )
+    if isinstance(error, imaplib.IMAP4.error):
+        return (
+            "The mail server refused the login. Check the address and password; Gmail, iCloud and "
+            "Yahoo need an app password, and GMX and WEB.DE need IMAP turned on in their settings."
+        )
+    return f"Could not log in: {type(error).__name__}: {error}"
+
+
 @router.post("/accounts")
 def create_imap(body: ImapIn, user: User) -> dict:
     if body.provider != "imap":
@@ -74,7 +103,7 @@ def create_imap(body: ImapIn, user: User) -> dict:
         )
         conn.test_login()  # test before saving
     except Exception as e:  # noqa: BLE001 - shown to the user
-        fail(400, "imap_login_failed", f"Could not log in: {type(e).__name__}: {e}")
+        fail(400, "imap_login_failed", login_problem(e, body.host))
     try:
         blob = accounts.encrypt(
             {

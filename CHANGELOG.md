@@ -4,6 +4,11 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Changed
+
+- **Connect a mailbox** asks only for your email address and password. The server is found from the address for common services, the form explains app passwords where they are needed (Gmail, iCloud, Yahoo), and Outlook points to Microsoft sign-in. Server, port and folders move under Advanced. **Sign in with Google / Microsoft** appears only when that sign-in app is set up (`oauth` in `GET /api/sources/accounts`).
+- Mailbox login failures are explained in plain words: server not found, no answer on that port, or login refused, with the app-password hint.
+
 ### Added
 
 - **Change storage** on Storage health: admins choose the vault folder on a mounted share or disk, or create one. The folder must be inside the storage root that Compose mounts at install (`DOCUHIVE_STORAGE_ROOT_HOST_DIR`, default `/srv/docuhive/storage`, created if missing). Only safe switches are allowed: a new vault in an empty folder while the archive is empty, or the archive's own vault at a new place. Other files, another archive's vault, symlinks and paths outside the root are refused, and nothing is moved or deleted.

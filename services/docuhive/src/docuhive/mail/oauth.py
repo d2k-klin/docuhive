@@ -45,6 +45,14 @@ def _endpoints(name: str) -> dict:
     }
 
 
+def configured(name: str) -> bool:
+    try:
+        _client(name)
+    except LookupError:
+        return False
+    return True
+
+
 def _client(name: str) -> tuple[str, str]:
     s = get_mail_settings()
     cid, secret = (
