@@ -1,6 +1,6 @@
 # Security checklist
 
-The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.md#81-security-checklist-nfr-02--docssecurity-checklistmd-every-box-ticked), with the evidence for each item. Last checked 2026-11-04.
+The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.md#81-security-checklist-nfr-02--docssecurity-checklistmd-every-box-ticked), with the evidence for each item. Last checked 2026-11-05.
 
 - [x] **Dependencies.** CI runs `pip-audit` and `npm audit --omit=dev --audit-level=high` ([ci.yml](../.github/workflows/ci.yml)). Dependabot runs weekly for uv, npm and GitHub Actions ([dependabot.yml](../.github/dependabot.yml)).
 - [x] **Licences.** CI runs `deploy/scripts/check_licenses.py` and `license-checker`. [THIRD_PARTY.md](../THIRD_PARTY.md) lists Ghostscript and unpaper as separate subprocesses.
@@ -27,7 +27,7 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
   | HTML with `<script>`/`<iframe>` | stored, no script or remote URL in the archive |
 
   "No JavaScript" and "no remote URL" are checked on the decoded PDF objects, object streams included (scripts, actions, `/URI`, launch and embedded files), not by searching raw bytes; a compressed active PDF proves the check sees through compression. The worker never crashes.
-- [x] **Web headers.** [next.config.ts](../apps/web/next.config.ts) sets the CSP (`default-src 'self'; frame-src 'self'; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`), `nosniff`, `Referrer-Policy: same-origin` and `Permissions-Policy: camera=(self)`. The file route alone allows framing by DocuHive's own pages, for the PDF preview. Known limit: `script-src` allows `'unsafe-inline'`, because Next.js needs nonces to remove it.
+- [x] **Web headers.** [next.config.ts](../apps/web/next.config.ts) sets the CSP (`default-src 'self'; frame-src 'self'; img-src 'self' data: blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`), `nosniff`, `Referrer-Policy: same-origin`, `Permissions-Policy: camera=(self)`, and `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy: same-origin`. There is no `Cross-Origin-Embedder-Policy`: nothing needs cross-origin isolation. The file route alone allows framing by DocuHive's own pages, for the PDF preview. Known limit: `script-src` and `style-src` allow `'unsafe-inline'`, because Next.js needs nonces to remove it.
 - [x] **Downloads.**
   - Starlette's `FileResponse` writes an RFC 5987 `filename*`.
   - Originals are sent as attachments unless they are PDF or images (`INLINE_ORIGINALS`), so HTML originals are never rendered inline.
@@ -42,10 +42,19 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
   - Without a session, everything answers 401. The only exceptions are login, the health check and the token-authenticated calendar feed.
   - Every document route refuses another user, administrators included, on a private document that has real files in the vault; the owner gets 200 on every read route first, so a refusal cannot be a "file missing" 404.
 
+  The calendar feed is the one route that takes a token in its URL. Calendar services store that URL, so it accepts only a `calendar`-scope token, which every other route refuses (`test_auth_integration.py`).
+
   CL's privacy tests (`tests/intel/test_privacy_audit.py`) pass.
 - [x] **Network.** Only the web app publishes a port, on `127.0.0.1:3000`. The operations guide shows how to check this with `ss -tlnp`.
 
+- [x] **OWASP ZAP baseline** (2026-11-05, ZAP stable, local production stack from the 0.3.1 images): signed out and signed in as a household member, 63 rules passed, no failures. Remaining warnings:
+  - `'unsafe-inline'` in the CSP (the known limit above);
+  - no `Cross-Origin-Embedder-Policy` (deliberate);
+  - no `Content-Type` on empty redirect responses;
+  - the calendar feed's token in its URL (by design, scoped as above);
+  - informational notes on caching and on the app being a single-page app.
+
 ## Still open
 
-- An OWASP ZAP baseline scan of the running web app (QA release gate).
+- The ZAP baseline again on the target host, over its HTTPS address.
 - The checks on the target host itself: `ss -tlnp`, and file modes on the real `.env.production`.

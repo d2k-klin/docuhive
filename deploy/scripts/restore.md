@@ -57,7 +57,8 @@ rows by hand or claim DB rebuilding from a file copy.
 
 ## Rebuild without a database dump
 
-The document-core phase must supply `docuhive vault rebuild` before this path is available.
-Use a restored copy of the vault and a fresh database. That command is currently an
-integration prerequisite, not a result established by this operations work. Recovery of
-mail credentials, sessions and chat history still needs a database dump.
+Use a restored copy of the vault and a fresh database: `docuhive db upgrade`, then
+`docuhive vault init` (it binds the existing `VAULT_ID`), then `docuhive vault rebuild`; a
+`--dry-run` first only validates the `meta.json` files. See the [rebuild drill](../drills/rebuild.md).
+Users, sessions, tokens, mail credentials and chat history are not in the vault and still
+need a database dump.

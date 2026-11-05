@@ -7709,11 +7709,12 @@
                 "write",
                 "admin",
                 "kb:read",
-                "kb:ask"
+                "kb:ask",
+                "calendar"
               ]
             },
             "type": "array",
-            "maxItems": 6,
+            "maxItems": 7,
             "minItems": 1,
             "title": "Scopes"
           },

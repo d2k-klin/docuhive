@@ -148,6 +148,51 @@ def test_migration_environments_have_separate_versions(postgres):
         )
 
 
+def test_restarted_worker_releases_only_dead_processes_jobs(postgres):
+    import os
+    import socket
+    import subprocess
+    import sys
+
+    from docuhive.jobs.runner import release_orphans
+
+    @handler("test.orphan", queue="orphans")
+    def orphan(payload, ctx):
+        pass
+
+    dead = subprocess.Popen([sys.executable, "-c", "pass"])
+    dead.wait()
+    host = socket.gethostname()
+    owners = {
+        "predecessor": f"{host}:{os.getpid()}:a",  # a restarted container reuses the PID
+        "dead": f"{host}:{dead.pid}:b",
+        "live sibling": f"{host}:{os.getppid()}:c",
+        "other host": f"elsewhere.invalid:{os.getpid()}:d",
+    }
+    ids = {}
+    with session() as db:
+        for name, owner in owners.items():
+            job = Job(
+                kind="test.orphan",
+                queue="orphans",
+                payload={},
+                status="running",
+                attempts=1,
+                locked_at=datetime.now(UTC),
+                locked_by=owner,
+            )
+            db.add(job)
+            db.flush()
+            ids[name] = job.id
+    assert release_orphans() == 2
+    assert {name: fetch(i).status for name, i in ids.items()} == {
+        "predecessor": "pending",
+        "dead": "pending",
+        "live sibling": "running",
+        "other host": "running",
+    }
+
+
 def test_killed_worker_lease_recovers_without_duplicate_completion(postgres, tmp_path):
     import os
     import subprocess

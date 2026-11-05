@@ -35,7 +35,7 @@ States:
 | Rebuildable index | Works | Rebuilds the database from the vault's metadata files alone. |
 | Vault health check | Built | A weekly, read-only check that every document's files exist, match their checksums and agree with the database, and that no folder is orphaned. |
 | Library view | Built | An optional, read-only folder tree sorted by category, year, date and title. |
-| Parallel processing | Works | A job queue lets several workers process documents at once and recovers jobs from a crashed worker. |
+| Parallel processing | Works | A job queue lets several workers process documents at once; a restarted worker picks its crashed predecessor's jobs straight back up, and other crashed jobs come back when their lease runs out. |
 
 ## Sorting
 

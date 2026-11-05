@@ -32,7 +32,11 @@ def atomic_json(path: Path, value: dict) -> None:
 
 
 def mounted(vault: Path, expected: str) -> None:
-    if not expected or (vault / "_system" / "VAULT_ID").read_text().strip() != expected:
+    try:
+        found = (vault / "_system" / "VAULT_ID").read_text().strip()
+    except OSError:
+        found = ""
+    if not expected or found != expected:
         raise ValueError("Mount the registered vault before backing up")
 
 
@@ -188,7 +192,10 @@ def main() -> None:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise SystemExit("A backup is already running") from None
-        result = backup()
+        try:
+            result = backup()
+        except ValueError as error:  # a refusal (wrong or missing vault), not a crash
+            raise SystemExit(str(error)) from None
     print(json.dumps(result))
     raise SystemExit(0 if result["ok"] else 1)
 

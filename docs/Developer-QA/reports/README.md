@@ -9,6 +9,7 @@
 | [Initial verification](initial-verification.md) | This checkout's measured results and gaps |
 | [Release acceptance](v1-acceptance.md) | Explicit NO-GO until all release evidence exists |
 | [Test audit](test-audit-2026-11-04.md) | Hermeticity, critical coverage, mutation and skip-policy findings |
+| [Local production validation](local-production-validation-2026-11-05.md) | Install guide, end to end, ZAP, timings, backup, restore, rebuild and failure drills on the production images |
 
 ## Extending
 

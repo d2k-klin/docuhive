@@ -11,7 +11,7 @@ from sqlalchemy import text
 from docuhive.config.settings import get_settings
 from docuhive.db import get_engine
 from docuhive.jobs import scheduler
-from docuhive.jobs.runner import claim, reap, run
+from docuhive.jobs.runner import claim, reap, release_orphans, run
 from docuhive.startup import start_intelligence
 from docuhive.worker.handlers import HANDLER_MODULES
 
@@ -60,6 +60,9 @@ def serve(queues: list[str], concurrency: int) -> None:
     for module in HANDLER_MODULES:
         import_module(module)
     start_intelligence()
+    # Before claiming anything, so a lease carrying our own PID can only be a predecessor's.
+    if released := release_orphans():
+        log.warning("Released %d jobs left by a stopped worker on this host", released)
     stopped = threading.Event()
     for signum in (signal.SIGINT, signal.SIGTERM):
         signal.signal(signum, lambda *_: stopped.set())

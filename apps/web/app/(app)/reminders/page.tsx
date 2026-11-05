@@ -71,8 +71,8 @@ export default function RemindersPage() {
         )}
       <Card title="In your calendar" className="mt-4">
         <p className="max-w-[65ch] text-sm text-text-muted">
-          Subscribe to <code className="font-mono">/api/reminders.ics?token=…</code> with a personal API token that has read access
-          (Settings → Tokens). See docs/setup/notifications.md.
+          Subscribe to <code className="font-mono">/api/reminders.ics?token=…</code> with a personal API token that has only the
+          calendar scope (API tokens). See docs/setup/notifications.md.
         </p>
       </Card>
     </Page>

@@ -113,7 +113,7 @@ def test_similar_and_reminders_endpoints(client, core):
     assert client.get("/api/reminders.ics?token=nope").status_code == 401
 
 
-def test_ics_with_read_token(client, core):
+def test_ics_needs_calendar_token(client, core):
     import hashlib
     from datetime import date
 
@@ -132,8 +132,24 @@ def test_ics_with_read_token(client, core):
     with core.session() as s:
         s.execute(
             insert(api_tokens).values(
-                user_id=1, scopes=["read"], token_hash=hashlib.sha256(b"tok").hexdigest()
+                user_id=1, scopes=["calendar"], token_hash=hashlib.sha256(b"tok").hexdigest()
+            )
+        )
+        # A broader token must not work in a URL that calendar services store.
+        s.execute(
+            insert(api_tokens).values(
+                user_id=1, scopes=["read", "admin"], token_hash=hashlib.sha256(b"wide").hexdigest()
             )
         )
     r = client.get("/api/reminders.ics?token=tok")
     assert r.status_code == 200 and "SUMMARY:End date: Vertrag" in r.text
+    assert client.get("/api/reminders.ics?token=wide").status_code == 401
+    with core.session() as s:
+        s.execute(
+            insert(api_tokens).values(
+                user_id=1,
+                scopes=["calendar", "read"],
+                token_hash=hashlib.sha256(b"mixed").hexdigest(),
+            )
+        )
+    assert client.get("/api/reminders.ics?token=mixed").status_code == 401

@@ -58,7 +58,7 @@ def send(n: Notification) -> None: ...   # fan-out to the user's enabled channel
   - `app/(app)/reminders/`: an upcoming list grouped by month (label, document link, due date, days left), with Dismiss and Done.
   - A dashboard widget "Next deadlines" (top 5) in `IntelDashboardWidgets`.
   - Nav: uncomment "Reminders".
-- **Calendar export:** `GET /api/reminders.ics?token=<api token with read scope>`, an iCalendar feed of the upcoming reminders (hand-written ICS, about 20 lines, no library), so the deadlines show up in your phone calendar. Document it in `docs/setup/notifications.md`.
+- **Calendar export:** `GET /api/reminders.ics?token=<api token with the calendar scope>`, an iCalendar feed of the upcoming reminders (hand-written ICS, about 20 lines, no library), so the deadlines show up in your phone calendar. Document it in `docs/setup/notifications.md`.
 
 ## 7.4 Privacy audit (AI-03) — tests and visibility
 1. **Test suite** `tests/intel/test_privacy_audit.py`:

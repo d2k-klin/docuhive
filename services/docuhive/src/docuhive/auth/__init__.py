@@ -20,7 +20,8 @@ from .permissions import visible_docs, visible_docs_incl_trash  # noqa: F401
 
 password_hasher = PasswordHasher()
 _dummy_hash = password_hasher.hash(secrets.token_urlsafe(32))
-SCOPES = {"upload", "read", "write", "admin", "kb:read", "kb:ask"}
+# "calendar" opens only the reminders feed, whose token travels in the URL.
+SCOPES = {"upload", "read", "write", "admin", "kb:read", "kb:ask", "calendar"}
 
 
 def token_hash(token: str) -> str:

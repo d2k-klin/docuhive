@@ -17,6 +17,7 @@ const scopeOptions: { id: Scope; label: string }[] = [
   { id: "write", label: "Read and edit documents" },
   { id: "kb:read", label: "Retrieve knowledge-base chunks" },
   { id: "kb:ask", label: "Ask knowledge bases" },
+  { id: "calendar", label: "Calendar feed only" },
   { id: "admin", label: "All administrator actions" },
 ];
 

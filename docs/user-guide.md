@@ -103,11 +103,11 @@ Answers only use documents you are allowed to see.
 **Reminders** lists deadlines found in your documents: due dates, contract ends, notice periods and renewals. Mark one **Done** or **Dismiss** it.
 
 - **Notifications** sends them to your phone or by email; see [notifications](setup/notifications.md).
-- **In your calendar** gives a private address your calendar app can subscribe to.
+- **In your calendar** gives a private address your calendar app can subscribe to, with a token that has only the **Calendar feed only** scope.
 
 ## Connecting other tools
 
-**API tokens** creates personal tokens for scripts and other tools. Give each token only what it needs, such as upload only, or read one knowledge base. Treat a token like a password, and delete it when you stop using it.
+**API tokens** creates personal tokens for scripts and other tools. Give each token only what it needs, such as upload only, calendar feed only, or read one knowledge base. Treat a token like a password, and delete it when you stop using it.
 
 ## For administrators
 
