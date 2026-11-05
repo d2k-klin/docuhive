@@ -4,8 +4,11 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-04
+
 ### Added
 
+- Security checklist (`docs/security-checklist.md`) with evidence for every item; a hostile-file corpus and a route permission matrix in the integration tests; `make perf-ingest` for upload-to-stored timing.
 - Document screens: documents list with filters and bulk edit, document detail (PDF preview, editing with "set by you"/AI badges and unlock, facts, history, downloads, trash), search with highlighted snippets (`GET /api/search`), drag-and-drop upload that follows each file until it is stored, quarantine with plain-language reasons and retry, trash, vocabulary, account settings and the dashboard setup checklist.
 - Document intake: `ingest.submit` (type and size checks, per-owner dedupe, staging) and the `ingest.process` job (conversion, OCR to PDF/A, thumbnail, verified vault write, quarantine with the input kept, retry). A NAS outage leaves uploads staged until the vault is back.
 - The vault: `docuhive vault init`, an availability check against the vault id, atomic writes verified by checksum, and `meta.json` for every document, rendered from the database after each change.
@@ -35,6 +38,12 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - The document preview may frame the archive PDF from DocuHive's own origin; every other page still refuses framing.
 - The capture page's service worker, queue script and manifest load without a session; before, the sign-in redirect stopped the service worker from installing.
 - Lint, type and formatting errors from the capture change, which had turned `main`'s CI red.
+
+### Security
+
+- Log lines no longer carry passwords, tokens, session cookies or `Authorization` values (quoted, `Basic`, `Bearer` or in query strings); every handler masks them, uvicorn's and `--reload` children included, and access lines keep their format.
+- A generated hostile-file corpus (zip bomb, scripted and looping PDFs, polyglot, oversized image, beacon email, scripted HTML) runs through the real pipeline; archives are checked inert on their decoded objects.
+- A permission matrix walks every API route: no route answers without a session except sign-in, health and the token-authenticated calendar feed, and no document route serves a private document to another user, administrators included.
 
 ## [0.2.0] - 2026-11-04
 
@@ -94,6 +103,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/d2k-klin/docuhive/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/d2k-klin/docuhive/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/d2k-klin/docuhive/releases/tag/v0.1.0

@@ -1,6 +1,7 @@
 """CLI dispatch must preserve queue selection, fail-fast security and password handling."""
 
 import json
+import logging
 import sys
 
 import pytest
@@ -54,3 +55,53 @@ def test_user_password_mismatch_never_creates_user(monkeypatch):
     with pytest.raises(SystemExit):
         cli.main()
     assert called == []
+
+
+@pytest.mark.parametrize(
+    ("line", "secret"),
+    [
+        ("login password=hunter2 user=a", "hunter2"),
+        ('{"token": "dh_abc123", "user": "a"}', "dh_abc123"),
+        ("Authorization: Bearer eyJ.secret.value", "eyJ.secret.value"),
+        ("cookie: dh_session=abcdef; theme=dark", "abcdef"),
+        ("GET /api/capture?api_key=k123&page=2", "k123"),
+        ('{"password": "alpha bravo charlie"}', "bravo charlie"),
+        ('{"secret": "with \\"escaped\\" quote"}', "escaped"),
+        ("Authorization: Basic dXNlcjpwYXNz", "dXNlcjpwYXNz"),
+    ],
+)
+def test_log_lines_never_carry_secret_values(line, secret):
+    record = logging.LogRecord("x", logging.INFO, __file__, 1, "%s", (line,), None)
+    assert cli.Redact().filter(record)
+    assert "[redacted]" in record.getMessage()
+    assert secret not in record.getMessage()
+
+
+def test_redaction_leaves_ordinary_lines_alone():
+    record = logging.LogRecord(
+        "x", logging.INFO, __file__, 1, "session expired for %s", ("a",), None
+    )
+    cli.Redact().filter(record)
+    assert record.getMessage() == "session expired for a"
+
+
+def test_access_log_keeps_its_arguments_after_redaction():
+    from uvicorn.logging import AccessFormatter
+
+    args = ("127.0.0.1:5000", "GET", "/api/reminders.ics?token=dh_abc", "1.1", 200)
+    record = logging.LogRecord(
+        "uvicorn.access", logging.INFO, __file__, 1, '%s - "%s %s HTTP/%s" %d', args, None
+    )
+    cli.Redact().filter(record)
+    line = AccessFormatter(use_colors=False).format(record)
+    assert "dh_abc" not in line and "token=[redacted]" in line and "200" in line
+
+
+def test_api_logging_config_filters_root_and_uvicorn_handlers(monkeypatch):
+    seen = {}
+    monkeypatch.setattr("uvicorn.run", lambda *a, **kw: seen.update(kw))
+    monkeypatch.setattr(sys, "argv", ["docuhive", "api", "--reload"])
+    cli.main()
+    config = seen["log_config"]
+    assert config["root"]["handlers"] == ["root"]
+    assert all(h["filters"] == ["redact"] for h in config["handlers"].values())

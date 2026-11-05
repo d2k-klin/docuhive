@@ -1,13 +1,61 @@
 """Command-line entry points for the platform and optional intelligence extensions."""
 
 import argparse
+import copy
 import getpass
 import json
 import logging
+import re
 from importlib import import_module
 
 from docuhive import __version__
 from docuhive.config.settings import get_settings
+
+# A key that names a secret, then `=` or `:`, then its whole value: a quoted string (escapes
+# included), an auth scheme plus its credential (`Bearer …`, `Basic …`), or a bare word up to
+# the next separator (`password=…`, `"token": "…"`, `dh_session=…`).
+SECRET = re.compile(
+    r"(?i)\b(\w*(?:password|passwd|token|secret|authorization|api_?key|session|cookie))\b"
+    r"([\"']?\s*[:=]\s*)"
+    r"(\"(?:[^\"\\]|\\.)*\"|'(?:[^'\\]|\\.)*'"
+    r"|(?:(?:bearer|basic|digest|token)\s+)?[^\s\"',;&}]+)"
+)
+
+LOG_FORMAT = "%(asctime)s %(levelname)s %(name)s %(message)s"
+
+
+def redact(text: str) -> str:
+    def mask(match: re.Match[str]) -> str:
+        quote = match[3][0] if match[3][0] in "\"'" else ""
+        return f"{match[1]}{match[2]}{quote}[redacted]{quote}"
+
+    return SECRET.sub(mask, text)
+
+
+class Redact(logging.Filter):
+    """Masks secret values in every log line before any handler writes it.
+
+    Arguments are redacted one by one when that suffices, so formatters that unpack them
+    (uvicorn's access log) keep working; otherwise the line is flattened.
+    ponytail: the message only, not tracebacks; scrub exc_text too if a secret ever shows up there.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        message = record.getMessage()
+        clean = redact(message)
+        if clean == message:
+            return True
+        if isinstance(record.args, tuple):
+            args = tuple(redact(a) if isinstance(a, str) else a for a in record.args)
+            msg = redact(str(record.msg))
+            try:
+                if msg % args == clean:
+                    record.msg, record.args = msg, args
+                    return True
+            except (TypeError, ValueError):
+                pass
+        record.msg, record.args = clean, None
+        return True
 
 
 def parser() -> argparse.ArgumentParser:
@@ -55,18 +103,35 @@ def parser() -> argparse.ArgumentParser:
 def main() -> None:
     root = parser()
     args = root.parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+    for handler in logging.getLogger().handlers:
+        handler.addFilter(Redact())
     try:
         get_settings()
         if args.command == "api":
             import uvicorn
+            from uvicorn.config import LOGGING_CONFIG
 
+            # uvicorn installs its own handlers, also in --reload children that never run the
+            # basicConfig above: filter those, and give the root logger a filtered handler too.
+            log_config = copy.deepcopy(LOGGING_CONFIG)
+            log_config["filters"] = {"redact": {"()": Redact}}
+            log_config["formatters"]["plain"] = {"format": LOG_FORMAT}
+            log_config["handlers"]["root"] = {
+                "class": "logging.StreamHandler",
+                "formatter": "plain",
+                "stream": "ext://sys.stderr",
+            }
+            for handler in log_config["handlers"].values():
+                handler["filters"] = ["redact"]
+            log_config["root"] = {"handlers": ["root"], "level": "INFO"}
             uvicorn.run(
                 "docuhive.api.app:create_app",
                 factory=True,
                 host=args.host,
                 port=args.port,
                 reload=args.reload,
+                log_config=log_config,
             )
         elif args.command == "worker":
             from docuhive.worker import serve

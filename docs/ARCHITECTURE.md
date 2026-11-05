@@ -508,8 +508,10 @@ It costs more and has more moving parts. It is not needed for personal use.
   - mail tokens are encrypted with Fernet (`cryptography`), keyed by `DOCUHIVE_MAIL_TOKEN_KEY`
   - API keys come from environment variables, never from config files
   - gitleaks runs in pre-commit and CI
+  - every log handler masks values after secret-looking keys (`password=`, `token`, `Authorization`, `dh_session`…)
 - **Network:** designed for LAN and Tailscale. The browser talks to one origin.
-- **Untrusted files:** types are detected from bytes; parsers run isolated with limits; active and remote content is stripped from email HTML.
+- **Untrusted files:** types are detected from bytes; parsers run isolated with limits; active and remote content is stripped from email HTML. A generated corpus of hostile files (zip bomb, PDF with JavaScript, xref loop, polyglot, 50k×50k PNG, beacon email, scripted HTML) runs through the real pipeline in CI.
+- **Checklist:** every hardening item and its evidence is in [security-checklist.md](security-checklist.md); a test walks every API route for missing sign-in checks and cross-user document access.
 - **Public repository:** synthetic test data only; personal data, prompts and the golden evaluation set live in the private overlay.
 
 ---
@@ -521,7 +523,7 @@ It costs more and has more moving parts. It is not needed for personal use.
 | Unit | `pytest` with fakes (no keys, no network; a socket guard fails any network call), coverage ≥ 85% | CI `python` |
 | Types and lint | ruff, mypy, ESLint, `tsc` | CI `python`, `web` |
 | Contracts | the documented interfaces in `shared/contracts.md` are compared with the code | CI `python` |
-| Integration | real PostgreSQL and Gotenberg (`compose.test.yml`): search, pgvector, privacy constraint, jobs | CI `integration` |
+| Integration | real PostgreSQL and Gotenberg (`compose.test.yml`): search, pgvector, privacy constraint, jobs, hostile files, the route permission matrix | CI `integration` |
 | OCR | real OCR inside the worker image | CI `OCR in the worker image` |
 | Web | lint, typecheck, unit tests, production build, licence check, `npm audit` | CI `web` |
 | Browser | Playwright journeys, axe accessibility, control heights, overflow, fonts, at 375/768/1280 px in light and dark | QA stack (`make qa-e2e`), nightly |
