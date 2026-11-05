@@ -4,6 +4,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-05
+
 ### Fixed
 
 - A worker restarted after a crash now frees the jobs its predecessor was running at once, instead of leaving a scan in processing until its 30-minute lease expires. Live sibling processes on the same host are left alone.
@@ -125,7 +127,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/d2k-klin/docuhive/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/d2k-klin/docuhive/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/d2k-klin/docuhive/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/d2k-klin/docuhive/compare/v0.1.0...v0.2.0
