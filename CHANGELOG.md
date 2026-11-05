@@ -4,10 +4,16 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-11-05
+
 ### Added
 
 - **Storage health** now says which storage the archive uses: its location (the host path, through the new display-only `DOCUHIVE_VAULT_LABEL` and `DOCUHIVE_STAGING_LABEL`), network share or local disk, vault ID, document count and free space. It also shows uploads waiting in local staging (`GET /api/system/storage`, admins only).
 - The installation guide covers a vault on a local disk when there is no NAS.
+
+### Fixed
+
+- Connecting Gmail or Outlook before its sign-in app was set up showed raw JSON. It now returns to **Sources** with a plain reason and a pointer to the setup guide, and suggests IMAP with an app password for Gmail. The OAuth callback's error message is now URL-encoded.
 
 ## [0.4.0] - 2026-11-05
 
@@ -146,7 +152,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/d2k-klin/docuhive/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/d2k-klin/docuhive/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/d2k-klin/docuhive/compare/v0.3.0...v0.3.1
