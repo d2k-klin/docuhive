@@ -52,7 +52,7 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
     if not available():
         return
     settings = get_settings()
-    root = settings.consume_dir or settings.vault_dir / "consume"
+    root = settings.consume_dir or vault.root() / "consume"
     if not root.is_dir() or root.is_symlink():
         return
     with session() as db:
@@ -90,9 +90,9 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                     seen[key] = old
                     doc = db.get(Document, old["document_id"])
                     if doc and doc.status == "stored" and doc.vault_path and available():
-                        folder = folder_of(settings.vault_dir, doc.vault_path).resolve()
+                        folder = folder_of(vault.root(), doc.vault_path).resolve()
                         original = vault.original(folder)
-                        if folder.is_relative_to(settings.vault_dir.resolve()) and original:
+                        if folder.is_relative_to(vault.root().resolve()) and original:
                             if (
                                 sha256(original) == old["sha256"] == doc.sha256 == sha256(path)
                                 and signature(path) == current

@@ -10,9 +10,9 @@ from pathlib import Path
 from sqlalchemy import select
 
 from docuhive import jobs
-from docuhive.config.settings import get_settings
 from docuhive.db import session
 from docuhive.db.models import Document, Setting, User
+from docuhive.vault import root
 from docuhive.vault.availability import available
 from docuhive.vault.health import folder_of
 
@@ -39,7 +39,7 @@ def inside(root: Path, relative: str) -> Path:
 def sync(*, retry: bool = False) -> dict:
     if not available():
         return {"ok": False, "reason": "vault_unavailable"}
-    vault = get_settings().vault_dir
+    vault = root()
     library = vault / "library"
     with session() as db:
         disabled = db.get(Setting, DISABLED)

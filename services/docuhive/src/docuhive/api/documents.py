@@ -15,7 +15,6 @@ from sqlalchemy import select
 
 from docuhive import auth, db, documents, taxonomy, vault
 from docuhive.auth import current_user
-from docuhive.config.settings import get_settings
 from docuhive.contracts import (
     ApplyResult,
     CurrentUser,
@@ -95,7 +94,7 @@ def detail(view: DocumentView) -> DocumentDetail:
         reason, provenance, vault_path = row.quarantine_reason, row.ai_provenance, row.vault_path
     files: list[Literal["original", "archive", "thumb"]] = []
     if vault_path:
-        folder = get_settings().vault_dir / vault_path
+        folder = vault.root() / vault_path
         for kind in ("original", "archive", "thumb"):
             if file_path(folder, kind):
                 files.append(kind)  # type: ignore[arg-type]
@@ -329,7 +328,7 @@ def get_file(
     view = get_document(doc_id, user)
     with db.session() as session:
         vault_path = session.scalar(select(Document.vault_path).where(Document.id == doc_id))
-    root = get_settings().vault_dir.resolve()
+    root = vault.root().resolve()
     path = file_path(root / vault_path, kind) if vault_path else None
     if path is None or not path.resolve().is_relative_to(root):
         raise problem(404, "document_file_missing", "This file is not in the vault.")

@@ -294,6 +294,131 @@
         }
       }
     },
+    "/api/system/storage/folders": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Storage Folders",
+        "description": "Folders inside the storage root, each with what choosing it would do.",
+        "operationId": "storage_folders_api_system_storage_folders_get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Listing"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Storage New Folder",
+        "operationId": "storage_new_folder_api_system_storage_folders_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewFolder"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Folder"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/storage/choose": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Storage Choose",
+        "description": "Make a folder inside the storage root the vault (only the safe cases, see vault.storage).",
+        "operationId": "storage_choose_api_system_storage_choose_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChooseStorage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageInfo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/system/backup": {
       "get": {
         "tags": [
@@ -5619,6 +5744,19 @@
         "type": "object",
         "title": "ChannelPatch"
       },
+      "ChooseStorage": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "ChooseStorage"
+      },
       "CurrentUser": {
         "properties": {
           "id": {
@@ -6568,6 +6706,36 @@
         ],
         "title": "FactValue"
       },
+      "Folder": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "empty",
+              "this_vault",
+              "other_vault",
+              "not_empty",
+              "not_writable"
+            ],
+            "title": "State"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "state"
+        ],
+        "title": "Folder"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -6942,6 +7110,44 @@
         ],
         "title": "KnowledgeBaseView"
       },
+      "Listing": {
+        "properties": {
+          "root": {
+            "type": "string",
+            "title": "Root"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current"
+          },
+          "folders": {
+            "items": {
+              "$ref": "#/components/schemas/Folder"
+            },
+            "type": "array",
+            "title": "Folders"
+          }
+        },
+        "type": "object",
+        "required": [
+          "root",
+          "path",
+          "current",
+          "folders"
+        ],
+        "title": "Listing"
+      },
       "Login": {
         "properties": {
           "username": {
@@ -7001,6 +7207,24 @@
           "content"
         ],
         "title": "MessageIn"
+      },
+      "NewFolder": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NewFolder"
       },
       "PasswordChange": {
         "properties": {
@@ -7723,6 +7947,10 @@
             "type": "string",
             "title": "Staging Location"
           },
+          "choosable": {
+            "type": "boolean",
+            "title": "Choosable"
+          },
           "free_bytes": {
             "anyOf": [
               {
@@ -7756,6 +7984,7 @@
           "documents",
           "waiting",
           "staging_location",
+          "choosable",
           "free_bytes",
           "total_bytes"
         ],

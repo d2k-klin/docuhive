@@ -186,7 +186,6 @@ def test_resolve_by_owner_only(core, status):
 def test_dead_jobs_and_backup_checks(core, monkeypatch, tmp_path):
     from datetime import UTC, datetime
 
-    from docuhive.config import settings as core_settings
     from docuhive.notify import jobs as njobs
     from sqlalchemy import insert
 
@@ -205,7 +204,7 @@ def test_dead_jobs_and_backup_checks(core, monkeypatch, tmp_path):
     njobs.scan_dead_jobs({}, None)
     njobs.scan_dead_jobs({}, None)
     assert [r["dedupe_key"] for r in core.rows("notification_log")] == ["job_dead:7"]
-    monkeypatch.setattr(core_settings.get_settings(), "vault_dir", tmp_path)
+    monkeypatch.setattr(njobs, "vault_root", lambda: tmp_path)
     (tmp_path / "_system").mkdir()
     (tmp_path / "_system" / "backup-status.json").write_text(
         json.dumps({"at": "2020-01-01T00:00:00+00:00", "ok": True})

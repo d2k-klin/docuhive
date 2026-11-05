@@ -37,8 +37,13 @@ class CoreSettings(BaseSettings):
     gotenberg_url: str = "http://localhost:3001"
     consume_dir: Path | None = None  # unset: VAULT_DIR/consume
     consume_default_owner: str | None = None
+    # A parent folder mounted at install (NAS shares, disks); admins pick the vault inside it.
+    storage_root: Path | None = None
+    storage_root_label: str | None = None  # the same folder as the host sees it (display only)
 
-    @field_validator("overlay_dir", "consume_dir", "consume_default_owner", mode="before")
+    @field_validator(
+        "overlay_dir", "consume_dir", "consume_default_owner", "storage_root", mode="before"
+    )
     @classmethod
     def empty_overlay_is_unset(cls, value: object) -> object:
         return None if value == "" else value

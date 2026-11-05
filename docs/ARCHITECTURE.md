@@ -231,6 +231,7 @@ vault/
 - **Atomic writes:** a temporary file, `fsync`, then a rename in the same folder.
 - **Vault health:** before any write, the worker checks `_system/VAULT_ID` against the database, on every check (only the write probe is cached for 30 s). If the NAS is unmounted, vault writes pause, uploads wait in `staging/`, and the UI shows a banner.
 - **`docuhive vault init`** creates a vault only in an empty folder, and refuses to move a database to a different vault: an empty mount point for an absent NAS never becomes a replacement.
+- **Choosing storage in the app:** `vault.root()` is the folder an admin chose on Storage health (`settings` key `vault.path`, read at most every 10 s per process), else `DOCUHIVE_VAULT_DIR`. The choice is limited to folders inside `DOCUHIVE_STORAGE_ROOT`, a parent mounted at install, and to safe cases: a new vault in an empty folder while the archive is empty, or the archive's own vault (same ID) at a new place. A worker still holding the old folder cannot write there, because writes check the vault ID the database is bound to.
 - **`meta.json`** is rendered from the database after every change, with the document row locked from render to rename, and a re-render job is committed with the change itself.
 - **Without DocuHive:** the archive is still a tidy set of folders with PDFs and readable JSON.
 
@@ -369,7 +370,8 @@ privacy gate → routes (primary, fallbacks) → budget check → Strands call w
   | Variable | Sets |
   | --- | --- |
   | `DOCUHIVE_DATABASE_URL` | the database |
-  | `DOCUHIVE_VAULT_DIR` | the vault folder |
+  | `DOCUHIVE_VAULT_DIR` | the vault folder, unless one is chosen on Storage health |
+  | `DOCUHIVE_STORAGE_ROOT` | parent folder an admin may choose the vault inside (optional) |
   | `DOCUHIVE_STAGING_DIR` | where uploads wait |
   | `DOCUHIVE_SECRET_KEY` | core secret required in production |
   | `DOCUHIVE_MAIL_TOKEN_KEY` | Fernet encryption of mail credentials |

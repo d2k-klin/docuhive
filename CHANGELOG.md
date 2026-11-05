@@ -4,6 +4,14 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Added
+
+- **Change storage** on Storage health: admins choose the vault folder on a mounted share or disk, or create one. The folder must be inside the storage root that Compose mounts at install (`DOCUHIVE_STORAGE_ROOT_HOST_DIR`, default `/srv/docuhive/storage`, created if missing). Only safe switches are allowed: a new vault in an empty folder while the archive is empty, or the archive's own vault at a new place. Other files, another archive's vault, symlinks and paths outside the root are refused, and nothing is moved or deleted.
+
+### Changed
+
+- The scanner folder defaults to the chosen vault's `consume` folder; Compose no longer pins it to `/srv/vault/consume`.
+
 ## [0.4.1] - 2026-11-05
 
 ### Added

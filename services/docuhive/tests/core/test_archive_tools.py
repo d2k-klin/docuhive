@@ -225,6 +225,91 @@ def test_storage_info_says_which_storage_is_used(tools, monkeypatch):
     assert tools.get("/api/system/storage").status_code == 403
 
 
+@pytest.fixture
+def storage_root(tools, monkeypatch, tmp_path):
+    from docuhive import vault
+
+    root = tmp_path / "mnt"
+    (root / "photos").mkdir(parents=True)
+    (root / "photos" / "cat.jpg").write_text("x")
+    (root / "old" / "_system").mkdir(parents=True)
+    (root / "old" / "_system" / "VAULT_ID").write_text("someone-else")
+    (root / "system-disk").symlink_to("/")  # like macOS /Volumes/Macintosh HD
+    monkeypatch.setenv("DOCUHIVE_STORAGE_ROOT", str(root))
+    monkeypatch.setenv("DOCUHIVE_STORAGE_ROOT_LABEL", "/mnt")
+    config.reload()
+    vault.forget_chosen()
+    yield root
+    vault.forget_chosen()
+
+
+def test_choosing_storage_without_a_storage_root_is_refused(tools):
+    assert tools.get("/api/system/storage").json()["choosable"] is False
+    r = tools.get("/api/system/storage/folders")
+    assert r.status_code == 409 and r.json()["error"]["code"] == "no_storage_root"
+
+
+def test_choose_an_empty_folder_for_an_empty_archive(tools, storage_root):
+    from docuhive import vault
+
+    assert tools.get("/api/system/storage").json()["choosable"] is True
+    made = tools.post("/api/system/storage/folders", json={"name": "docuhive"}, headers=CSRF)
+    assert made.status_code == 201 and made.json()["state"] == "empty"
+    states = {
+        f["name"]: f["state"] for f in tools.get("/api/system/storage/folders").json()["folders"]
+    }
+    assert states == {"docuhive": "empty", "old": "other_vault", "photos": "not_empty"}
+    info = tools.post("/api/system/storage/choose", json={"path": "docuhive"}, headers=CSRF)
+    assert info.status_code == 200, info.text
+    body = info.json()
+    assert body["location"] == "/mnt/docuhive" and body["available"] is True
+    assert (storage_root / "docuhive" / "_system" / "VAULT_ID").read_text() == body["vault_id"]
+    assert vault.root() == (storage_root / "docuhive").resolve()
+    listing = tools.get("/api/system/storage/folders").json()
+    assert listing["current"] == "docuhive" and listing["root"] == "/mnt"
+
+
+def test_unsafe_storage_choices_are_refused(tools, storage_root):
+    def code(path):
+        r = tools.post("/api/system/storage/choose", json={"path": path}, headers=CSRF)
+        return r.status_code, r.json()["error"]["code"]
+
+    assert code("photos") == (409, "not_empty")
+    assert code("old") == (409, "other_vault")
+    assert code("../vault") == (409, "outside_storage_root")
+    assert code("missing") == (404, "not_found")
+    bad = tools.post("/api/system/storage/folders", json={"name": "../x"}, headers=CSRF)
+    assert bad.status_code == 409 and bad.json()["error"]["code"] == "invalid_name"
+    add("a", vault=tools.vault)  # an archive with documents keeps its storage
+    (storage_root / "new").mkdir()
+    assert code("new") == (409, "archive_not_empty")
+    login(tools, "other")
+    assert (
+        tools.post("/api/system/storage/choose", json={"path": "new"}, headers=CSRF).status_code
+        == 403
+    )
+
+
+def test_the_archives_own_vault_found_elsewhere_can_be_chosen(tools, storage_root):
+    """A share mounted at a new place: same vault ID, so the documents come along."""
+    from docuhive import vault
+
+    first = tools.post("/api/system/storage/folders", json={"name": "share"}, headers=CSRF)
+    assert first.status_code == 201
+    vault_id = tools.post(
+        "/api/system/storage/choose", json={"path": "share"}, headers=CSRF
+    ).json()["vault_id"]
+    add("a", vault=storage_root / "share")
+    (storage_root / "share").rename(storage_root / "moved")
+    vault.forget_chosen()
+    states = {
+        f["name"]: f["state"] for f in tools.get("/api/system/storage/folders").json()["folders"]
+    }
+    assert states["moved"] == "this_vault"
+    info = tools.post("/api/system/storage/choose", json={"path": "moved"}, headers=CSRF).json()
+    assert info["vault_id"] == vault_id and info["location"] == "/mnt/moved"
+
+
 def test_storage_kind_from_mountinfo():
     from pathlib import Path
 

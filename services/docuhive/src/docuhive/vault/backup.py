@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel, ValidationError
 
-from docuhive.config.settings import get_settings
+from docuhive.vault import root
 
 
 class BackupStatus(BaseModel):
@@ -17,7 +17,7 @@ class BackupStatus(BaseModel):
 
 
 def status() -> BackupStatus:
-    path = get_settings().vault_dir / "_system" / "backup-status.json"
+    path = root() / "_system" / "backup-status.json"
     try:
         value = json.loads(path.read_text())
         result = BackupStatus.model_validate(value)
