@@ -4,7 +4,7 @@ This guide takes you from an empty Linux host to a signed-in household archive, 
 
 To try DocuHive on your own computer first, use the [quick start](../../README.md#quick-start) instead. It runs a development copy with test settings, not something to keep real documents in.
 
-> DocuHive 0.3.0 is not yet accepted for real documents: three nightly backups, a host-loss rehearsal and phone and NAS checks on the target hardware are still open. See [production readiness](../shared/production-readiness.md).
+> DocuHive is not yet accepted for real documents: three nightly backups, a host-loss rehearsal and phone and NAS checks on the target hardware are still open. See [production readiness](../shared/production-readiness.md).
 
 ## What you need
 
