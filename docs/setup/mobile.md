@@ -5,9 +5,8 @@ EXIF, reduced to a 2400-pixel long edge and converted to JPEG before upload. Use
 Later or drag to change page order; Rotate turns a photo clockwise. Multiple photos are
 one document by default. PDFs and uncombined pages are submitted separately.
 
-Document intake must be implemented and running before a capture can reach the archive.
-This feature calls the same `ingest.submit` contract as email and web uploads. While that
-contract is unavailable, uploads stay queued; no success is shown.
+Captures go through the same `ingest.submit` intake as email and web uploads. While the
+server can't be reached, uploads stay queued; no success is shown until it accepts them.
 
 ## Install on your phone
 

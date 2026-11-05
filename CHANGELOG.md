@@ -4,6 +4,15 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Added
+
+- An installation guide (`docs/setup/installation.md`), from an empty host to the first sign-in, and a user guide (`docs/user-guide.md`) for everyday use.
+
+### Fixed
+
+- Production containers had no supported way to receive AI keys, mail OAuth apps or notification settings: every backend container now reads a private `/etc/docuhive/app.env` (or `DOCUHIVE_APP_ENV`); it is optional, and the stack's own settings always win. Needs Compose 2.24 or newer.
+- The README status, and the operations, NAS and capture guides, still described document intake and `vault init` as unavailable.
+
 ## [0.3.0] - 2026-11-04
 
 ### Added
