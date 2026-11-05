@@ -34,6 +34,19 @@ def test_default_routing_yaml_is_valid(monkeypatch):
     assert cfg.providers["ollama"].host == "http://nas:11434"
     assert cfg.providers["copilot"].enabled is False
     assert cfg.tasks["classify"].apply.auto is False
+    assert cfg.providers["ollama"].think is False
+
+
+@pytest.mark.parametrize(("think", "sent"), [(False, {"think": False}), (None, None)])
+def test_ollama_think_setting_reaches_the_request(monkeypatch, think, sent):
+    pytest.importorskip("strands.models.ollama")
+    use_routing(
+        monkeypatch, providers={"ollama": {"kind": "ollama", "local": True, "think": think}}
+    )
+    router._MODELS.clear()
+    model = router.model_for(Route("ollama", "qwen3:8b", True))
+    assert model.config.get("additional_args") == sent
+    router._MODELS.clear()
 
 
 def test_resolve_orders_and_filters(core, monkeypatch):

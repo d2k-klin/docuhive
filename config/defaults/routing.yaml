@@ -4,7 +4,9 @@
 # ${VAR} or ${VAR:-default} is replaced from the environment when the file is loaded.
 version: 1
 providers:
-  ollama:    { kind: ollama, host: "${DOCUHIVE_AI_OLLAMA_HOST:-http://localhost:11434}", local: true }
+  # think: false skips the reasoning pass: as accurate or better, and 2-13x faster on the synthetic set
+  # (docs/decisions/0004-model-selection.md).
+  ollama:    { kind: ollama, host: "${DOCUHIVE_AI_OLLAMA_HOST:-http://localhost:11434}", local: true, think: false }
   anthropic: { kind: anthropic, local: false }
   openai:    { kind: openai, local: false }          # base_url optional -> any OpenAI-compatible server
   bedrock:   { kind: bedrock, local: false }
@@ -15,14 +17,15 @@ providers:
 tasks:
   triage:   { route: ollama/qwen3:4b, accept_threshold: 0.6 }
   classify:
-    route: ollama/qwen3:8b
+    route: ollama/gemma4:12b   # 92.5% category vs 47.5% for qwen3:8b on the synthetic set (0004)
+    fallback: [ollama/qwen3:8b]
     context: { head_chars: 6000, tail_chars: 1500 }
     apply:
-      auto: false            # stays false until the CL-M3 eval gate passes (docs/decisions/0004)
+      auto: false            # stays false until the gate passes on your own golden set (docs/decisions/0004)
       threshold: 0.80
       per_field: { document_date: 0.90, correspondent: 0.85 }
   extract:
-    route: ollama/qwen3:8b
+    route: ollama/qwen3:8b     # 95.3% of facts exact vs 57.0% for gemma4:12b (0004)
     context: { max_chars: 12000 }
     apply: { auto: false, threshold: 0.80 }
   embed:    { route: ollama/bge-m3, dims: 1024, batch: 32 }

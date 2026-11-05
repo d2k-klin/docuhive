@@ -10,6 +10,7 @@
 | [`0001-ocr-gate.md`](0001-ocr-gate.md) | OCR gate — pending measurements |
 | [`0002-knowledge-bases.md`](0002-knowledge-bases.md) | Knowledge bases inside DocuHive instead of a separate KB platform — proposed |
 | [0003-operations-verification.md](0003-operations-verification.md) | Local capture, backup/restore and upgrade evidence, with hardware gates still pending |
+| [0004-model-selection.md](0004-model-selection.md) | Local models: Gemma 4 classifies, qwen3 extracts, thinking off; measured on the synthetic set |
 
 ## Extending
 

@@ -72,7 +72,8 @@ def model_for(route: Route) -> Any:
         elif p.kind == "ollama":
             from strands.models.ollama import OllamaModel
 
-            m = OllamaModel(p.host or s.ollama_host, model_id=route.model)
+            extra = {"think": p.think} if p.think is not None else None
+            m = OllamaModel(p.host or s.ollama_host, model_id=route.model, additional_args=extra)
         elif p.kind == "anthropic":
             from strands.models.anthropic import AnthropicModel
 
