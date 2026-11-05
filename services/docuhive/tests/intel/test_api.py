@@ -115,6 +115,9 @@ def test_unconfigured_oauth_returns_to_sources_with_a_reason(client, monkeypatch
     query = parse_qs(url.query)
     assert url.path == "/sources" and query["error"] == ["not_configured"]
     assert "Gmail isn't set up" in query["message"][0] and "IMAP" in query["message"][0]
+    r = client.get("/api/sources/oauth/microsoft/start", follow_redirects=False)
+    outlook = parse_qs(urlsplit(r.headers["location"]).query)["message"][0]
+    assert "Outlook isn't set up" in outlook and "IMAP" not in outlook
 
 
 def test_similar_and_reminders_endpoints(client, core):

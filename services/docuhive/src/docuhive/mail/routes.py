@@ -152,9 +152,11 @@ def oauth_start(provider: str, user: User, label_on_import: bool = False) -> Red
         name = "Gmail" if provider == "google" else "Outlook"
         message = (
             f"{name} isn't set up on this server yet: an administrator first registers a "
-            "sign-in app (docs/setup/mail-accounts.md). You can connect the mailbox with "
-            "Other (IMAP) and an app password instead."
+            "sign-in app (docs/setup/mail-accounts.md)."
         )
+        if provider == "google":  # Outlook.com no longer accepts IMAP passwords
+            message += " You can connect Gmail with Other (IMAP) and an app password instead."
+
         query = urlencode({"error": "not_configured", "message": message})
         return RedirectResponse(f"/sources?{query}", status_code=302)
     return RedirectResponse(url, status_code=302)
