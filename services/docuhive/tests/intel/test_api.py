@@ -144,3 +144,12 @@ def test_ics_needs_calendar_token(client, core):
     r = client.get("/api/reminders.ics?token=tok")
     assert r.status_code == 200 and "SUMMARY:End date: Vertrag" in r.text
     assert client.get("/api/reminders.ics?token=wide").status_code == 401
+    with core.session() as s:
+        s.execute(
+            insert(api_tokens).values(
+                user_id=1,
+                scopes=["calendar", "read"],
+                token_hash=hashlib.sha256(b"mixed").hexdigest(),
+            )
+        )
+    assert client.get("/api/reminders.ics?token=mixed").status_code == 401

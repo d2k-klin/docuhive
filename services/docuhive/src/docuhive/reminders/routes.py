@@ -61,7 +61,8 @@ def _token_user(raw: str) -> CurrentUser | None:
                 t.c.token_hash == hashlib.sha256(raw.encode()).hexdigest(), t.c.revoked_at.is_(None)
             )
         ).first()
-    if row is None or "calendar" not in row.scopes:
+    # Exactly calendar: a mixed token would carry its broader scopes everywhere else.
+    if row is None or set(row.scopes) != {"calendar"}:
         return None
     return CurrentUser(id=row.id, username=row.username, role=row.role)
 

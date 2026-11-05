@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import delete, select
 
 from docuhive.auth import (
@@ -44,6 +44,14 @@ class TokenCreate(BaseModel):
         Field(min_length=1, max_length=7)
     )
     local_consumer: bool = False
+
+    @field_validator("scopes")
+    @classmethod
+    def calendar_alone(cls, scopes: list[str]) -> list[str]:
+        # The calendar token lives in a URL that calendar services store: it gets nothing else.
+        if "calendar" in scopes and set(scopes) != {"calendar"}:
+            raise ValueError("The calendar scope cannot be combined with other scopes")
+        return scopes
 
 
 class TokenView(BaseModel):

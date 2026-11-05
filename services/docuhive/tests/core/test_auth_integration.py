@@ -113,6 +113,9 @@ def test_calendar_token_opens_only_the_feed(client):
     for path in ("/api/auth/me", "/api/documents", "/api/search?q=x", "/api/tokens"):
         assert client.get(path, headers=bearer).status_code == 403, path
     assert client.get(f"/api/reminders.ics?token={token}").status_code == 200
+    for scopes in (["calendar", "read"], ["calendar", "admin"]):
+        mixed = client.post("/api/tokens", json={"name": "mixed", "scopes": scopes}, headers=CSRF)
+        assert mixed.status_code == 422, scopes
 
 
 def test_admin_users_and_password_revokes_old_credentials(client):
