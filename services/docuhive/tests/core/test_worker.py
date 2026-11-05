@@ -72,6 +72,7 @@ def test_worker_sigterm_stops_all_threads_and_imports_touchpoints(monkeypatch):
     monkeypatch.setattr(worker, "HANDLER_MODULES", ["synthetic.handlers"])
     monkeypatch.setattr(worker, "import_module", imports.append)
     monkeypatch.setattr(worker, "start_intelligence", lambda: None)
+    monkeypatch.setattr(worker, "release_orphans", lambda: 0)
     monkeypatch.setattr(worker, "claim", lambda queues: None)
 
     def stop(queues, stopped):

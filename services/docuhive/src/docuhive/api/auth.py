@@ -40,8 +40,8 @@ class PasswordChange(BaseModel):
 
 class TokenCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    scopes: list[Literal["upload", "read", "write", "admin", "kb:read", "kb:ask"]] = Field(
-        min_length=1, max_length=6
+    scopes: list[Literal["upload", "read", "write", "admin", "kb:read", "kb:ask", "calendar"]] = (
+        Field(min_length=1, max_length=7)
     )
     local_consumer: bool = False
 

@@ -2,7 +2,7 @@
 
 **Overview.** What stands between DocuHive 0.3.1 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The status badge changes when the [release gate](../Developer-QA/README.md) says GO, not before: software that has never held a real household's documents on its target hardware is not production software, whatever the label says.
 
-## Where it stands (2026-11-04)
+## Where it stands (2026-11-05)
 
 | Area | State |
 | --- | --- |
@@ -12,8 +12,8 @@
 | Document intake, vault writes, document service and API | Built in phase 1, including rebuilding the database from the vault; tested with synthetic files on PostgreSQL, Tesseract and Gotenberg |
 | Document screens: list, detail, search, upload, quarantine, trash, vocabulary, account, setup checklist, AI run page (0.3.0) | Built and checked in the browser against the real API, worker and OCR with synthetic files; undo, notes and a compact phone menu still open |
 | Phone capture and scanner folder | Implemented; production browser and real PostgreSQL checks pass, and the scanner folder runs against the real document core. Real-phone and NAS acceptance pending |
-| Production deployment, backups, restore drills | Implemented and exercised on a disposable local stack; target NAS/host drills and three nightly backups pending |
-| Security checklist, performance targets (0.3.0) | Checklist ticked with evidence; ingest and search well under target on the development Mac. Open: OWASP ZAP scan, both timings on the target host |
+| Production deployment, backups, restore drills | Installed from the installation guide on the production images, with backup, restore, vault rebuild, storage-unavailable and worker-killed drills passing locally ([report](../Developer-QA/reports/local-production-validation-2026-11-05.md)); target NAS/host drills and three nightly backups pending |
+| Security checklist, performance targets | Checklist ticked with evidence, OWASP ZAP baseline with no failures; ingest (German and English OCR) and search well under target on the development Mac. Open: both on the target host |
 | Release gate | NO-GO until phase 6 |
 
 ## Decisions only the owner can make
@@ -60,6 +60,8 @@ The security checklist ticked item by item (sessions, CSRF, headers and CSP, upl
 Progress (2026-11-04): word search at 20,000 synthetic documents (`make perf-search`, development Mac, PostgreSQL 16 in Docker): median 174 ms, p95 206 ms, max 292 ms. Still to measure on the target host, and with the meaning-based half once an embedding model runs there.
 
 Progress (2026-11-04): the [security checklist](../security-checklist.md) is ticked item by item with its evidence. New: log redaction on every handler, a generated hostile-file corpus through the real pipeline, a permission matrix over every API route, and the host port check in the operations guide. Ingest time (`make perf-ingest`, development Mac, English-only OCR): a scanned 1-page PDF is stored in 4.5 s median (max 4.9 s), a 5-page one in 7.6 s (max 7.7 s), against 60 s. Still open: an OWASP ZAP baseline scan, and both timings on the target host with German and English OCR.
+
+Progress (2026-11-05): on the production images (development Mac, 2 CPUs), German and English OCR stores a 1-page scan in 4.6 s and a 5-page one in 12.8 s. The OWASP ZAP baseline, signed out and signed in, has no failures; its warnings are in the checklist. Two findings are fixed: the calendar feed now needs its own `calendar` token scope, and a restarted worker frees its crashed predecessor's jobs at once instead of after the 30-minute OCR lease. Still open: both timings and the scan on the target host. See the [report](../Developer-QA/reports/local-production-validation-2026-11-05.md).
 
 ### 6. Real-world verification and 1.0
 

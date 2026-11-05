@@ -141,7 +141,7 @@ export function TrashPage() {
     <Page>
       <PageHeader
         title="Trash"
-        description="Deleted documents stay here, with their files, until an administrator removes them."
+        description="Deleted documents stay here, with their files, until you restore them."
       />
       {error && (
         <p role="alert" className="mb-4 text-sm text-danger">

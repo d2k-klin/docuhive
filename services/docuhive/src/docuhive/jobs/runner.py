@@ -103,11 +103,45 @@ def reap() -> int:
             registration = HANDLERS.get(job.kind)
             timeout = registration.timeout_s if registration else 600
             if job.locked_at and job.locked_at < now - timedelta(seconds=timeout):
-                job.status = "dead" if job.attempts >= job.max_attempts else "pending"
-                job.run_after, job.locked_at, job.locked_by = now, None, None
-                job.last_error = "Worker lease expired"
-                if job.status == "dead":
-                    job.finished_at = now
+                _release(job, now, "Worker lease expired")
+                count += 1
+    return count
+
+
+def _release(job: Job, now: datetime, reason: str) -> None:
+    job.status = "dead" if job.attempts >= job.max_attempts else "pending"
+    job.run_after, job.locked_at, job.locked_by = now, None, None
+    job.last_error = reason
+    if job.status == "dead":
+        job.finished_at = now
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def release_orphans() -> int:
+    """At worker start, free jobs held by a dead process on this host, without waiting out
+    their lease (30 minutes for OCR). A restarted container keeps its hostname and often
+    its PID, so a lease with our own PID is a predecessor's; a live sibling's is left alone.
+    """
+    host, me, now, count = socket.gethostname(), os.getpid(), datetime.now(UTC), 0
+    with session() as db:
+        jobs = db.scalars(
+            select(Job)
+            .where(Job.status == "running", Job.locked_by.startswith(f"{host}:", autoescape=True))
+            .with_for_update(skip_locked=True)
+        )
+        for job in jobs:
+            pid = int((job.locked_by or "").split(":")[-2])
+            if pid == me or not _alive(pid):
+                _release(job, now, "Worker stopped while running this job")
                 count += 1
     return count
 

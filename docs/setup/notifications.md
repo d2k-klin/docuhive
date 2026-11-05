@@ -22,7 +22,7 @@ Each channel can be limited to certain kinds of messages (for example reminders 
 ## Calendar feed
 
 To see your deadlines in your phone or desktop calendar:
-1. Create a personal API token with the **read** scope in **Settings → Tokens**.
+1. On **API tokens**, create a token with only **Calendar feed only**. The feed accepts no other token: calendar services store the address, and may log it.
 2. Subscribe to `<your DocuHive address>/api/reminders.ics?token=<token>` in your calendar app (iOS/macOS: Settings → Calendar → Accounts → Add subscribed calendar).
 
-Treat this link like a password: anyone with it can read your reminder titles. Revoke the token to stop it working.
+Treat this link like a password: anyone with it can read your reminder titles, and nothing else. Revoke the token to stop it working.

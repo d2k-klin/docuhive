@@ -166,7 +166,7 @@ select(Job).where(Job.status == "pending", Job.queue.in_(queues), Job.run_after 
 ```
 
 - **Queues** keep slow work apart: `ocr`, `ai`, `mail`, `default`. In the QA stack, one worker serves `ai,mail,default` and a separate `worker-ocr` serves `ocr`, so a big mail import cannot starve OCR.
-- **Leases and retries:** a claimed job records who holds it. If the worker dies, the job is recovered. Failures retry with exponential back-off, from 30 s up to 1 hour.
+- **Leases and retries:** a claimed job records who holds it (host and process). If the worker dies, the job is recovered: at once when a worker restarts on the same host and finds the holder process gone, otherwise when the lease expires. Failures retry with exponential back-off, from 30 s up to 1 hour.
 - **Scheduler:** periodic jobs run under one elected leader, so they never run twice:
 
   | Job | Runs |
@@ -359,7 +359,7 @@ privacy gate → routes (primary, fallbacks) → budget check → Strands call w
 
 ### 5.10 Reminders and notifications (`docuhive.reminders`, `docuhive.notify`)
 
-- **Reminders** come from extracted facts: due dates, renewals and notice deadlines. They are scanned hourly, and can be done, dismissed, or subscribed to as a calendar feed (`/api/reminders.ics`).
+- **Reminders** come from extracted facts: due dates, renewals and notice deadlines. They are scanned hourly, and can be done, dismissed, or subscribed to as a calendar feed (`/api/reminders.ics`). Its token travels in the URL, so it must have the `calendar` scope, which opens nothing else.
 - **Notification channels** are **ntfy** push and **email**, with a plugin kind for others. Daily checks report the review backlog and the backup status, and an hourly check reports failed jobs.
 
 ### 5.11 Configuration and the private overlay (`docuhive.config`)

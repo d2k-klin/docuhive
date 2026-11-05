@@ -2542,7 +2542,7 @@ export interface components {
             /** Name */
             name: string;
             /** Scopes */
-            scopes: ("upload" | "read" | "write" | "admin" | "kb:read" | "kb:ask")[];
+            scopes: ("upload" | "read" | "write" | "admin" | "kb:read" | "kb:ask" | "calendar")[];
             /**
              * Local Consumer
              * @default false

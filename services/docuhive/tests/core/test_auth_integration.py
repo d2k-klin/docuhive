@@ -103,6 +103,18 @@ def test_personal_tokens_scopes_revocation_and_user_boundaries(client):
     assert client.get("/api/auth/me", headers=bearer).status_code == 401
 
 
+def test_calendar_token_opens_only_the_feed(client):
+    login(client)
+    token = client.post(
+        "/api/tokens", json={"name": "phone calendar", "scopes": ["calendar"]}, headers=CSRF
+    ).json()["token"]
+    bearer = {"Authorization": f"Bearer {token}"}
+    # Its URL is stored, and maybe logged, by calendar services: it must read nothing else.
+    for path in ("/api/auth/me", "/api/documents", "/api/search?q=x", "/api/tokens"):
+        assert client.get(path, headers=bearer).status_code == 403, path
+    assert client.get(f"/api/reminders.ics?token={token}").status_code == 200
+
+
 def test_admin_users_and_password_revokes_old_credentials(client):
     login(client)
     response = client.post(

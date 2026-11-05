@@ -4,6 +4,17 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Fixed
+
+- A worker restarted after a crash now frees the jobs its predecessor was running at once, instead of leaving a scan in processing until its 30-minute lease expires. Live sibling processes on the same host are left alone.
+- `backup.sh` refuses a missing vault marker with a clear message instead of a traceback.
+- The Trash page no longer says an administrator can remove documents for good.
+
+### Security
+
+- The calendar feed takes its token in the URL, which calendar services store and may log. It accepted `read`, `write` and `admin` tokens, so a leaked feed address gave access to every document. It now accepts only a new `calendar` scope, which opens nothing else. Existing calendar subscriptions need a new token.
+- The web app sends `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy: same-origin`.
+
 ## [0.3.1] - 2026-11-05
 
 ### Added

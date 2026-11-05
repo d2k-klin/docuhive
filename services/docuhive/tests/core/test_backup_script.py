@@ -100,6 +100,10 @@ def test_backup_refuses_unmounted_vault_and_public_password_file(environment, mo
     (vault / "_system/VAULT_ID").write_text("wrong-vault")
     with pytest.raises(ValueError, match="registered vault"):
         backup.backup()
+    # An unmounted share has no marker at all: the same refusal, not a crash.
+    (vault / "_system/VAULT_ID").unlink()
+    with pytest.raises(ValueError, match="registered vault"):
+        backup.backup()
     assert not calls
 
 
