@@ -100,6 +100,23 @@ def test_routing_providers_setup_status(client):
     assert client.get("/api/sources/setup-status").json()[0]["id"] == "mail.key"
 
 
+def test_unconfigured_oauth_returns_to_sources_with_a_reason(client, monkeypatch):
+    from urllib.parse import parse_qs, urlsplit
+
+    from docuhive.mail import oauth
+
+    def missing(*args, **kwargs):
+        raise LookupError("not set")
+
+    monkeypatch.setattr(oauth, "start_url", missing)
+    r = client.get("/api/sources/oauth/google/start", follow_redirects=False)
+    assert r.status_code == 302
+    url = urlsplit(r.headers["location"])
+    query = parse_qs(url.query)
+    assert url.path == "/sources" and query["error"] == ["not_configured"]
+    assert "Gmail isn't set up" in query["message"][0] and "IMAP" in query["message"][0]
+
+
 def test_similar_and_reminders_endpoints(client, core):
     from docuhive.index.jobs import embed_document
 

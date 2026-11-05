@@ -1,6 +1,7 @@
 """/api/sources: mail accounts, OAuth, backfills, the triage log. Owner-scoped throughout."""
 
 from datetime import date
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Query
 from fastapi.responses import RedirectResponse
@@ -146,8 +147,16 @@ def oauth_start(provider: str, user: User, label_on_import: bool = False) -> Red
         fail(404, "not_found", "Unknown provider")
     try:
         url = oauth.start_url(provider, user.id, label_on_import)
-    except LookupError as e:
-        fail(409, "not_configured", str(e))
+    except LookupError:
+        # A full-page link, not an API call: send the person back with a readable reason.
+        name = "Gmail" if provider == "google" else "Outlook"
+        message = (
+            f"{name} isn't set up on this server yet: an administrator first registers a "
+            "sign-in app (docs/setup/mail-accounts.md). You can connect the mailbox with "
+            "Other (IMAP) and an app password instead."
+        )
+        query = urlencode({"error": "not_configured", "message": message})
+        return RedirectResponse(f"/sources?{query}", status_code=302)
     return RedirectResponse(url, status_code=302)
 
 
@@ -160,7 +169,8 @@ def oauth_callback(
     try:
         account_id = oauth.callback(provider, code, state, user.id)
     except (PermissionError, LookupError, MissingKey) as e:
-        return RedirectResponse(f"/sources?error={type(e).__name__}&message={e}", status_code=302)
+        query = urlencode({"error": type(e).__name__, "message": str(e)})
+        return RedirectResponse(f"/sources?{query}", status_code=302)
     jobs.enqueue(
         "mail.sync", {"account_id": account_id}, queue="mail", dedupe_key=f"mail.sync:{account_id}"
     )
