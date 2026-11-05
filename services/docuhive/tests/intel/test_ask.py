@@ -140,6 +140,27 @@ def test_tools_mask_restricted_for_cloud_route(core, invoices):
     assert local["read_document"](document_id=doc)["content"] == "Arzt"
 
 
+def test_search_relaxes_model_filters_for_unreviewed_documents(core):
+    from docuhive.contracts import SemanticHit
+
+    doc = core.docs.add("Kontoauszug Musterbank")  # not reviewed: no category, type or date
+
+    def semantic(user, query, f, limit):  # like the real one: no category matches a filter
+        narrowed = f.categories or f.document_types or f.date_from or f.date_to
+        return [] if narrowed else [SemanticHit(document_id=doc, score=0.9, chunk_no=0, text=query)]
+
+    core.semantic = semantic
+    search = {t.tool_name: t for t in build_tools(OWNER, SearchFilters(), LOCAL)}
+    out = search["search_documents"](query="Kontoauszug", category="finance/banking")
+    assert [r["id"] for r in out["results"]] == [doc] and out["filters_relaxed"]
+    # The session scope is the user's choice and is never relaxed.
+    scoped = {
+        t.tool_name: t for t in build_tools(OWNER, SearchFilters(categories=["health"]), LOCAL)
+    }
+    out = scoped["search_documents"](query="Kontoauszug", category="finance/banking")
+    assert out["results"] == [] and "filters_relaxed" not in out
+
+
 def script_answer(doc_ids, total="174.20"):
     cites = " ".join(f"[doc:{d}]" for d in doc_ids)
     return [

@@ -11,13 +11,15 @@ By default, AI suggestions go to the **Review** queue, and nothing is applied au
 ## Running evals
 
 ```bash
-uv run docuhive eval classify --set evals/synthetic --route classify=ollama/qwen3:8b
+uv run docuhive eval classify --set evals/synthetic --route classify=ollama/gemma4:12b --route classify=ollama/qwen3:8b
 uv run docuhive eval extract  --set evals/synthetic --route extract=ollama/qwen3:8b
 uv run docuhive eval search   --set evals/synthetic --mode hybrid
 uv run docuhive eval ask      --set evals/synthetic --route chat=anthropic/claude-sonnet-5-5
 ```
 - Repeat `--route` to compare models side by side.
 - Reports are written to `evals/reports/` (gitignored), as markdown and JSON.
+
+Reports from the synthetic set that back a decision are kept in [`reports/`](reports/), for example the [model selection](../decisions/0004-model-selection.md) runs.
 
 ## Building your golden set
 

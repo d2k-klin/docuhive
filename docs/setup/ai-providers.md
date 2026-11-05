@@ -13,8 +13,9 @@ DocuHive uses AI to read and sort your documents, find them by meaning, and answ
 1. Install Ollama from <https://ollama.com> and start it.
 2. Download the default models:
    ```bash
-   ollama pull qwen3:4b
+   ollama pull gemma4:12b
    ollama pull qwen3:8b
+   ollama pull qwen3:4b
    ollama pull bge-m3
    ```
 3. If Ollama runs on another machine, set `DOCUHIVE_AI_OLLAMA_HOST` (default `http://localhost:11434`) in `.env`.
@@ -39,10 +40,12 @@ Each task has its own route in `config/defaults/routing.yaml`. Override any part
 | Task | What it does | Default |
 |------|--------------|---------|
 | triage | decides whether an email contains a document worth keeping | `ollama/qwen3:4b` |
-| classify | picks the category, type, sender, title and date | `ollama/qwen3:8b` |
+| classify | picks the category, type, sender, title and date | `ollama/gemma4:12b`, falling back to `ollama/qwen3:8b` |
 | extract | reads amounts, due dates, contract terms | `ollama/qwen3:8b` |
 | embed | turns text into numbers for meaning-based search | `ollama/bge-m3` |
 | chat / analyse | answers your questions | `anthropic/claude-sonnet-5-5`, falling back to `ollama/qwen3:8b` |
+
+The local defaults were measured on the synthetic set in [decision 0004](../decisions/0004-model-selection.md): Gemma 4 sorts documents far better, and qwen3 finds far more facts. Together they need about 17 GB of memory, which fits a 32 GB machine next to the embedding model. Ollama's `think` setting is off by default (`providers.ollama.think` in `routing.yaml`): thinking made answers no more accurate and 2–13 times slower.
 
 To keep everything on your machine, set `privacy.local_only: true`. Health and identity documents are always processed locally; see [privacy routing](../learn/05-privacy-routing.md).
 

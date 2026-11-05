@@ -67,7 +67,15 @@ def build_tools(user: CurrentUser, scope: SearchFilters, route: Route) -> list:
                 "date_to": min(filter(None, [scope.date_to, _date(date_to)]), default=None),
             }
         )
-        hits = search.hybrid(user, query, f, max(1, min(limit, 20)))
+        n = max(1, min(limit, 20))
+        hits = search.hybrid(user, query, f, n)
+        relaxed = False
+        if not hits and (category or document_type or date_from or date_to):
+            # Until a person accepts the AI's suggestions, a document has no category, type or
+            # date, so the model's own filters would hide every unreviewed one. The session
+            # scope, which the user chose, still applies.
+            hits = search.hybrid(user, query, scope, n)
+            relaxed = bool(hits)
         out = []
         for h in hits:
             v = documents.get(h.document_id)
@@ -82,6 +90,13 @@ def build_tools(user: CurrentUser, scope: SearchFilters, route: Route) -> list:
                     "snippet": None if hidden else (h.snippet or "")[:300],
                 }
             )
+        if relaxed:
+            return {
+                "results": out,
+                "filters_relaxed": True,
+                "summary": f"{len(out)} documents; none matched your filters, so these match "
+                "the query alone (unreviewed documents have no category, type or date yet)",
+            }
         return {"results": out, "summary": f"{len(out)} documents"}
 
     @tool

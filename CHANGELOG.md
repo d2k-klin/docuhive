@@ -4,6 +4,20 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-05
+
+### Changed
+
+- Local AI defaults, measured on the synthetic set ([decision 0004](docs/decisions/0004-model-selection.md)):
+  - classification moves to `ollama/gemma4:12b` (92.5% category against 47.5%), falling back to `qwen3:8b`;
+  - extraction stays on `qwen3:8b` (95.3% of facts exact against 57.0%).
+  Pull `gemma4:12b` to use it.
+- Ollama's thinking is off by default (`providers.ollama.think`). It made answers no more accurate and 2–13 times slower, and it pushed calls into the timeout.
+
+### Fixed
+
+- Ask found nothing in a new archive. Until someone accepts the AI's suggestions, a document has no category, type or date, so the filters the model adds to its searches hid every unreviewed document. When the model's own filters match nothing, it now searches again within the user's chosen scope, which still applies, and says so.
+
 ## [0.3.2] - 2026-11-05
 
 ### Fixed
@@ -127,7 +141,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/d2k-klin/docuhive/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/d2k-klin/docuhive/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/d2k-klin/docuhive/compare/v0.2.0...v0.3.0

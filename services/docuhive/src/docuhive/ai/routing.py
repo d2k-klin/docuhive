@@ -18,6 +18,7 @@ class Provider(BaseModel):
     enabled: bool = True
     experimental: bool = False
     host: str | None = None  # ollama
+    think: bool | None = None  # ollama: reasoning models think first (slow); None = model default
     base_url: str | None = None  # openai-compatible
     prefix: str | None = None  # litellm, e.g. "github_copilot"
     region: str | None = None  # bedrock
