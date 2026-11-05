@@ -1,0 +1,30 @@
+name: release
+
+# A version bump landing on main publishes its release: tag v<version> on that commit, with
+# the notes from CHANGELOG.md. A version that already has a release is left alone.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency: release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Publish the release for a new version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          if gh release view "v$version" >/dev/null 2>&1; then
+            echo "v$version is already released"
+            exit 0
+          fi
+          python3 deploy/scripts/release_notes.py "$version" > notes.md
+          gh release create "v$version" --target "$GITHUB_SHA" --title "DocuHive $version" \
+            --notes-file notes.md --latest
