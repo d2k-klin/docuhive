@@ -32,26 +32,34 @@ DocuHive reads two private files. Neither belongs in the repository.
 - **`/opt/docuhive/.env.production`** (mode 600): images, database password, secret key, HTTPS address and storage paths. The variable list is in the [operations guide](operations.md#prepare-a-linux-host).
 - **`/etc/docuhive/app.env`** (mode 600, owner `docuhive`): AI keys, mail sign-in apps and other private settings. All containers that do work read it; the values from `.env.production` always win. Set `DOCUHIVE_APP_ENV` in `.env.production` to keep it somewhere else.
 
-Start `app.env` with the mail encryption key, which you need before you connect any mailbox:
+Create it empty:
 
 ```bash
 sudo install -d -m 755 /etc/docuhive
 sudo install -m 600 -o docuhive -g docuhive /dev/null /etc/docuhive/app.env
 ```
 
-Then add its lines with an editor, using the names from these guides:
+Then add lines with an editor, using the names from these guides. They say `.env`; in production the same lines go in `app.env`.
 
 - [AI providers](ai-providers.md): `DOCUHIVE_AI_OLLAMA_HOST` and the cloud keys you want. Inside a container, `localhost` is the container itself: point `DOCUHIVE_AI_OLLAMA_HOST` at the address of the machine running Ollama, such as its LAN or tailnet address, and let Ollama listen there.
-- [Email accounts](mail-accounts.md): `DOCUHIVE_MAIL_TOKEN_KEY`, and the Google or Microsoft app you created.
+- [Email accounts](mail-accounts.md): the Google or Microsoft app you created.
 - [Notifications](notifications.md): push and email settings.
 
-Keep a copy of `DOCUHIVE_MAIL_TOKEN_KEY` somewhere other than this host. Without it, saved mail accounts have to be connected again.
+The two encryption keys need the DocuHive image, so they come in the next step.
 
 ## 4. Build and start
 
 ```bash
 make images PROD_ENV=.env.production
 ```
+
+Generate the encryption key for mail credentials with the image you just built:
+
+```bash
+docker compose --env-file .env.production -f deploy/compose.yml run --rm --no-deps api mail gen-key
+```
+
+It prints a new key. Add it to `app.env` as `DOCUHIVE_MAIL_TOKEN_KEY=<key>`. Run the command again for the notification key, and add that one as `DOCUHIVE_AI_NOTIFY_KEY=<key>`. Keep a copy of both keys somewhere other than this host: without them, saved mail accounts and notification channels have to be set up again.
 
 ```bash
 make up PROD_ENV=.env.production

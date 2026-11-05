@@ -29,10 +29,11 @@ Change it on the document page under **Details**. Health and identity documents 
 
 All of them do exactly the same thing with a file. On **Upload**, drop files on the page or choose them, and optionally set a category and tags. Your choices are locked against the AI. Each file then shows its progress, from **Waiting to be read…** and **Reading text…** to **Stored**. Scans can take several seconds per page.
 
-Two outcomes need you:
+Three outcomes need you:
 
 - **A file you already have** is recognised by its content and not stored twice. **Already in your archive** links to the existing document.
-- **A file that can't be read** goes to **Quarantine** with the reason: for example, it is encrypted, damaged, empty or an unsupported type. Nothing is lost. Fix the cause if you can, then choose **Retry**. If it fails again, ask your administrator to check the logs.
+- **A file DocuHive can't take at all**, such as an empty file, an unsupported type or one over the size limit, is refused straight away with the reason. Nothing is stored; upload a corrected file.
+- **A file that fails while being read**, such as an encrypted or damaged PDF or a scan with no readable text, goes to **Quarantine** with the reason. Nothing is lost. **Retry** helps when the failure was temporary, such as a timeout. For an encrypted or damaged file, upload a corrected copy instead. If a retry fails again, ask your administrator to check the logs.
 
 Your original file is always kept unchanged. DocuHive stores a searchable PDF copy next to it.
 
@@ -41,8 +42,6 @@ Your original file is always kept unchanged. DocuHive stores a searchable PDF co
 - **Documents** lists everything you can see, newest first. Filter by category, type, tag and date range.
 - **Search** finds documents by their words, with German and English word forms and small typos, and by their meaning. Matching passages are highlighted.
 - **Saved views** keep a filter you use often, such as "Unpaid invoices" or "Car", in the sidebar. **Export** downloads a view's documents as one ZIP file with their PDFs and a spreadsheet (CSV) of their details.
-- On a document's page, **Similar documents** lists documents close in meaning.
-
 ## A document's page
 
 The page shows the PDF preview, the **Details** and the **History**. **Original** downloads the file as it arrived; **PDF** downloads the searchable copy.
@@ -60,7 +59,6 @@ Each detail shows who set it:
 2. Change the title, date, category, type, sender, language or tags, then choose **Save**.
 3. Your changes are locked against the AI. To empty a field, clear it and save.
 4. To hand a field back to the AI, choose **Let the AI manage this again**.
-5. To have the AI read the whole document again, choose **Re-run AI**.
 
 **Details found in the document** lists what the AI extracted, such as amounts, due dates, contract terms and policy numbers. Amounts and dates are checked before they are shown.
 
@@ -68,7 +66,7 @@ Each detail shows who set it:
 
 ### Trash
 
-**Move to trash** hides the document from lists, searches and answers. **Trash** lists everything you deleted; choose **Restore** to bring a document back with its files. Only an administrator can remove a document for good, with a command on the server.
+**Move to trash** hides the document from lists, searches and answers. **Trash** lists everything you deleted; choose **Restore** to bring a document back with its files. Documents in the trash keep their files, and there is no way yet to remove one for good.
 
 ## Editing many documents at once
 
@@ -82,7 +80,7 @@ Until the AI has proven itself on your own documents, all its suggestions wait h
 
 ## Tidying names
 
-**Vocabulary** lists your categories, tags and senders. **Rename** fixes a name everywhere. **Merge** folds a duplicate, such as "Stadtwerke" and "Stadtwerke GmbH", into one; documents, saved views and knowledge bases follow.
+**Vocabulary** lists your tags and senders. Administrators can **Rename** one everywhere, or **Merge** a duplicate, such as "Stadtwerke" and "Stadtwerke GmbH", into one; documents, saved views and knowledge bases follow. Categories and document types come from the taxonomy file, not this page.
 
 **Custom fields** add details DocuHive doesn't know about, such as a licence plate or a warranty end date. The AI fills them like the built-in ones; a date field can create reminders.
 
@@ -115,11 +113,13 @@ Answers only use documents you are allowed to see.
 
 - **Storage health** shows whether the vault is mounted and each document's files match their checksums. It also shows when the last backup ran.
 - The dashboard's **Set up your archive** card lists anything still missing.
-- Accounts, permanent deletion and recovery are server commands; see the [operations guide](setup/operations.md).
+- Accounts and recovery are server commands; see the [operations guide](setup/operations.md).
 
 ## Not there yet
 
 - An undo button for edits.
+- **Similar documents** and **Re-run AI** on the document page: built, but not yet shown there.
+- Removing a document from the trash for good.
 - Notes on a document.
 - A compact menu for phones.
 - Letting other AI agents use your knowledge bases (MCP).

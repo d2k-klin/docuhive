@@ -9,7 +9,7 @@ Mail passwords and sign-in tokens are stored encrypted. Generate a key, then add
 ```bash
 uv run docuhive mail gen-key
 ```
-The output is a line like `DOCUHIVE_MAIL_TOKEN_KEY=…`. Keep this key safe: without it, the saved accounts can't be used and have to be connected again.
+It prints the key alone; add it to `.env` as `DOCUHIVE_MAIL_TOKEN_KEY=<key>`. Keep this key safe: without it, the saved accounts can't be used and have to be connected again.
 
 ## 2. Gmail
 
