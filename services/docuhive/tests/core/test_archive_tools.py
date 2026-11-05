@@ -209,6 +209,41 @@ def test_vault_health_reports_every_problem_without_changing_files(tools):
     assert tools.get("/api/system/vault/health").status_code == 403
 
 
+def test_storage_info_says_which_storage_is_used(tools, monkeypatch):
+    add("a", vault=tools.vault)
+    add("b", vault=tools.vault)
+    (tools.vault / "_system" / "VAULT_ID").write_text("vault-123\n")
+    info = tools.get("/api/system/storage").json()
+    assert info["location"] == str(tools.vault) and info["vault_id"] == "vault-123"
+    assert info["documents"] == 2 and info["free_bytes"] > 0 and info["total_bytes"] > 0
+    assert info["available"] is False and info["reason"] == "id_mismatch"  # not registered
+    # In a container the vault is always /srv/vault: the host path is the useful label.
+    monkeypatch.setenv("DOCUHIVE_VAULT_LABEL", "/srv/docuhive/vault (wdnas)")
+    config.reload()
+    assert tools.get("/api/system/storage").json()["location"] == "/srv/docuhive/vault (wdnas)"
+    login(tools, "other")
+    assert tools.get("/api/system/storage").status_code == 403
+
+
+def test_storage_kind_from_mountinfo():
+    from pathlib import Path
+
+    from docuhive.api.system import storage_kind
+
+    table = (
+        "22 1 8:1 / / rw - ext4 /dev/sda1 rw\n"
+        "40 22 0:50 / /srv/vault rw - nfs4 wdnas.local:/nfs/docuhive rw\n"
+        "41 22 0:51 / /srv/staging rw - ext4 /dev/sda1 rw\n"
+    )
+    assert storage_kind(Path("/srv/vault"), table) == "network"
+    assert storage_kind(Path("/srv/vault/2026"), table) == "network"
+    assert storage_kind(Path("/srv/staging"), table) == "local"
+    assert storage_kind(Path("/srv/vaultx"), table) == "local"  # a prefix is not a mount
+    assert storage_kind(Path("/srv/vault"), "") is None
+    desktop = "40 22 0:50 / /srv/vault rw - fuse.sshfs :/Users/me rw\n"
+    assert storage_kind(Path("/srv/vault"), desktop) is None  # Docker Desktop: unknowable
+
+
 def test_unmounted_vault_is_one_problem(tools):
     add("a", vault=tools.vault)
     add("b", vault=tools.vault)

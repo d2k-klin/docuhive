@@ -90,6 +90,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/system/storage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Storage Info
+         * @description Which storage DocuHive uses: the vault's location, identity, size and free space.
+         */
+        get: operations["storage_info_api_system_storage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/system/backup": {
         parameters: {
             query?: never;
@@ -2519,6 +2539,29 @@ export interface components {
          * @enum {string}
          */
         SourceKind: "upload" | "mobile" | "email" | "consume" | "api";
+        /** StorageInfo */
+        StorageInfo: {
+            /** Location */
+            location: string;
+            /** Vault Id */
+            vault_id: string | null;
+            /** Available */
+            available: boolean;
+            /** Reason */
+            reason: string | null;
+            /** Kind */
+            kind: ("network" | "local") | null;
+            /** Documents */
+            documents: number;
+            /** Waiting */
+            waiting: number;
+            /** Staging Location */
+            staging_location: string;
+            /** Free Bytes */
+            free_bytes: number | null;
+            /** Total Bytes */
+            total_bytes: number | null;
+        };
         /** Taxonomy */
         Taxonomy: {
             /** Version */
@@ -2842,6 +2885,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    storage_info_api_system_storage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageInfo"];
                 };
             };
         };

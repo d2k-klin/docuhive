@@ -7,6 +7,7 @@ import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
 
 type Report = components["schemas"]["VaultReport"];
+type Storage = components["schemas"]["StorageInfo"];
 type Kind = components["schemas"]["VaultProblem"]["kind"];
 const api = browserClient();
 const problems: Record<Kind, string> = {
@@ -21,12 +22,29 @@ const problems: Record<Kind, string> = {
   orphan_folder: "A folder that no document points to",
 };
 
+const unavailable: Record<string, string> = {
+  not_initialised:
+    "No DocuHive vault was found here. Check that the share is mounted.",
+  id_mismatch:
+    "This folder holds a different vault from the one this archive belongs to.",
+  not_writable: "DocuHive can’t write to this storage.",
+};
+
+function size(bytes: number): string {
+  const gb = bytes / 1024 ** 3;
+  return gb >= 1024
+    ? `${(gb / 1024).toFixed(1)} TB`
+    : `${gb.toFixed(gb >= 10 ? 0 : 1)} GB`;
+}
+
 export function VaultHealth({
   initial,
   backup,
+  storage,
 }: {
   initial: Report | null;
   backup?: components["schemas"]["BackupStatus"] | null;
+  storage?: Storage | null;
 }) {
   const [queued, setQueued] = useState(false);
   const [error, setError] = useState("");
@@ -58,6 +76,82 @@ export function VaultHealth({
           <Button onClick={() => void run(true)}>Full check</Button>
         </div>
       </header>
+      {storage && (
+        <section
+          aria-label="Your storage"
+          className="space-y-2 rounded-card border border-border bg-surface p-4"
+        >
+          <h2 className="flex items-center gap-2 text-md font-semibold">
+            {storage.available ? (
+              <CircleCheck className="size-5 text-success" aria-hidden="true" />
+            ) : (
+              <TriangleAlert
+                className="size-5 text-danger"
+                aria-hidden="true"
+              />
+            )}
+            Your storage
+          </h2>
+          {!storage.available && (
+            <p className="text-sm text-danger">
+              {unavailable[storage.reason ?? ""] ?? "Storage is unavailable."}
+            </p>
+          )}
+          <dl className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-[max-content_1fr]">
+            <dt className="text-text-muted">Location</dt>
+            <dd className="break-all font-mono">{storage.location}</dd>
+            {storage.kind && (
+              <>
+                <dt className="text-text-muted">Type</dt>
+                <dd>
+                  {storage.kind === "network"
+                    ? "Network share (NAS)"
+                    : "Local disk on this server"}
+                </dd>
+              </>
+            )}
+            <dt className="text-text-muted">Vault ID</dt>
+            <dd className="break-all font-mono">
+              {storage.vault_id ?? "None"}
+            </dd>
+            <dt className="text-text-muted">Documents</dt>
+            <dd className="tabular">{storage.documents}</dd>
+            {storage.free_bytes != null && storage.total_bytes != null && (
+              <>
+                <dt className="text-text-muted">Space</dt>
+                <dd className="tabular">
+                  {size(storage.free_bytes)} free of {size(storage.total_bytes)}
+                </dd>
+              </>
+            )}
+            {(storage.waiting > 0 || !storage.available) && (
+              <>
+                <dt className="text-text-muted">Waiting</dt>
+                <dd>
+                  {storage.waiting} uploads kept safe in local staging (
+                  <span className="break-all font-mono">
+                    {storage.staging_location}
+                  </span>
+                  ) until the storage accepts them
+                </dd>
+              </>
+            )}
+          </dl>
+          <p className="text-xs text-text-muted">
+            Storage is set when DocuHive is installed, not in the app. To move
+            to another share, see the{" "}
+            <a
+              href="https://github.com/d2k-klin/docuhive/blob/main/docs/setup/installation.md#2-mount-the-vault"
+              className="text-primary underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              installation guide
+            </a>
+            .
+          </p>
+        </section>
+      )}
       <section
         aria-label="Backup status"
         className="space-y-2 rounded-card border border-border bg-surface p-4"

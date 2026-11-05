@@ -272,6 +272,28 @@
         }
       }
     },
+    "/api/system/storage": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Storage Info",
+        "description": "Which storage DocuHive uses: the vault's location, identity, size and free space.",
+        "operationId": "storage_info_api_system_storage_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/system/backup": {
       "get": {
         "tags": [
@@ -7641,6 +7663,103 @@
           "api"
         ],
         "title": "SourceKind"
+      },
+      "StorageInfo": {
+        "properties": {
+          "location": {
+            "type": "string",
+            "title": "Location"
+          },
+          "vault_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vault Id"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "network",
+                  "local"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "documents": {
+            "type": "integer",
+            "title": "Documents"
+          },
+          "waiting": {
+            "type": "integer",
+            "title": "Waiting"
+          },
+          "staging_location": {
+            "type": "string",
+            "title": "Staging Location"
+          },
+          "free_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Bytes"
+          },
+          "total_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "vault_id",
+          "available",
+          "reason",
+          "kind",
+          "documents",
+          "waiting",
+          "staging_location",
+          "free_bytes",
+          "total_bytes"
+        ],
+        "title": "StorageInfo"
       },
       "Taxonomy": {
         "properties": {
