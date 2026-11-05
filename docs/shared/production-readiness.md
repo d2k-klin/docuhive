@@ -1,6 +1,6 @@
 # Production readiness: plan
 
-**Overview.** What stands between DocuHive 0.4.0 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The status badge changes when the [release gate](../Developer-QA/README.md) says GO, not before: software that has never held a real household's documents on its target hardware is not production software, whatever the label says.
+**Overview.** What stands between DocuHive 0.4.1 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The status badge changes when the [release gate](../Developer-QA/README.md) says GO, not before: software that has never held a real household's documents on its target hardware is not production software, whatever the label says.
 
 ## Where it stands (2026-11-05)
 
