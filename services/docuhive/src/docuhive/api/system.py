@@ -2,19 +2,23 @@
 
 import asyncio
 import json
+import re
+import shutil
 from collections.abc import AsyncIterator
+from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select
+from pydantic import BaseModel
+from sqlalchemy import func, select
 
-from docuhive import __version__
+from docuhive import __version__, vault
 from docuhive.auth import current_user, require_admin
 from docuhive.config.settings import get_settings
 from docuhive.contracts import CurrentUser, SetupCheck
 from docuhive.db import session
-from docuhive.db.models import Job
+from docuhive.db.models import Document, Job
 from docuhive.jobs import enqueue
 from docuhive.vault import health as vault_health
 from docuhive.vault.availability import available
@@ -113,6 +117,86 @@ def vault_report(user: Admin) -> vault_health.VaultReport | None:
 def queue_vault_check(user: Admin, full: bool = False) -> dict:
     enqueue("vault.check", {"full": full}, dedupe_key="vault.check:manual")
     return {"queued": True}
+
+
+class StorageInfo(BaseModel):
+    location: str
+    vault_id: str | None
+    available: bool
+    reason: str | None  # not_initialised | id_mismatch | not_writable
+    kind: Literal["network", "local"] | None  # None: not certain (Docker Desktop, macOS)
+    documents: int
+    waiting: int  # accepted uploads still in local staging
+    staging_location: str
+    free_bytes: int | None
+    total_bytes: int | None
+
+
+NETWORK_FS = {"nfs", "nfs4", "cifs", "smb3", "smbfs", "afpfs"}
+# Only what is certain: Docker Desktop shows every host folder as fuse.sshfs, NAS or not.
+LOCAL_FS = {"ext4", "ext3", "xfs", "btrfs", "zfs", "f2fs", "apfs", "vfat", "exfat", "ntfs3"}
+
+
+def storage_kind(path: Path, mountinfo: str | None = None) -> Literal["network", "local"] | None:
+    """Network share or local disk, from the mount holding `path` (Linux only)."""
+    try:
+        table = Path("/proc/self/mountinfo").read_text() if mountinfo is None else mountinfo
+        lines = table.splitlines()
+    except OSError:
+        return None
+    target, best, fstype = str(path), "", ""
+    for line in lines:
+        fields = line.split()
+        # mountinfo escapes spaces and the like as octal: /mnt/NAS\040Archive
+        mount = re.sub(r"\\([0-7]{3})", lambda m: chr(int(m[1], 8)), fields[4])
+        inside = target == mount or target.startswith(mount.rstrip("/") + "/")
+        if inside and len(mount) >= len(best):
+            best, fstype = mount, fields[fields.index("-") + 1]
+    if not best:
+        return None
+    if fstype in NETWORK_FS:
+        return "network"
+    return "local" if fstype in LOCAL_FS else None
+
+
+@router.get("/storage", response_model=StorageInfo)
+def storage_info(user: Admin) -> StorageInfo:
+    """Which storage DocuHive uses: the vault's location, identity, size and free space."""
+    settings = get_settings()
+    root = settings.vault_dir
+    try:
+        vault_id: str | None = (root / "_system" / "VAULT_ID").read_text().strip()
+    except OSError:
+        vault_id = None
+    free: int | None = None
+    total: int | None = None
+    try:
+        usage = shutil.disk_usage(root)
+        free, total = usage.free, usage.total
+    except OSError:
+        pass
+    status = vault.check()
+    with session() as db:
+        count = db.scalar(
+            select(func.count()).select_from(Document).where(Document.deleted_at.is_(None))
+        )
+        waiting = db.scalar(
+            select(func.count())
+            .select_from(Document)
+            .where(Document.status.in_(["staged", "processing"]))
+        )
+    return StorageInfo(
+        location=settings.vault_label or str(root),
+        vault_id=vault_id,
+        available=status.ok,
+        reason=status.reason,
+        kind=storage_kind(root.resolve()),  # a relative path or symlink: match the real one
+        documents=count or 0,
+        waiting=waiting or 0,
+        staging_location=settings.staging_label or str(settings.staging_dir),
+        free_bytes=free,
+        total_bytes=total,
+    )
 
 
 @router.get("/backup", response_model=BackupStatus)

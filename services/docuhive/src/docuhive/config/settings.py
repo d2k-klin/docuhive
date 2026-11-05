@@ -23,7 +23,9 @@ class CoreSettings(BaseSettings):
     env: Literal["dev", "prod", "test"] = "dev"
     database_url: str = "postgresql+psycopg://docuhive:docuhive@localhost:5432/docuhive"
     vault_dir: Path = Path("data/vault")
+    vault_label: str | None = None  # where the vault lives, as the host sees it (display only)
     staging_dir: Path = Path("data/staging")
+    staging_label: str | None = None  # the staging folder as the host sees it (display only)
     overlay_dir: Path | None = None
     defaults_dir: Path = _defaults
     secret_key: SecretStr | None = None
