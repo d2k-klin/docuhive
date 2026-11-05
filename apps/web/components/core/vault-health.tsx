@@ -76,7 +76,23 @@ export function VaultHealth({
           <Button onClick={() => void run(true)}>Full check</Button>
         </div>
       </header>
-      {storage && (
+      {!storage ? (
+        <section
+          aria-label="Your storage"
+          className="space-y-2 rounded-card border border-border bg-surface p-4"
+        >
+          <h2 className="flex items-center gap-2 text-md font-semibold">
+            <TriangleAlert className="size-5 text-danger" aria-hidden="true" />
+            Your storage
+          </h2>
+          <p className="text-sm">
+            The storage details could not be loaded.{" "}
+            <a href="/settings/storage" className="text-primary underline">
+              Reload
+            </a>
+          </p>
+        </section>
+      ) : (
         <section
           aria-label="Your storage"
           className="space-y-2 rounded-card border border-border bg-surface p-4"

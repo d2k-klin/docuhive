@@ -240,6 +240,8 @@ def test_storage_kind_from_mountinfo():
     assert storage_kind(Path("/srv/staging"), table) == "local"
     assert storage_kind(Path("/srv/vaultx"), table) == "local"  # a prefix is not a mount
     assert storage_kind(Path("/srv/vault"), "") is None
+    spaced = table + "42 22 0:52 / /mnt/NAS\\040Archive rw - cifs //nas/archive rw\n"
+    assert storage_kind(Path("/mnt/NAS Archive/vault"), spaced) == "network"
     desktop = "40 22 0:50 / /srv/vault rw - fuse.sshfs :/Users/me rw\n"
     assert storage_kind(Path("/srv/vault"), desktop) is None  # Docker Desktop: unknowable
 

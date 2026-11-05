@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import re
 import shutil
 from collections.abc import AsyncIterator
 from pathlib import Path
@@ -146,7 +147,8 @@ def storage_kind(path: Path, mountinfo: str | None = None) -> Literal["network",
     target, best, fstype = str(path), "", ""
     for line in lines:
         fields = line.split()
-        mount = fields[4]
+        # mountinfo escapes spaces and the like as octal: /mnt/NAS\040Archive
+        mount = re.sub(r"\\([0-7]{3})", lambda m: chr(int(m[1], 8)), fields[4])
         inside = target == mount or target.startswith(mount.rstrip("/") + "/")
         if inside and len(mount) >= len(best):
             best, fstype = mount, fields[fields.index("-") + 1]
@@ -188,7 +190,7 @@ def storage_info(user: Admin) -> StorageInfo:
         vault_id=vault_id,
         available=status.ok,
         reason=status.reason,
-        kind=storage_kind(root),
+        kind=storage_kind(root.resolve()),  # a relative path or symlink: match the real one
         documents=count or 0,
         waiting=waiting or 0,
         staging_location=settings.staging_label or str(settings.staging_dir),
