@@ -5,6 +5,7 @@ import { CircleCheck, CircleDashed, TriangleAlert } from "lucide-react";
 import { browserClient } from "@/lib/api/client";
 import type { components } from "@/lib/api/schema";
 import { Button } from "@/components/ui/button";
+import { StorageChooser } from "@/components/core/storage-chooser";
 
 type Report = components["schemas"]["VaultReport"];
 type Storage = components["schemas"]["StorageInfo"];
@@ -47,6 +48,7 @@ export function VaultHealth({
   storage?: Storage | null;
 }) {
   const [queued, setQueued] = useState(false);
+  const [choosing, setChoosing] = useState(false);
   const [error, setError] = useState("");
   async function run(full: boolean) {
     setError("");
@@ -153,21 +155,31 @@ export function VaultHealth({
               </>
             )}
           </dl>
-          <p className="text-xs text-text-muted">
-            Storage is set when DocuHive is installed, not in the app. To move
-            to another share, see the{" "}
-            <a
-              href="https://github.com/d2k-klin/docuhive/blob/main/docs/setup/installation.md#2-mount-the-vault"
-              className="text-primary underline"
-              target="_blank"
-              rel="noreferrer"
+          {storage.choosable ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setChoosing(true)}
             >
-              installation guide
-            </a>
-            .
-          </p>
+              Change storage
+            </Button>
+          ) : (
+            <p className="text-xs text-text-muted">
+              To choose storage here, mount a storage folder at install; see the{" "}
+              <a
+                href="https://github.com/d2k-klin/docuhive/blob/main/docs/setup/installation.md#2-mount-the-vault"
+                className="text-primary underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                installation guide
+              </a>
+              .
+            </p>
+          )}
         </section>
       )}
+      {choosing && <StorageChooser onClose={() => setChoosing(false)} />}
       <section
         aria-label="Backup status"
         className="space-y-2 rounded-card border border-border bg-surface p-4"

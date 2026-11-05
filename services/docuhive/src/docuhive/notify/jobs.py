@@ -10,6 +10,7 @@ from docuhive import config, db, jobs
 from docuhive.ai import coretables
 from docuhive.notify import Notification, send_once
 from docuhive.review.models import ReviewItem
+from docuhive.vault import root as vault_root
 
 
 @jobs.periodic("notify.scan_dead_jobs", every=timedelta(hours=1))
@@ -65,9 +66,8 @@ def review_backlog(payload: dict, ctx: Any) -> None:
 
 @jobs.periodic("notify.backup_check", every=timedelta(days=1))
 def backup_check(payload: dict, ctx: Any) -> None:
-    from docuhive.config.settings import get_settings
 
-    path = get_settings().vault_dir / "_system" / "backup-status.json"
+    path = vault_root() / "_system" / "backup-status.json"
     try:
         status = json.loads(path.read_text())
         at = datetime.fromisoformat(status["at"])

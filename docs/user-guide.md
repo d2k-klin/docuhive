@@ -111,7 +111,7 @@ Answers only use documents you are allowed to see.
 
 ## For administrators
 
-- **Storage health** shows which storage the archive uses: its location, whether it is a network share or a local disk (on Linux, where that can be told), its vault ID, the number of documents and the free space. It also shows uploads waiting in local staging, a check that every document's files are complete and unchanged, and when the last backup ran. Storage is chosen when DocuHive is installed, not in the app.
+- **Storage health** shows which storage the archive uses: its location, whether it is a network share or a local disk (on Linux, where that can be told), its vault ID, the number of documents and the free space. It also shows uploads waiting in local staging, a check that every document's files are complete and unchanged, and when the last backup ran. **Change storage** picks the vault folder on a mounted share or disk: an empty folder while the archive has no documents, or the archive's own vault at a new place. It never moves or deletes anything. It appears when the server mounts a storage folder for it (see the installation guide).
 - The dashboard's **Set up your archive** card lists anything still missing.
 - Accounts and recovery are server commands; see the [operations guide](setup/operations.md).
 

@@ -110,6 +110,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/system/storage/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Storage Folders
+         * @description Folders inside the storage root, each with what choosing it would do.
+         */
+        get: operations["storage_folders_api_system_storage_folders_get"];
+        put?: never;
+        /** Storage New Folder */
+        post: operations["storage_new_folder_api_system_storage_folders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/storage/choose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Storage Choose
+         * @description Make a folder inside the storage root the vault (only the safe cases, see vault.storage).
+         */
+        post: operations["storage_choose_api_system_storage_choose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/system/backup": {
         parameters: {
             query?: never;
@@ -1784,6 +1825,11 @@ export interface components {
             /** Kinds */
             kinds?: string[] | null;
         };
+        /** ChooseStorage */
+        ChooseStorage: {
+            /** Path */
+            path: string;
+        };
         /** CurrentUser */
         CurrentUser: {
             /** Id */
@@ -2098,6 +2144,18 @@ export interface components {
             /** Confidence */
             confidence?: number | null;
         };
+        /** Folder */
+        Folder: {
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "empty" | "this_vault" | "other_vault" | "not_empty" | "not_writable";
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2272,6 +2330,17 @@ export interface components {
              */
             updated_at: string;
         };
+        /** Listing */
+        Listing: {
+            /** Root */
+            root: string;
+            /** Path */
+            path: string;
+            /** Current */
+            current: string | null;
+            /** Folders */
+            folders: components["schemas"]["Folder"][];
+        };
         /** Login */
         Login: {
             /** Username */
@@ -2290,6 +2359,16 @@ export interface components {
         MessageIn: {
             /** Content */
             content: string;
+        };
+        /** NewFolder */
+        NewFolder: {
+            /**
+             * Path
+             * @default
+             */
+            path: string;
+            /** Name */
+            name: string;
         };
         /** PasswordChange */
         PasswordChange: {
@@ -2557,6 +2636,8 @@ export interface components {
             waiting: number;
             /** Staging Location */
             staging_location: string;
+            /** Choosable */
+            choosable: boolean;
             /** Free Bytes */
             free_bytes: number | null;
             /** Total Bytes */
@@ -2905,6 +2986,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StorageInfo"];
+                };
+            };
+        };
+    };
+    storage_folders_api_system_storage_folders_get: {
+        parameters: {
+            query?: {
+                path?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Listing"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    storage_new_folder_api_system_storage_folders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewFolder"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Folder"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    storage_choose_api_system_storage_choose_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChooseStorage"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
