@@ -4,6 +4,11 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Added
+
+- **Storage health** now says which storage the archive uses: its location (the host path, through the new display-only `DOCUHIVE_VAULT_LABEL` and `DOCUHIVE_STAGING_LABEL`), network share or local disk, vault ID, document count and free space. It also shows uploads waiting in local staging (`GET /api/system/storage`, admins only).
+- The installation guide covers a vault on a local disk when there is no NAS.
+
 ## [0.4.0] - 2026-11-05
 
 ### Changed

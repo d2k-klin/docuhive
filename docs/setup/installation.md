@@ -25,6 +25,10 @@ Clone the repository to `/opt/docuhive`, create the `docuhive` user and the SSD 
 
 Mount the NAS share at `/srv/docuhive/vault` with systemd, and check it with `findmnt`. See the [NAS guide](nas-wd-ex2-ultra.md), steps 1–5. Don't write anything into the empty folder while the NAS is not mounted.
 
+**No NAS?** Use a folder on a local disk instead. Ideally pick a second disk, not the system disk, and set `DOCUHIVE_VAULT_HOST_DIR` to it. The vault is the same plain folder tree either way: one folder per year and one per document, with the untouched original, the searchable PDF and `meta.json`. DocuHive writes each file once and never edits or deletes an original; trashed documents keep their files. **Storage health** shows the location and, on a Linux host, whether it is a network share or a local disk. With no second copy on a NAS, the [nightly backup](operations.md#nightly-backups) matters even more.
+
+DocuHive never switches storage on its own. When the configured storage is unavailable, new uploads wait in SSD staging, and they are stored once the storage is back. A silent switch to a local folder would split the archive in two.
+
 ## 3. Write the configuration
 
 DocuHive reads two private files. Neither belongs in the repository.
