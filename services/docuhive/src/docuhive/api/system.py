@@ -139,7 +139,8 @@ LOCAL_FS = {"ext4", "ext3", "xfs", "btrfs", "zfs", "f2fs", "apfs", "vfat", "exfa
 def storage_kind(path: Path, mountinfo: str | None = None) -> Literal["network", "local"] | None:
     """Network share or local disk, from the mount holding `path` (Linux only)."""
     try:
-        lines = (mountinfo or Path("/proc/self/mountinfo").read_text()).splitlines()
+        table = Path("/proc/self/mountinfo").read_text() if mountinfo is None else mountinfo
+        lines = table.splitlines()
     except OSError:
         return None
     target, best, fstype = str(path), "", ""
