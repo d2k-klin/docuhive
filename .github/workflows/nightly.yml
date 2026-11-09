@@ -1,7 +1,6 @@
 name: QA nightly
+# Schedule disabled; run by hand from the Actions tab.
 on:
-  schedule:
-    - cron: '0 2 * * *'
   workflow_dispatch:
 permissions:
   contents: read
