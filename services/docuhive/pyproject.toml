@@ -9,7 +9,7 @@ description = "Self-hosted document platform"
 requires-python = ">=3.12,<3.13"
 license = "Apache-2.0"
 dependencies = [
-  "fastapi>=0.115", "uvicorn[standard]>=0.54.0", "pydantic>=2", "pydantic-settings>=2",
+  "fastapi>=0.162.2", "uvicorn[standard]>=0.54.0", "pydantic>=2", "pydantic-settings>=2",
   "sqlalchemy>=2", "alembic>=1.15", "psycopg[binary]>=3.3.6", "pgvector>=0.3",
   "httpx>=0.28", "pyyaml>=6", "python-ulid>=3", "argon2-cffi>=23", "cryptography>=44",
   "python-multipart>=0.0.20",
