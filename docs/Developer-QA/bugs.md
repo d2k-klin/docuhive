@@ -18,9 +18,12 @@ Release blocker until the real contract checks pass. Fakes do not satisfy this i
 
 ## QA-002
 
-S2 · `bug:oa` · open dependency · OA-M5 · GUIDE-01, GUIDE-02.
+S2 · `bug:oa` · endpoint fixed 2026-11-12, wizard pending · OA-M5 · GUIDE-01, GUIDE-02.
 
-`/api/system/setup-status` and the setup wizard are absent. Reproduce with
+`/api/system/setup-status` now exists and `test_setup_checks_have_actionable_states[system]`
+runs without `xfail`. The setup wizard (E2E-01) remains open.
+
+Originally: `/api/system/setup-status` and the setup wizard were absent. Reproduce with
 `test_routes.py::test_setup_checks_have_actionable_states[system]` and E2E-01.
 Expected: storage/security checks and a resumable wizard, not a 404.
 

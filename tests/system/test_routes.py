@@ -40,14 +40,7 @@ class MissingSetupEndpoint(Exception):
 @pytest.mark.parametrize(
     "area",
     [
-        pytest.param(
-            "system",
-            marks=pytest.mark.xfail(
-                strict=True,
-                raises=MissingSetupEndpoint,
-                reason="OA-M5: docs/Developer-QA/bugs.md#qa-002",
-            ),
-        ),
+        "system",
         "ai",
         "sources",
         "notifications",
