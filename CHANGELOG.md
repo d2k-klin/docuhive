@@ -4,22 +4,29 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
-### Changed
-
-- **Sources** guides you through choosing a provider, connecting securely, and importing existing attachments. Google and Microsoft sign-in are the primary paths when configured; app-password guidance and one-time server setup instructions are shown in the page. Custom mailboxes have explicit server, username and folder settings. Successful connections offer a history range immediately, with live import progress and email activity.
-- Mailbox login failures are explained in plain words: server not found, no answer on that port, or login refused, with the app-password hint.
+## [0.5.0] - 2026-11-12
 
 ### Added
 
 - Shared document categories: select predefined categories and add custom ones in Vocabulary. Choices apply to uploads, edits and AI classification; disabling a category preserves existing documents and privacy rules.
 - Live AI progress on uploads, document lists and document details, including queued work, analysis, review, completion, retries and failures.
 - Last month and last quarter document filters, with a shortcut to save the current group in the sidebar. Date filtering uses the printed date, falling back to the upload date when missing.
-
 - **Change storage** on Storage health: admins choose the vault folder on a mounted share or disk, or create one. The folder must be inside the storage root that Compose mounts at install (`DOCUHIVE_STORAGE_ROOT_HOST_DIR`, default `/srv/docuhive/storage`, created if missing). Only safe switches are allowed: a new vault in an empty folder while the archive is empty, or the archive's own vault at a new place. Other files, another archive's vault, symlinks and paths outside the root are refused, and nothing is moved or deleted.
 
 ### Changed
 
+- **Sources** guides you through choosing a provider, connecting securely, and importing existing attachments. Google and Microsoft sign-in are the primary paths when configured; app-password guidance and one-time server setup instructions are shown in the page. Custom mailboxes have explicit server, username and folder settings. Successful connections offer a history range immediately, with live import progress and email activity.
+- Mailbox login failures are explained in plain words: server not found, no answer on that port, or login refused, with the app-password hint.
 - The scanner folder defaults to the chosen vault's `consume` folder; Compose no longer pins it to `/srv/vault/consume`.
+- Dependencies: pydantic 2.14.3, FastAPI 0.162, SQLAlchemy 2.1.8, Strands Agents 1.64, import-linter 2.16, Playwright 1.65, lucide-react 1.70.
+
+### Fixed
+
+- Gmail, iCloud and Yahoo app passwords pasted with their display spaces (`abcd efgh ijkl mnop`) now log in; a refused login shows the mail server's own reply.
+
+### Security
+
+- A refused mailbox login never shows the password, even when the mail server repeats it in its reply.
 
 ## [0.4.1] - 2026-11-05
 
@@ -170,7 +177,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/d2k-klin/docuhive/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/d2k-klin/docuhive/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/d2k-klin/docuhive/compare/v0.3.1...v0.3.2
