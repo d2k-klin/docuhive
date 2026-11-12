@@ -81,7 +81,7 @@ class ImapIn(BaseModel):
 APP_PASSWORD_HOSTS = {"imap.gmail.com", "imap.mail.me.com", "imap.mail.yahoo.com"}
 
 
-def login_problem(error: Exception, host: str) -> str:
+def login_problem(error: Exception, host: str, password: str = "") -> str:
     """What went wrong connecting to a mailbox, in words a person can act on."""
     if isinstance(error, socket.gaierror):
         return (
@@ -95,6 +95,8 @@ def login_problem(error: Exception, host: str) -> str:
         )
     if isinstance(error, imaplib.IMAP4.error):
         reply = str(error).removeprefix("b'").removeprefix('b"').rstrip("'\"")
+        if password:  # some servers echo what they were sent; never show it back
+            reply = reply.replace(password, "***")
         return (
             "The mail server refused the login. Check the address and password; Gmail, iCloud and "
             "Yahoo need an app password, and GMX and WEB.DE need IMAP turned on in their settings."
@@ -131,7 +133,7 @@ def create_imap(body: ImapIn, user: User) -> dict:
         )
         conn.test_login()  # test before saving
     except Exception as e:  # noqa: BLE001 - mapped to actionable copy
-        fail(400, "imap_login_failed", login_problem(e, body.host))
+        fail(400, "imap_login_failed", login_problem(e, body.host, body.password))
     with db.session() as s:
         address = (body.address or body.username).lower()
         if s.scalar(
