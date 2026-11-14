@@ -34,6 +34,7 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
   - The preview shows the archive PDF, which has no JavaScript.
 - [x] **Auth.**
   - Every login issues a new session token, and only its hash is stored.
+  - A session lasts 30 days, is renewed while in use, and ends 90 days after sign-in at the latest (`test_login_csrf_cookie_hash_slide_and_logout`).
   - `logout-everywhere` exists; a password change also ends every session and revokes all tokens.
   - Login rate limit and the CSRF header are covered by `test_auth_integration.py`.
   - The cookie is `HttpOnly`, `SameSite=Lax`, and `Secure` outside development.
@@ -45,6 +46,7 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
   The calendar feed is the one route that takes a token in its URL. Calendar services store that URL, so it accepts only a `calendar`-scope token, which every other route refuses (`test_auth_integration.py`).
 
   CL's privacy tests (`tests/intel/test_privacy_audit.py`) pass.
+- [x] **Files at rest.** New vault and staging files are created with `DOCUHIVE_UMASK` (default `027`), so other accounts on the host or NAS cannot read them (`test_cli.py::test_created_files_are_closed_to_other_accounts`). Disk or volume encryption is the host's job; the [operations guide](setup/operations.md#protect-the-storage) says how.
 - [x] **Network.** Only the web app publishes a port, on `127.0.0.1:3000`. The operations guide shows how to check this with `ss -tlnp`.
 
 - [x] **OWASP ZAP baseline** (2026-11-05, ZAP stable, local production stack from the 0.3.1 images): signed out and signed in as a household member, 63 rules passed, no failures. Remaining warnings:
@@ -56,5 +58,6 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
 
 ## Still open
 
+- **A second sign-in factor.** Sign-in is a password (argon2id, rate-limited) and nothing else; TOTP or passkeys are not built. Until they are, keep DocuHive on the tailnet or LAN only.
 - The ZAP baseline again on the target host, over its HTTPS address.
 - The checks on the target host itself: `ss -tlnp`, and file modes on the real `.env.production`.

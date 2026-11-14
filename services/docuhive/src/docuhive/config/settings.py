@@ -34,6 +34,8 @@ class CoreSettings(BaseSettings):
     ocr_languages: str = "deu+eng"
     ocr_jobs: int = Field(default=2, ge=1, le=32)
     public_url: str = "http://localhost:3000"
+    # Files DocuHive creates (vault, staging) are closed to other accounts on the host or NAS.
+    umask: str = Field(default="027", pattern=r"^[0-7]{3}$")
     gotenberg_url: str = "http://localhost:3001"
     consume_dir: Path | None = None  # unset: VAULT_DIR/consume
     consume_default_owner: str | None = None

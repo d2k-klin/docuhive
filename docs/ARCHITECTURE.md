@@ -381,6 +381,7 @@ privacy gate → routes (primary, fallbacks) → budget check → Strands call w
   | `DOCUHIVE_OCR_LANGUAGES` | OCR languages |
   | `DOCUHIVE_OCR_JOBS` | OCR parallelism |
   | `DOCUHIVE_MAX_UPLOAD_MB` | the upload size limit |
+  | `DOCUHIVE_UMASK` | permissions of the files DocuHive creates (default `027`: nothing for other accounts) |
   | `DOCUHIVE_AI_*` | provider keys and AI settings |
 
   Settings are validated with `pydantic-settings`.

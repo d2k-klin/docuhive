@@ -5,6 +5,7 @@ import copy
 import getpass
 import json
 import logging
+import os
 import re
 from importlib import import_module
 
@@ -107,7 +108,7 @@ def main() -> None:
     for handler in logging.getLogger().handlers:
         handler.addFilter(Redact())
     try:
-        get_settings()
+        os.umask(int(get_settings().umask, 8))
         if args.command == "api":
             import uvicorn
             from uvicorn.config import LOGGING_CONFIG

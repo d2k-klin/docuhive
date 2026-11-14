@@ -74,6 +74,23 @@ the Compose file was changed; put it back on loopback.
 `make logs` follows logs; `make down` stops the stack without deleting data. No production
 command removes volumes. Production database downgrades are refused.
 
+## Protect the storage
+
+DocuHive keeps originals unchanged and readable without DocuHive, so the files themselves are
+not encrypted. Protect them where they live:
+
+- **Encrypt the disk or volume** that holds the vault, staging and database folders: LUKS on a
+  Linux host, or volume encryption on the NAS. Without it, anyone who takes the disk reads the
+  archive.
+- **File permissions.** DocuHive creates files with `DOCUHIVE_UMASK` (default `027`): the
+  DocuHive account reads and writes, its group reads, other accounts on the host or NAS get
+  nothing. Use `077` to close the group too, or `022` only if another account must read the
+  vault directly. Files stored before 0.6.0 keep their old permissions; close them once with
+  `chmod -R o-rwx` on the vault folder.
+- **Backups** made by the nightly restic job are encrypted with the restic password. Keep that
+  password off this host.
+- **Access** stays on the tailnet or your LAN; the web app is the only published port.
+
 ## Nightly backups
 
 Initialise each restic repository yourself, on a separate disk or remote target. Test its

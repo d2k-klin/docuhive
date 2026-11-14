@@ -21,6 +21,7 @@ from .permissions import visible_docs, visible_docs_incl_trash  # noqa: F401
 password_hasher = PasswordHasher()
 _dummy_hash = password_hasher.hash(secrets.token_urlsafe(32))
 # "calendar" opens only the reminders feed, whose token travels in the URL.
+SESSION_MAX_AGE = timedelta(days=90)
 SCOPES = {"upload", "read", "write", "admin", "kb:read", "kb:ask", "calendar"}
 
 
@@ -84,7 +85,10 @@ def current_user(request: Request) -> CurrentUser:
                 user = db.get(User, auth_session.user_id)
                 auth_session.last_seen_at = now
                 if auth_session.expires_at - now < timedelta(days=15):
-                    auth_session.expires_at = now + timedelta(days=30)
+                    # Renewed while in use, but a stolen cookie cannot be kept alive for ever.
+                    auth_session.expires_at = min(
+                        now + timedelta(days=30), auth_session.created_at + SESSION_MAX_AGE
+                    )
             check_csrf(request)
             request.state.token_scopes = None
         if user is None or user.pw_hash.startswith("!"):

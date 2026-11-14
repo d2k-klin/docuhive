@@ -50,6 +50,16 @@ def test_login_csrf_cookie_hash_slide_and_logout(client):
         assert db.get(AuthSession, token_hash(raw)).expires_at > datetime.now(UTC) + timedelta(
             days=29
         )
+    # An old session is renewed only up to 90 days after sign-in.
+    with session() as db:
+        row = db.get(AuthSession, token_hash(raw))
+        row.created_at = datetime.now(UTC) - timedelta(days=85)
+        row.expires_at = datetime.now(UTC) + timedelta(days=1)
+    assert client.get("/api/auth/me").status_code == 200
+    with session() as db:
+        assert db.get(AuthSession, token_hash(raw)).expires_at < datetime.now(UTC) + timedelta(
+            days=6
+        )
     assert client.post("/api/auth/logout", headers=CSRF).status_code == 204
     assert client.get("/api/auth/me").status_code == 401
     assert login(client) != raw

@@ -14,6 +14,25 @@ def test_openapi_cli_is_machine_readable(monkeypatch, capsys):
     assert json.loads(capsys.readouterr().out)["info"]["title"] == "DocuHive"
 
 
+def test_created_files_are_closed_to_other_accounts(monkeypatch, tmp_path):
+    import os
+
+    previous = os.umask(0o022)
+    try:
+        monkeypatch.setattr(sys, "argv", ["docuhive", "openapi"])
+        cli.main()
+        (tmp_path / "document").write_bytes(b"synthetic")
+        assert (tmp_path / "document").stat().st_mode & 0o007 == 0
+        monkeypatch.setenv("DOCUHIVE_UMASK", "999")
+        config.reload()
+        with pytest.raises(ValueError):
+            config.get_settings()
+    finally:
+        os.umask(previous)
+        monkeypatch.delenv("DOCUHIVE_UMASK", raising=False)
+        config.reload()
+
+
 def test_worker_and_api_dispatch(monkeypatch):
     calls = []
     monkeypatch.setattr(
