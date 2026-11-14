@@ -2,6 +2,7 @@ name: docuhive-qa
 x-backend: &backend
   image: docuhive-qa-backend:local
   pull_policy: never
+  restart: on-failure  # as in production: a killed service comes back and resumes its queue
   environment: &environment
     DOCUHIVE_ENV: test
     DOCUHIVE_AUTH_DISABLED: "false"
@@ -9,6 +10,7 @@ x-backend: &backend
     DOCUHIVE_VAULT_DIR: /srv/vault
     DOCUHIVE_STAGING_DIR: /srv/staging
     DOCUHIVE_GOTENBERG_URL: http://gotenberg:3000
+    DOCUHIVE_OCR_JOBS: "1"  # the stack shares a small Docker VM with whatever else runs
     DOCUHIVE_OVERLAY_DIR: /app/tests/mocks/config
     DOCUHIVE_AI_OPENAI_API_KEY: synthetic-qa-key
     DOCUHIVE_PUBLIC_URL: https://127.0.0.1:53100

@@ -53,7 +53,7 @@ def fake_core(monkeypatch, tmp_path):
 
 
 @pytest.fixture
-def postgres(monkeypatch):
+def postgres(monkeypatch, request):
     from docuhive.db import (
         CoreBase,
         models,  # noqa: F401
@@ -64,7 +64,10 @@ def postgres(monkeypatch):
 
     url = os.environ.get("DOCUHIVE_TEST_DATABASE_URL")
     if not url:
-        pytest.skip("Set DOCUHIVE_TEST_DATABASE_URL to the disposable integration database")
+        reason = "Set DOCUHIVE_TEST_DATABASE_URL to the disposable integration database"
+        # Asked for by name (-m integration): a missing database is a failure, not a quiet skip.
+        selected = request.config.getoption("markexpr", "").replace("not integration", "")
+        (pytest.fail if "integration" in selected else pytest.skip)(reason)
     from sqlalchemy.engine import make_url
 
     if not (make_url(url).database or "").endswith("_test"):
