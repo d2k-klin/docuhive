@@ -1,6 +1,6 @@
 # Production readiness: plan
 
-**Overview.** What stands between DocuHive 0.5.0 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The status badge changes when the [release gate](../Developer-QA/README.md) says GO, not before: software that has never held a real household's documents on its target hardware is not production software, whatever the label says.
+**Overview.** What stands between DocuHive 0.5.0 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The owner declared DocuHive production-ready on 2026-11-14 ([decision](../decisions/0005-production-status.md)), ahead of the [release gate](../Developer-QA/README.md), which is still NO-GO; the status label follows that decision, and 1.0.0 still waits for the gate.
 
 ## Where it stands (2026-11-05)
 
@@ -65,8 +65,8 @@ Progress (2026-11-05): on the production images (development Mac, 2 CPUs), Germa
 
 ### 6. Real-world verification and 1.0
 
-Real provider and mailbox runs, a golden evaluation set and the auto-apply gate, the end-to-end journeys, the restore drill on the target hardware, then the QA release gate. On GO: version 1.0.0, and the README badge and status section say so.
+Real provider and mailbox runs, a golden evaluation set and the auto-apply gate, the end-to-end journeys, the restore drill on the target hardware, then the QA release gate. On GO: version 1.0.0.
 
 ## What this plan does not do
 
-It does not mark anything done from mocks, and it does not change the status label before the gate.
+It does not mark anything done from mocks. The status label was changed before the gate by the owner's decision of 2026-11-14, which lists what is still unverified.

@@ -7,7 +7,7 @@
 [![CI](https://github.com/d2k-klin/docuhive/actions/workflows/ci.yml/badge.svg)](https://github.com/d2k-klin/docuhive/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Runs locally](https://img.shields.io/badge/runs-locally-green.svg)](docs/setup/ai-providers.md)
-[![Status: pre-alpha](https://img.shields.io/badge/status-pre--alpha-orange.svg)](#project-status)
+[![Status: production-ready](https://img.shields.io/badge/status-production--ready-green.svg)](#project-status)
 
 ## What DocuHive does
 
@@ -92,17 +92,17 @@ Open <http://localhost:3000> and sign in with the account you just created. The 
 
 ## Project status
 
-DocuHive is in early development and not ready for real documents yet.
+DocuHive is production-ready: install it from the [installation guide](docs/setup/installation.md) and keep real documents in it. The owner declared this on 2026-11-14 ([decision](docs/decisions/0005-production-status.md)); the table says what has been verified and where your own first run is the check.
 
 | Area | State |
 | --- | --- |
 | Platform: settings, database, job queue, sign-in | working, tested |
-| AI layer, classification, review queue, email connectors, chat | working against test doubles; real-provider runs pending |
-| Document intake and archive (OCR, vault) | working, tested with synthetic files; real-document OCR measurements pending ([OCR gate](docs/decisions/0001-ocr-gate.md)) |
-| Web app | all document, review, chat, source and settings pages; undo, notes and a compact phone menu pending |
-| Security hardening | [checklist](docs/security-checklist.md) ticked with evidence; OWASP ZAP scan pending |
-| Phone, scanner and token capture | working through the same intake as uploads; real-phone and NAS checks pending |
-| Deployment and recovery | production stack and real synthetic backup/restore tested locally; target hardware and nightly-run acceptance pending |
+| AI layer, classification, review queue, email connectors, chat | working, tested against test doubles and local models; run `docuhive ai check` against your own providers |
+| Document intake and archive (OCR, vault) | working, tested with synthetic files; OCR quality on real documents is not measured ([OCR gate](docs/decisions/0001-ocr-gate.md)) |
+| Web app | all document, review, chat, source and settings pages; undo, notes and a compact phone menu are planned |
+| Security hardening | [checklist](docs/security-checklist.md) ticked with evidence; OWASP ZAP baseline with no failures |
+| Phone, scanner and token capture | working through the same intake as uploads; tested in desktop browsers, not on a range of real phones |
+| Deployment and recovery | production stack, backup and restore tested locally with synthetic data; run the [restore drill](docs/setup/operations.md) on your own host before you rely on it |
 
 Progress is tracked in the [team plans](docs/shared/README.md).
 

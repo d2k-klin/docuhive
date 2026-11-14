@@ -4,6 +4,10 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Changed
+
+- Project status: production-ready, declared by the owner ([decision 0005](docs/decisions/0005-production-status.md)). The README, installation guide and production-readiness plan say what is verified and what is not.
+
 ## [0.5.0] - 2026-11-12
 
 ### Added

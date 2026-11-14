@@ -11,6 +11,7 @@
 | [`0002-knowledge-bases.md`](0002-knowledge-bases.md) | Knowledge bases inside DocuHive instead of a separate KB platform — proposed |
 | [0003-operations-verification.md](0003-operations-verification.md) | Local capture, backup/restore and upgrade evidence, with hardware gates still pending |
 | [0004-model-selection.md](0004-model-selection.md) | Local models: Gemma 4 classifies, qwen3 extracts, thinking off; measured on the synthetic set |
+| [0005-production-status.md](0005-production-status.md) | Production-ready, declared by the owner on 2026-11-14; release gate still NO-GO, unverified items listed |
 
 ## Extending
 
