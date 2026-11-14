@@ -13,7 +13,7 @@ label to the QA release gate, which stands at NO-GO
 
 On 2026-11-14 the owner declared DocuHive production-ready. The README badge and status
 section, the installation guide and the production-readiness plan say so from this date.
-The version stays 0.5.0; 1.0.0 is still tied to the release gate.
+Releases continue as 0.x; 1.0.0 is still tied to the release gate.
 
 ## Validation and consequences
 
@@ -25,7 +25,9 @@ recorded here rather than hidden:
   on a development machine
   ([report](../Developer-QA/reports/local-production-validation-2026-11-05.md)); the
   security checklist and an OWASP ZAP baseline with no failures.
-- Not recorded in this repository: runs against real AI providers and mailboxes,
+- Since 0.6.0 the five first user journeys pass in the browser against the real stack with
+  scripted AI ([QA status](../Developer-QA/STATUS.md)).
+- Not recorded in this repository: a second sign-in factor (not built), runs against real AI providers and mailboxes,
   real-document OCR measurements ([OCR gate](0001-ocr-gate.md)), backup, restore and
   storage-outage drills on the target host and NAS, three consecutive nightly backups,
   and checks on real phones.

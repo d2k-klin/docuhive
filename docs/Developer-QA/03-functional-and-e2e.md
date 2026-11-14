@@ -37,7 +37,7 @@ Smoke = runs on every merge to `main`. Everything runs nightly.
 
 ## Journey details (key steps → assertions)
 
-**E2E-01 Setup wizard.**
+**E2E-01 Setup wizard.** Shipped as the dashboard checklist, and the automated journey covers that: every check shows its state and next action, and the state survives a reload ([QA-002](bugs.md#qa-002)). The wizard steps below were not built.
 1. Fresh stack, first login as `alice`.
 2. The wizard opens: Storage (vault ok) → AI provider (fake-llm as "Local", test connection) → Models (recommended) → Privacy (preset) → Email (connect the mock Gmail) → Phone (a QR code is visible) → Notifications (ntfy-mock, test message received) → Ready.
 

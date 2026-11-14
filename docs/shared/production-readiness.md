@@ -1,6 +1,6 @@
 # Production readiness: plan
 
-**Overview.** What stands between DocuHive 0.5.0 and a 1.0 that a household can trust with its real documents, in the order it has to happen. The owner declared DocuHive production-ready on 2026-11-14 ([decision](../decisions/0005-production-status.md)), ahead of the [release gate](../Developer-QA/README.md), which is still NO-GO; the status label follows that decision, and 1.0.0 still waits for the gate.
+**Overview.** What stands between DocuHive 0.x and a 1.0 that a household can trust with its real documents, in the order it has to happen. The owner declared DocuHive production-ready on 2026-11-14 ([decision](../decisions/0005-production-status.md)), ahead of the [release gate](../Developer-QA/README.md), which is still NO-GO; the status label follows that decision, and 1.0.0 still waits for the gate.
 
 ## Where it stands (2026-11-05)
 

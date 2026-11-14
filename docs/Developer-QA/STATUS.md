@@ -5,9 +5,9 @@ Update this file whenever a milestone, a verification or a blocker changes state
 | Milestone | State | Updated | Notes |
 |-----------|-------|---------|-------|
 | QA-M0 Strategy, traceability, bug process | in progress | 2026-11-04 | Generator lists all 127 product/QA IDs; manual register and local issue process exist. Remote labels/issues not created. |
-| QA-M1 System test harness (stack, corpus, mocks, CI) | in progress | 2026-11-04 | Isolated HTTPS stack builds and starts; separate contract/system DBs; 150 deterministic files / 15 cases; capturing HTTP fixtures; pinned workflows. Real Strands/HTTP triage and embeddings pass. Full corpus scripts, OCR binaries, mail/real-AI profiles and remote CI pending. |
-| QA-M2 Contracts & integration verification | in progress | 2026-11-04 | Model/signature drift, document/ingest parity and boundary checks implemented. Real archive paths remain OA stubs. Boundary violation QA-004 recorded. |
-| QA-M3 Functional & E2E journeys | in progress | 2026-11-04 | Login/logout and incremental SSE pass on 375/768/1280 px in light/dark. E2E-01…05 are explicit test-ahead skeletons; E2E-06…24 still pending. |
+| QA-M1 System test harness (stack, corpus, mocks, CI) | in progress | 2026-11-14 | Isolated HTTPS stack builds and starts with real OCR (QA-010) and restarts killed services; separate contract/system DBs; 150 deterministic files / 15 cases; capturing HTTP fixtures; pinned workflows. Mail/real-AI profiles and remote CI pending. |
+| QA-M2 Contracts & integration verification | in progress | 2026-11-14 | Model/signature drift, document/ingest parity and boundary checks pass on the real implementation; all three import contracts kept (QA-004 fixed). |
+| QA-M3 Functional & E2E journeys | in progress | 2026-11-14 | Login/logout, E2E-01…05 and incremental SSE pass on 375/768/1280 px in light/dark against the real API, worker, OCR and scripted AI. E2E-06…24 are not written. |
 | QA-M4 Non-functional verification | in progress | 2026-11-04 | Default suite: 309 passed, 85.34% lines. Implemented critical modules ≥95%. Real SQL permission/decimal checks and 25-asset bundle scan pass. Browser: 18 pass, 54 font failures, 30 pending. Vault, full security/privacy, hardware/drills/upgrade/mutation pending. |
 | QA-M5 Release gate | blocked (product prerequisites) | 2026-11-04 | Gate implemented; v1 NO-GO. No real archive acceptance, manual signatures or reference-host evidence. |
 
@@ -37,11 +37,10 @@ Update this file whenever a milestone, a verification or a blocker changes state
 
 ## Open S1/S2 defects
 
-[QA-001…005](bugs.md) track archive/setup/capture prerequisites, private settings imports,
-and missing endpoint/clock/write-origin test hooks. No S1 incident has been reproduced.
-QA-006 records the integration skip-policy gap (S3).
-QA-007 (missing help guides) and QA-008 (critical coverage) were re-verified and resolved.
-QA-009 records the shared font defect. Owner STATUS files were not read or edited for this run.
+[QA-005](bugs.md#qa-005) is open: provider endpoints cannot be pointed at the mocks, so mail
+and privacy paths are not proven end to end. QA-001…004, 006…011 are fixed and verified
+(2026-11-14). No S1 incident has been reproduced. The integration-point and joint-milestone
+tables above date from 2026-11-04 and have not been re-run.
 
 ## Notes
 - Requests to OA/CL for testability (mock base URLs, `base_url` per provider, test clock, `application_name` per module) are still to be opened as `contract` issues (QA-01 §1.1, §1.3).

@@ -4,8 +4,23 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-14
+
+### Security
+
+- Files DocuHive creates in the vault and staging folders are closed to other accounts on the host or NAS (`DOCUHIVE_UMASK`, default `027`). Files stored earlier keep their permissions; close them once with `chmod -R o-rwx` on the vault folder. Set `DOCUHIVE_UMASK=022` only if another account must read the vault directly.
+- A session is renewed while in use but ends 90 days after sign-in at the latest.
+- The operations guide says how to protect the storage: disk or volume encryption, file permissions, encrypted backups.
+
+### Fixed
+
+- **Sources**, **AI settings** and loading placeholders pass the accessibility and control-size checks: the mailbox provider choices, the document link in AI activity (it was distinguishable by colour only) and the loading state's label.
+- Database tests selected by name fail without a database instead of being skipped.
+
 ### Changed
 
+- The five first user journeys (setup checklist, upload and review, upload locks, three-page capture, offline capture queue) run against the real stack at phone, tablet and desktop width in light and dark, instead of being switched off. The test stack reads uploads with real OCR and restarts killed services like production.
+- `ai`, `mail` and `notify` read the public address and shipped defaults through the public configuration contract (`config.public_url()`, `config.default_yaml()`).
 - Project status: production-ready, declared by the owner ([decision 0005](docs/decisions/0005-production-status.md)). The README, installation guide and production-readiness plan say what is verified and what is not.
 
 ## [0.5.0] - 2026-11-12
@@ -181,7 +196,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/d2k-klin/docuhive/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/d2k-klin/docuhive/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/d2k-klin/docuhive/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/d2k-klin/docuhive/compare/v0.3.2...v0.4.0

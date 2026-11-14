@@ -1,49 +1,46 @@
 # QA defect register
 
-Local issue records, 2026-11-04. No GitHub issues or labels have been created remotely.
+Local issue records, opened 2026-11-04, re-verified 2026-11-14. No GitHub issues or labels have been created remotely.
 Each anchor is a stable reproduction link for strict xfails. Owners retain their files.
 
 ## QA-001
 
-S2 · `bug:oa` · backend fixed 2026-11-04, screens pending · OA-M3/M4/M5 · ING-01, ING-05, DOC-03, SRCH-01.
+S2 · `bug:oa` · fixed, verified 2026-11-14 · OA-M3/M4/M5 · ING-01, ING-05, DOC-03, SRCH-01.
 
-The real parity tests and the system upload test now run without `xfail`. The archive screens (OA-M5, the `journeys.spec.ts` markers) remain open.
-
-`ingest.incoming_dir/submit`, `documents.*` and `search.hybrid` raise `NotImplementedError`;
-the upload and document routes do not exist yet. This is unfinished planned work, not a
-regression. Reproduce with the real parameters of `test_documents_parity.py` and
-`test_ingest_parity.py`, or `tests/system/test_backend.py::test_upload_deduplication`.
-Expected: durable ingestion and searchable documents with the promised manual locks.
-Release blocker until the real contract checks pass. Fakes do not satisfy this item.
+Originally `ingest.incoming_dir/submit`, `documents.*` and `search.hybrid` raised
+`NotImplementedError` and the upload and document routes did not exist. The real parity
+tests and the system upload test run without `xfail` since 2026-11-04. The archive screens
+exist: E2E-02 (upload, stored, AI suggestions, review, accept) and E2E-03 (a category chosen
+at upload stays locked against the AI) pass at 375/768/1280 in light and dark.
 
 ## QA-002
 
-S2 · `bug:oa` · endpoint fixed 2026-11-12, wizard pending · OA-M5 · GUIDE-01, GUIDE-02.
+S2 · `bug:oa` · fixed, verified 2026-11-14 · OA-M5 · GUIDE-01, GUIDE-02.
 
-`/api/system/setup-status` now exists and `test_setup_checks_have_actionable_states[system]`
-runs without `xfail`. The setup wizard (E2E-01) remains open.
-
-Originally: `/api/system/setup-status` and the setup wizard were absent. Reproduce with
-`test_routes.py::test_setup_checks_have_actionable_states[system]` and E2E-01.
-Expected: storage/security checks and a resumable wizard, not a 404.
+`/api/system/setup-status` exists and `test_setup_checks_have_actionable_states[system]`
+runs without `xfail`. Setup shipped as the dashboard checklist, not as a separate wizard:
+every check names its state and its next action, and the state comes from the server, so it
+survives a reload. E2E-01 was rewritten for the checklist and passes. The step-by-step wizard
+in [03-functional-and-e2e.md](03-functional-and-e2e.md) was not built.
 
 ## QA-003
 
-S2 · `bug:oa` · open dependency · OA-M6 · CAP-01, CAP-02.
+S2 · `bug:oa` · fixed, verified 2026-11-14 · OA-M6 · CAP-01, CAP-02.
 
-The capture/offline queue is not implemented. E2E-04/E2E-05 are test-ahead skeletons,
-disabled with explicit blocker links. They need expansion against the final controls,
-page order, compression and IndexedDB implementation before counting as acceptance.
+The capture page and its offline queue exist. E2E-04 (three photos uploaded as one
+three-page document) and E2E-05 (captured offline, queued on the device, sent when back
+online) pass against the real API, worker and OCR. EXIF rotation and page reordering are
+covered by the capture suite in `apps/web/tests/capture`, not by these journeys. Real phones
+are still a manual check.
 
 ## QA-004
 
-S2 · `bug:integration` · open · QAR-INT-03.
+S2 · `bug:integration` · fixed 2026-11-14 · QAR-INT-03.
 
-`make qa-boundaries` independently rejects four imports of the OA-private
-`docuhive.config.settings`: `ai.cli`, `mail.oauth`, `notify`, `notify.jobs`.
-The binding contract exposes `config.load_yaml/overlay_path/prompt/plugins`, not
-`get_settings`. Owners must agree on an additive contract or remove those private imports.
-QA retains the strict failing contract and does not widen the allow-list.
+`ai.cli`, `mail.oauth` and `notify` imported the OA-private `docuhive.config.settings`.
+The contract gained two additive functions, `config.default_yaml(name)` and
+`config.public_url()`, and the three modules use them. `make qa-boundaries` keeps all three
+contracts, and `test_import_linter_contracts` runs without `xfail`.
 
 ## QA-005
 
@@ -58,12 +55,10 @@ also need the requested runtime table-write guard; the static check is partial.
 
 ## QA-006
 
-S3 · `bug:integration` · open · QAR-TQ-04.
+S3 · `bug:integration` · fixed 2026-11-14 · QAR-TQ-04.
 
-The shared `postgres` fixture skips without a linked issue when the integration URL
-is absent. Reproduce: run the existing integration suite without that variable.
-QA commands always supply an isolated URL; owners should make explicitly selected
-integration checks fail when their environment is missing.
+The shared `postgres` fixture skipped when the integration URL was absent. Selected by name
+(`-m integration`) it now fails instead; an unfiltered local run still skips.
 
 ## QA-007
 
@@ -102,6 +97,26 @@ passes 72 tests at 375/768/1280 in light and dark (30 skipped for unbuilt featur
 the font check. The same run found `/ask` overflowing at 768 px: the suggestion buttons could not
 wrap. They are now wrapping controls (`data-wrap`, control height as a minimum), and the
 height check treats `data-wrap` elements as at least control height.
+
+## QA-010
+
+S2 · `bug:integration` · fixed 2026-11-14 · QAR-FN-01.
+
+The QA backend image had no Tesseract or Ghostscript, so every upload in the system stack
+was quarantined (`MissingDependencyError`) and no journey past login could pass. The image
+now uses the production base and OCR packages. The stack's services also restart on failure,
+as in production: on a small Docker VM a worker killed for memory came back and finished all
+queued jobs, none lost.
+
+## QA-011
+
+S3 · `bug:cl` · fixed 2026-11-14 · WEB-03, WEB-04, QAR-NF-04.
+
+Found by the first full `ui-consistency` run since 0.5.0, fixed in the same change:
+the provider choices on `/sources` are two-line cards and are now marked as wrapping
+controls; the document link in the AI activity table on `/settings/ai` was distinguishable
+by colour only and is now underlined; the loading skeleton had an `aria-label` without a role
+and is now a `status`.
 
 ## Triage handling
 

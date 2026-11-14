@@ -100,7 +100,7 @@ DocuHive is production-ready: install it from the [installation guide](docs/setu
 | AI layer, classification, review queue, email connectors, chat | working, tested against test doubles and local models; run `docuhive ai check` against your own providers |
 | Document intake and archive (OCR, vault) | working, tested with synthetic files; OCR quality on real documents is not measured ([OCR gate](docs/decisions/0001-ocr-gate.md)) |
 | Web app | all document, review, chat, source and settings pages; undo, notes and a compact phone menu are planned |
-| Security hardening | [checklist](docs/security-checklist.md) ticked with evidence; OWASP ZAP baseline with no failures |
+| Security hardening | [checklist](docs/security-checklist.md) ticked with evidence; OWASP ZAP baseline with no failures; no second sign-in factor yet, so keep it on your tailnet or LAN |
 | Phone, scanner and token capture | working through the same intake as uploads; tested in desktop browsers, not on a range of real phones |
 | Deployment and recovery | production stack, backup and restore tested locally with synthetic data; run the [restore drill](docs/setup/operations.md) on your own host before you rely on it |
 
