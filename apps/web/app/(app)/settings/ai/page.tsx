@@ -117,7 +117,7 @@ export default function AISettingsPage() {
                 {runs.data.items.map((r) => (
                   <tr key={r.id} className="border-b border-border hover:bg-surface-2">
                     <td className="px-3 py-2"><Link className="hover:underline" href={`/settings/ai/runs/${r.id}`}>{formatDate(r.at)}</Link></td>
-                    <td className="px-3 py-2">{TASK[r.task] ?? r.task}{r.document_id && <> · <Link className="text-text-muted hover:underline" href={`/documents/${r.document_id}`}>document</Link></>}</td>
+                    <td className="px-3 py-2">{TASK[r.task] ?? r.task}{r.document_id && <> · <Link className="text-text-muted underline" href={`/documents/${r.document_id}`}>document</Link></>}</td>
                     <td className="px-3 py-2"><span className="flex items-center gap-2"><code className="font-mono text-xs">{r.provider}/{r.model}</code><LocalBadge local={r.local} /></span></td>
                     <td className="px-3 py-2"><Badge tone={r.status === "ok" ? "ok" : r.status === "skipped" ? "muted" : "error"}>{r.status}</Badge></td>
                     <td className="tabular px-3 py-2 text-right">{r.latency_ms !== null ? `${(r.latency_ms / 1000).toFixed(1)} s` : "–"}</td>

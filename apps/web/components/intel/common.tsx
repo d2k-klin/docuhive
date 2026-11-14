@@ -236,7 +236,7 @@ export function Skeleton({
   className?: string;
 }) {
   return (
-    <div aria-busy="true" aria-label="Loading" className={cn("space-y-2", className)}>
+    <div role="status" aria-busy="true" aria-label="Loading" className={cn("space-y-2", className)}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="h-10 animate-pulse rounded bg-surface-2" />
       ))}

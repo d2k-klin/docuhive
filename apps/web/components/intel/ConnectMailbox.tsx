@@ -270,6 +270,8 @@ export function ConnectMailbox({
               key={p.id}
               type="button"
               onClick={() => setProvider(p.id)}
+              data-wrap
+              data-size="lg"
               className="flex min-h-control-lg items-center gap-3 rounded-card border border-border bg-surface p-4 text-left transition-colors hover:border-primary hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
             >
               <Mail
