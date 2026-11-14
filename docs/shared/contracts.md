@@ -243,6 +243,8 @@ def load_yaml(name: str) -> dict: ...
     # config/defaults/<name> deep-merged with $DOCUHIVE_OVERLAY_DIR/<name>.
     # Mappings merge recursively; lists and scalars from the overlay REPLACE the default.
     # Missing in both -> {}.
+def default_yaml(name: str) -> dict: ...             # config/defaults/<name> alone, without the overlay
+def public_url() -> str: ...                         # DOCUHIVE_PUBLIC_URL without a trailing slash
 def overlay_path(*parts: str) -> Path | None: ...   # path inside the overlay if it exists
 def prompt(name: str) -> tuple[str, str]: ...        # (text, version) for prompts/<name>.md, overlay wins
 def plugins(hook: str) -> list[Callable]: ...        # entry points in group "docuhive.plugins" exposing <hook>

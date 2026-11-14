@@ -58,6 +58,16 @@ def _load_yaml(name: str) -> dict:
     return _merge(base, _mapping(overlay_path(name)))
 
 
+def default_yaml(name: str) -> dict:
+    """The shipped default alone, without the overlay, for comparing an overlay against it."""
+    return _mapping(_within(get_settings().defaults_dir, name))
+
+
+def public_url() -> str:
+    """The address users reach DocuHive at, without a trailing slash."""
+    return get_settings().public_url.rstrip("/")
+
+
 def load_yaml(name: str) -> dict:
     # Callers cannot mutate a cached configuration seen by another task.
     return deepcopy(_load_yaml(name))

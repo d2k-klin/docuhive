@@ -50,9 +50,9 @@ def decrypt(blob: bytes) -> dict:
 
 def _absolute(url: str | None) -> str | None:
     if url and url.startswith("/"):
-        from docuhive.config.settings import get_settings
+        from docuhive import config
 
-        return get_settings().public_url.rstrip("/") + url
+        return config.public_url() + url
     return url
 
 

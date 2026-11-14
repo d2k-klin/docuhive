@@ -67,11 +67,8 @@ def taxonomy_check(args: argparse.Namespace) -> None:
     import yaml
 
     from docuhive import config, taxonomy
-    from docuhive.config.settings import get_settings
 
-    default = taxonomy.validate(
-        yaml.safe_load((get_settings().defaults_dir / "taxonomy.yaml").read_text())
-    )
+    default = taxonomy.validate(config.default_yaml("taxonomy.yaml"))
     raw = (
         yaml.safe_load(Path(args.path).read_text())
         if args.path

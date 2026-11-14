@@ -70,9 +70,9 @@ def _client(name: str) -> tuple[str, str]:
 
 
 def redirect_uri(name: str) -> str:
-    from docuhive.config.settings import get_settings
+    from docuhive import config
 
-    return f"{get_settings().public_url.rstrip('/')}/api/sources/oauth/{name}/callback"
+    return f"{config.public_url()}/api/sources/oauth/{name}/callback"
 
 
 @dataclass
