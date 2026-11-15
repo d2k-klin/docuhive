@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 type Session = { id: number; title: string | null; filters: { categories?: string[] }; local_only: boolean; route: string | null };
 type FactsResult = {
+  agg: string;
   rows: { document_id: string; title: string | null; date: string | null; value: string; currency: string | null }[];
   aggregates: { group: string | null; currency: string | null; value: string | number | null; count: number }[];
 };
@@ -56,8 +57,13 @@ const ERROR_COPY: Record<string, string> = {
   provider_error: "The model did not answer. Try again, or pick another model.",
 };
 
+const AGG_LABEL: Record<string, string> = { sum: "Total", avg: "Average", min: "Lowest", max: "Highest" };
+
 function FactsTable({ result }: { result: FactsResult }) {
-  const totals = result.aggregates.filter((a) => a.group === null && a.value !== null);
+  // Only sum, average, lowest and highest are amounts; for count and list the aggregate is a
+  // number of documents and must never be shown as money.
+  const label = AGG_LABEL[result.agg];
+  const totals = label ? result.aggregates.filter((a) => a.group === null && a.value !== null) : [];
   return (
     <div className="mt-3 overflow-x-auto rounded border border-border">
       <table className="w-full text-sm">
@@ -83,7 +89,7 @@ function FactsTable({ result }: { result: FactsResult }) {
           <tfoot>
             {totals.map((t) => (
               <tr key={t.currency ?? "n"} className="font-medium">
-                <td className="px-3 py-2" colSpan={2}>Total ({t.count})</td>
+                <td className="px-3 py-2" colSpan={2}>{label} ({t.count})</td>
                 <td className="tabular px-3 py-2 text-right">{formatMoney(String(t.value), t.currency)}</td>
               </tr>
             ))}
@@ -178,8 +184,12 @@ export default function AskPage() {
     setMessages(res?.items ?? []);
   }
 
+  const [draft, setDraft] = React.useState<Partial<Session>>({});
+  const chosen = active ?? draft;
+
   async function patch(update: Partial<Session>) {
-    if (!active) return setActive((a) => a && { ...a, ...update });
+    // Before the first question there is no chat yet: keep the choices for when it starts.
+    if (!active) return setDraft((d) => ({ ...d, ...update }));
     const s = await api<Session>(`/api/chat/sessions/${active.id}`, { method: "PATCH", json: update }).catch((e) => (setError(e), null));
     if (s) setActive(s);
   }
@@ -189,9 +199,10 @@ export default function AskPage() {
     setError(null);
     let session = active;
     if (!session) {
-      session = await api<Session>("/api/chat/sessions", { method: "POST", json: { local_only: forced } }).catch((e) => (setError(e), null));
+      session = await api<Session>("/api/chat/sessions", { method: "POST", json: { local_only: forced || Boolean(draft.local_only), route: draft.route ?? null, filters: draft.filters ?? {} } }).catch((e) => (setError(e), null));
       if (!session) return;
       setActive(session);
+      setDraft({});
     }
     setInput("");
     setBusy(true);
@@ -229,12 +240,12 @@ export default function AskPage() {
     }
   }
 
-  const localOnly = forced || Boolean(active?.local_only);
+  const localOnly = forced || Boolean(chosen.local_only);
   return (
     <Page>
       <div className="grid gap-4 md:grid-cols-[14rem_minmax(0,1fr)]">
         <aside aria-label="Chats" className="space-y-2">
-          <Button className="w-full" onClick={() => { setActive(null); setMessages([]); }}>
+          <Button className="w-full" onClick={() => { setActive(null); setDraft({}); setMessages([]); }}>
             <MessageSquarePlus aria-hidden="true" /> New chat
           </Button>
           {sessions.loading && !sessions.data ? <Skeleton rows={4} /> : (
@@ -255,12 +266,12 @@ export default function AskPage() {
           <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Chat scope">
             <h1 className="mr-auto text-xl font-semibold">Ask</h1>
             <select aria-label="Category" className={cn(controlSm, "w-48")}
-              value={active?.filters?.categories?.[0] ?? ""}
+              value={chosen.filters?.categories?.[0] ?? ""}
               onChange={(e) => patch({ filters: e.target.value ? { categories: [e.target.value] } : {} })}>
               <option value="">All categories</option>
               {tax.data?.categories.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
-            <select aria-label="Model" className={cn(controlSm, "w-56")} value={active?.route ?? ""}
+            <select aria-label="Model" className={cn(controlSm, "w-56")} value={chosen.route ?? ""}
               onChange={(e) => patch({ route: e.target.value || null })} disabled={localOnly}>
               <option value="">Default model</option>
               {routes.data?.items.map((r) => <option key={r.route} value={r.route}>{r.route}{r.local ? " (local)" : ""}</option>)}

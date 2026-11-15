@@ -228,7 +228,9 @@ async def answer_stream(sid: int, user: CurrentUser, content: str) -> AsyncItera
                 result = ev.pop("result", None)
                 call = {"name": ev["name"], "summary": ev["summary"]}
                 if ev["name"] == "query_facts" and isinstance(result, dict):
-                    call["result"] = {k: result.get(k) for k in ("rows", "aggregates", "field")}
+                    call["result"] = {
+                        k: result.get(k) for k in ("rows", "aggregates", "field", "agg")
+                    }
                     ev["result"] = call["result"]
                 tool_calls.append(call)
             elif kind == "done":
