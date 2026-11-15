@@ -7,8 +7,8 @@ import httpx
 from fastapi import APIRouter, Query
 from sqlalchemy import func, select
 
-from docuhive import config, db, documents
-from docuhive.ai import budgets, routing
+from docuhive import auth, config, db, documents
+from docuhive.ai import budgets, coretables, routing
 from docuhive.ai.http import User, fail
 from docuhive.ai.models import AIRun
 from docuhive.ai.progress import document_status
@@ -208,8 +208,18 @@ def list_runs(
             q = q.where(col == val)
     if cursor:
         q = q.where(AIRun.id < cursor)
+    d = coretables.table("documents")
     with db.session() as s:
         rows = [_row(r) for r in s.scalars(q)]
+        # An administrator sees every run for cost and health, but not which private
+        # document of another member it was about.
+        ids = {r["document_id"] for r in rows if r["document_id"]}
+        visible = set(
+            s.scalars(select(d.c.id).where(d.c.id.in_(ids), auth.visible_docs_incl_trash(user)))
+        )
+    for r in rows:
+        if r["document_id"] not in visible:
+            r["document_id"] = None
     more = len(rows) > limit
     return {"items": rows[:limit], "next_cursor": str(rows[limit - 1]["id"]) if more else None}
 

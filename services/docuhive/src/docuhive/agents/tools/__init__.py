@@ -84,8 +84,9 @@ def build_tools(user: CurrentUser, scope: SearchFilters, route: Route) -> list:
                 {
                     "id": v.id,
                     "title": "[restricted]" if hidden else v.title,
-                    "date": v.document_date.isoformat() if v.document_date else None,
-                    "type": v.document_type,
+                    # A cloud model learns that a restricted document matched, nothing about it.
+                    "date": v.document_date.isoformat() if v.document_date and not hidden else None,
+                    "type": None if hidden else v.document_type,
                     "correspondent": None if hidden else v.correspondent,
                     "snippet": None if hidden else (h.snippet or "")[:300],
                 }
