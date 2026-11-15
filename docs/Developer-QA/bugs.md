@@ -118,6 +118,57 @@ controls; the document link in the AI activity table on `/settings/ai` was disti
 by colour only and is now underlined; the loading skeleton had an `aria-label` without a role
 and is now a `status`.
 
+## QA-012
+
+S1 · `bug:cl` · fixed 2026-11-15 · QA-01, QA-03.
+
+Wrong number in an Ask answer: when the facts tool listed or counted documents, the table's
+footer showed the number of documents as a money total ("Total (1) €1.00" under one invoice
+of €84.20). The footer now appears only for a sum, average, lowest or highest, labelled as
+such. Found and covered by E2E-12, which checks the total against the rows to the cent.
+
+## QA-013
+
+S2 · `bug:cl` · fixed 2026-11-15 · AUTH-03.
+
+The AI activity list (`GET /api/ai/runs`, administrators) named the documents of other
+members' private documents: id, task, time and model, not the content (opening such a run
+was already refused). Runs about documents the viewer may not see now carry no document
+reference. Found and covered by E2E-19.
+
+## QA-014
+
+S2 · `bug:cl` · fixed 2026-11-15 · QA-07, AI-03.
+
+On **Ask**, a category, model or **Local only** chosen before the first question was
+dropped: the control snapped back and the chat started with the defaults. The choices are
+now kept and applied when the chat starts. Found and covered by E2E-18.
+
+## QA-015
+
+S3 · `bug:oa` · fixed 2026-11-15 · SRCH-05, GUIDE-02.
+
+Two finished parts were never shown: the similar-documents card on the document page and the
+dashboard cards for suggestions waiting, next deadlines and mailbox state. Both are mounted.
+Found by E2E-11. `SearchModeHint` is still not shown: search has no flag to drive it.
+
+## QA-016
+
+S3 · `bug:cl` · fixed 2026-11-15 · AI-03.
+
+For a cloud model, a restricted document in search results had its title, sender and text
+withheld but not its type and date. Both are withheld now; the model learns only that a
+restricted document matched.
+
+## QA-017
+
+S3 · `bug:cl` · fixed 2026-11-15 · WEB-03, WEB-04, QAR-NF-04.
+
+On a phone, a long analysis name pushed the **Analyses** page wider than the screen, and
+long card titles did not wrap. On **AI settings**, the "then" between a model and its
+fallback had too little contrast (3.1:1). Found by `ui-consistency` once the journeys left
+real content on those pages.
+
 ## Triage handling
 
 Use S1–S4, one of `bug:oa`, `bug:cl`, `bug:integration`, and `flaky`/`qa:verified` as needed.

@@ -4,6 +4,27 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-15
+
+### Added
+
+- The document page shows **Similar documents**, and the dashboard shows suggestions waiting for review, the next deadlines and the state of your mailboxes. Both were built earlier but never displayed.
+
+### Fixed
+
+- **Ask** no longer shows a number of documents as a money total. The table's last row is shown only for a sum, average, lowest or highest value, and says which.
+- **Ask** keeps the category, model and **Local only** you choose before your first question. They used to be dropped.
+- On a phone, **Analyses** no longer scrolls sideways with a long analysis name, and long card titles wrap. The "then" between a model and its fallback on **AI settings** is readable.
+
+### Security
+
+- AI activity no longer tells an administrator which private document of another member a run was about.
+- A cloud model that searches your archive learns only that a restricted document matched: its type and date are withheld too, as its title, sender and text already were.
+
+### Changed
+
+- User journeys E2E-06 to E2E-24 are written. Fifteen run against the real stack: scanner folder, token upload, editing and locks, bulk edit, search, similar documents, Ask totals and citations, privacy across local and cloud-flagged routes, multi-user isolation, quarantine, a storage outage, reminders with the calendar feed, and saved analyses. The three mail journeys wait for mockable provider addresses, and the database-rebuild drill stays on its own stack.
+
 ## [0.6.0] - 2026-11-14
 
 ### Security
@@ -196,7 +217,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/d2k-klin/docuhive/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/d2k-klin/docuhive/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/d2k-klin/docuhive/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/d2k-klin/docuhive/compare/v0.4.0...v0.4.1

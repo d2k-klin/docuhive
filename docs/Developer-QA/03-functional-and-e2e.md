@@ -137,6 +137,28 @@ Assert:
 2. Set a tiny Anthropic budget (fake pricing), run chat → a `budget_exceeded` message with a "Use local model" button → it works.
 3. Click "How was this made?" on an AI field → the run page shows the route, prompt version (prompt text viewable), output, tokens, cost, and a "Learn about this" link to the correct `docs/learn/` note (the link resolves).
 
+## What the automated journeys leave out
+
+The journeys in `tests/e2e` cover what the product and the system stack offer today. Against
+the descriptions above, these parts are not automated:
+
+| Journey | Left out | Why |
+| --- | --- | --- |
+| E2E-01 | The step-by-step wizard | Shipped as the dashboard checklist |
+| E2E-04 | EXIF rotation, page reordering, the 2400 px limit | Covered by `apps/web/tests/capture` |
+| E2E-08, 09 | Undo | Not built |
+| E2E-08 | The library hardlink after a category change | Covered by `test_operations_integration.py` |
+| E2E-10 | Meaning-based ranking ("letter about pension change") | The scripted embeddings carry no meaning |
+| E2E-12 | 👍 feedback, twelve invoices | Feedback is not built; the corpus has one electricity invoice per upload |
+| E2E-13 | Ask about one document, ⌘K | Neither entry point is built |
+| E2E-14 | An ambiguous question, Stop mid-stream | The scripted model answers in one piece |
+| E2E-15…17 | Everything | Provider addresses cannot be pointed at the mocks ([QA-005](bugs.md#qa-005)) |
+| E2E-18 | The "private documents weren't sent" notice | Not built; the journey checks what reached the cloud-flagged model |
+| E2E-20 | Encrypted PDFs, discard | Covered by `test_malicious_integration.py`; quarantine has retry only |
+| E2E-22 | Everything | Dropping the database would take the shared stack down; the rebuild drill is `test_operations_integration.py` |
+| E2E-23 | The ntfy message, a moving clock | No test clock ([QA-005](bugs.md#qa-005)); the journey covers the reminder and the calendar feed |
+| E2E-24 | The exceeded budget and its local fallback | Needs priced cloud calls in the stack |
+
 ## Manual checks (in `manual-checks.md`, run before each release)
 
 | ID | Check | Why it can't be fully automated |
