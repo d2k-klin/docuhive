@@ -4,6 +4,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-15
+
 ### Added
 
 - **An easy way to use DocuHive at home.** `make up LAN=1` serves it over HTTPS to every device on your home network, with no extra account or app; you trust DocuHive's certificate once per device. See the [local network guide](docs/setup/local-network.md). Access from outside the house stays the advanced option ([remote access](docs/setup/remote-access.md)).
@@ -222,7 +224,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Select a patched Next.js release and current test tooling for the new web workspace.
 - Record the unmeasured OCR gate explicitly; the archive backend remains unselected.
 
-[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/d2k-klin/docuhive/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/d2k-klin/docuhive/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/d2k-klin/docuhive/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/d2k-klin/docuhive/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/d2k-klin/docuhive/compare/v0.4.1...v0.5.0
