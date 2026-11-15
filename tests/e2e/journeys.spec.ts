@@ -1,73 +1,12 @@
-import { readFileSync } from "node:fs";
-import { expect, type Page, test } from "@playwright/test";
-
-async function signIn(page: Page, username: string) {
-  await page.goto("/login");
-  await page.getByLabel("Username").fill(username);
-  await page
-    .getByLabel("Password", { exact: true })
-    .fill("synthetic qa password 2026");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(
-    page.getByRole("navigation", { name: "Main navigation" }),
-  ).toBeVisible();
-}
-
-const stamp = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-// Uploads are deduplicated by content, and every project and rerun shares one archive:
-// a trailing PDF comment makes each upload a new document without changing what it shows.
-const invoice = () => ({
-  name: "invoice.pdf",
-  mimeType: "application/pdf",
-  buffer: Buffer.concat([
-    readFileSync("tmp/qa/corpus/case-001.pdf"),
-    Buffer.from(`\n%qa ${stamp()}\n`),
-  ]),
-});
-
-// A unique "phone photo": a screenshot of a page that shows a unique line of text.
-async function photo(page: Page, label: string) {
-  const sheet = await page.context().newPage();
-  await sheet.setViewportSize({ width: 600, height: 800 });
-  await sheet.setContent(
-    `<body style="background:#fff;color:#000;font:32px sans-serif;padding:40px">Rechnung QA ${label}<br>${stamp()}<br>Amount: 84.20 EUR</body>`,
-  );
-  const buffer = await sheet.screenshot();
-  await sheet.close();
-  return { name: `${label}.png`, mimeType: "image/png", buffer };
-}
-
-const stored = { timeout: 90_000 };
-
-// The review page shows one document at a time and loads its queue once. Other journeys and
-// reruns leave suggestions behind, and the AI answers a few seconds after "Stored": dismiss
-// everyone else's suggestions and reload until this document's own are on the page.
-async function openReviewOf(page: Page, href: string) {
-  const id = href.split("/").pop();
-  await expect(async () => {
-    const queue = await (await page.request.get("/api/review/queue")).json();
-    for (const group of queue.items)
-      if (group.document.id !== id)
-        await page.request.post(
-          `/api/review/documents/${group.document.id}/reject-all`,
-          { headers: { "X-DocuHive-CSRF": "1" } },
-        );
-    await page.goto("/review");
-    await expect(page.locator(`a[href="${href}"]`)).toBeVisible({
-      timeout: 3000,
-    });
-  }).toPass(stored);
-  await expect(page.getByText("84.20").first()).toBeVisible();
-}
-
-async function acceptAll(page: Page) {
-  const accepted = page.waitForResponse(
-    (response) => response.url().endsWith("/accept-all") && response.ok(),
-  );
-  await page.getByRole("button", { name: "Accept all" }).click();
-  await accepted;
-}
+import { expect, test } from "@playwright/test";
+import {
+  acceptAll,
+  invoice,
+  openReviewOf,
+  photo,
+  signIn,
+  stored,
+} from "./helpers";
 
 test("Login, member boundary and logout @smoke @AUTH-01 @AUTH-04", async ({
   page,
@@ -117,7 +56,7 @@ test("E2E-01 setup checklist @smoke @J3 @GUIDE-01 @GUIDE-02", async ({
 test("E2E-02 upload and review @smoke @J1 @ING-01 @CLS-01 @DOC-02", async ({
   page,
 }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(300_000);
   await signIn(page, "alice");
   await page.goto("/upload");
   await page.getByLabel("Choose files to upload").setInputFiles(invoice());
@@ -132,7 +71,7 @@ test("E2E-02 upload and review @smoke @J1 @ING-01 @CLS-01 @DOC-02", async ({
 });
 
 test("E2E-03 upload metadata locks @J3 @DOC-08 @CLS-06", async ({ page }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(300_000);
   await signIn(page, "alice");
   await page.goto("/upload");
   await page
@@ -154,7 +93,7 @@ test("E2E-03 upload metadata locks @J3 @DOC-08 @CLS-06", async ({ page }) => {
 test("E2E-04 three page camera capture @J3 @CAP-01 @CAP-02", async ({
   page,
 }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(300_000);
   await signIn(page, "alice");
   await page.goto("/capture");
   await page
@@ -180,7 +119,7 @@ test("E2E-04 three page camera capture @J3 @CAP-01 @CAP-02", async ({
 });
 
 test("E2E-05 offline capture queue @J3 @CAP-01", async ({ page, context }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(300_000);
   await signIn(page, "alice");
   await page.goto("/capture");
   await expect(

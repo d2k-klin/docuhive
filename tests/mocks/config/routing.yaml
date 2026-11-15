@@ -4,6 +4,11 @@ providers:
     kind: openai
     local: true
     base_url: http://llm-proxy:8000/v1
+  # The same fake behind a route flagged as cloud, to prove restricted documents never go there.
+  qacloud:
+    kind: openai
+    local: false
+    base_url: http://llm-proxy:8000/v1
   ollama: {enabled: false}
   anthropic: {enabled: false}
   openai: {enabled: false}
@@ -14,5 +19,5 @@ tasks:
   classify: {route: qa/qa-classify, fallback: []}
   extract: {route: qa/qa-extract, fallback: []}
   embed: {route: qa/qa-embed, fallback: [], dims: 1024}
-  chat: {route: qa/qa-chat, fallback: []}
+  chat: {route: qa/qa-chat, fallback: [qacloud/qa-chat-cloud]}
   analyse: {route: qa/qa-chat, fallback: []}

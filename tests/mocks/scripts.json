@@ -2,5 +2,10 @@
   "qa-classify": {"title":"Synthetic invoice", "category":"utilities", "document_type":"invoice", "correspondent":"QA Utility 01", "tags":[], "document_date":"2025-11-01", "language":"de", "confidence":{"category":0.99,"document_type":0.99}},
   "qa-extract": {"amount_total":{"value":"84.20","currency":"EUR","confidence":0.99}},
   "qa-triage": {"archive":true,"attachments":["case-001.pdf"],"archive_body":false,"reason":"Synthetic invoice attachment","confidence":0.99,"doc_hint":"invoice"},
+  "qa-chat-tools": {
+    "electricity": {"name":"query_facts", "arguments":{"field":"amount_total","agg":"sum","category":"utilities"}},
+    "medical report": {"name":"search_documents", "arguments":{"query":"medical report"}}
+  },
+  "qa-chat-cloud": "I could not find matching documents. Try broader dates.",
   "qa-chat": "I could not find matching documents. Try broader dates."
 }

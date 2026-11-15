@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import os
+import re
 from pathlib import Path
 
 import httpx
@@ -85,6 +86,22 @@ def create_app() -> FastAPI:
             raise HTTPException(400, "Unknown scripted model")
         value = scripts[model]
         tools = body.get("tools", [])
+        tool_name = None
+        if str(model).startswith("qa-chat") and tools:
+            # Scripted tool conversations, keyed on the latest question: call the real tool,
+            # then cite the documents it returned.
+            messages = body.get("messages", [])
+            last = max((i for i, m in enumerate(messages) if m.get("role") == "user"), default=0)
+            asked = str(messages[last].get("content")).lower() if messages else ""
+            results = " ".join(
+                str(m.get("content")) for m in messages[last:] if m["role"] == "tool"
+            )
+            for keyword, call in scripts["qa-chat-tools"].items():
+                if keyword in asked and not results:
+                    value, tool_name = call["arguments"], call["name"]
+                elif keyword in asked:
+                    ids = dict.fromkeys(re.findall(r"\b[0-9A-HJKMNP-TV-Z]{26}\b", results))
+                    value = "These documents match: " + " ".join(f"[doc:{i}]" for i in ids)
         text = value if isinstance(value, str) else json.dumps(value)
         if endpoint == "messages":
             content = [{"type": "text", "text": text}]
@@ -110,7 +127,10 @@ def create_app() -> FastAPI:
                     {
                         "id": "qa_tool",
                         "type": "function",
-                        "function": {"name": tools[-1]["function"]["name"], "arguments": text},
+                        "function": {
+                            "name": tool_name or tools[-1]["function"]["name"],
+                            "arguments": text,
+                        },
                     }
                 ],
             }
