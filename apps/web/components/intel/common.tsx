@@ -70,7 +70,13 @@ export function useApi<T>(path: string | null) {
     };
   }, [path, key]);
   const reload = React.useCallback(() => setTick((t) => t + 1), []);
-  return { data, error, loading: Boolean(path) && loadedKey !== key, reload, setData };
+  return {
+    data,
+    error,
+    loading: Boolean(path) && loadedKey !== key,
+    reload,
+    setData,
+  };
 }
 
 export function PageHeader({
@@ -125,13 +131,17 @@ export function Card({
   return (
     <section
       className={cn(
-        "rounded-card border border-border bg-surface p-4",
+        "min-w-0 rounded-card border border-border bg-surface p-4",
         className,
       )}
     >
       {(title || actions) && (
         <div className="mb-3 flex items-center justify-between gap-2">
-          {title && <h2 className="text-md font-semibold">{title}</h2>}
+          {title && (
+            <h2 className="min-w-0 break-words text-md font-semibold">
+              {title}
+            </h2>
+          )}
           {actions}
         </div>
       )}
@@ -236,7 +246,12 @@ export function Skeleton({
   className?: string;
 }) {
   return (
-    <div role="status" aria-busy="true" aria-label="Loading" className={cn("space-y-2", className)}>
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading"
+      className={cn("space-y-2", className)}
+    >
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="h-10 animate-pulse rounded bg-surface-2" />
       ))}
@@ -265,7 +280,10 @@ export function Field({
 export function Meter({ value, label }: { value: number; label: string }) {
   const pct = Math.max(0, Math.min(100, Math.round(value * 100)));
   return (
-    <span className="inline-flex items-center gap-2" title={`${label}: ${pct}%`}>
+    <span
+      className="inline-flex items-center gap-2"
+      title={`${label}: ${pct}%`}
+    >
       <span
         role="meter"
         aria-label={label}
@@ -300,7 +318,10 @@ export function formatDate(value?: string | null): string {
 export function formatMoney(value: string | number, currency?: string | null) {
   const n = Number(value);
   if (!currency || Number.isNaN(n)) return String(value);
-  return new Intl.NumberFormat(undefined, { style: "currency", currency }).format(n);
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+  }).format(n);
 }
 
 /** Human labels for field names: "document_type" -> "Document type", "facts.amount_total" -> "Amount total". */

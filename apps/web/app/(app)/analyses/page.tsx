@@ -95,13 +95,13 @@ export default function AnalysesPage() {
       )}
       {list.loading && !list.data ? <Skeleton rows={4} /> : list.error ? <ErrorBox error={list.error} onRetry={list.reload} /> : (
         <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
             <Card title="Your analyses">
               {list.data?.items.length ? (
                 <ul className="space-y-1">
                   {list.data.items.map((a) => (
                     <li key={a.id}>
-                      <button onClick={() => setSelected(a.id)} className={`w-full rounded px-3 py-2 text-left hover:bg-surface-2 ${current?.id === a.id ? "bg-surface-2" : ""}`}>
+                      <button data-wrap onClick={() => setSelected(a.id)} className={`w-full rounded px-3 py-2 text-left hover:bg-surface-2 ${current?.id === a.id ? "bg-surface-2" : ""}`}>
                         <span className="block truncate font-medium">{a.name}</span>
                         <span className="text-xs text-text-muted">{a.last_run_at ? `Last run ${formatDate(a.last_run_at)}` : "Not run yet"}</span>
                       </button>

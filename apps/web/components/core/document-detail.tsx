@@ -33,6 +33,7 @@ import {
   useApi,
 } from "@/components/intel/common";
 import { DocumentAIPanel } from "@/components/intel/DocumentAIPanel";
+import { SimilarDocuments } from "@/components/intel/SimilarDocuments";
 import { reasonText } from "./document-queues";
 import { labelsOf } from "./documents";
 
@@ -530,6 +531,7 @@ export function DocumentDetailView({
               <p className="text-sm text-text-muted">No changes yet.</p>
             )}
           </Card>
+          <SimilarDocuments documentId={id} />
         </div>
       </div>
     </Page>

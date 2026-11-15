@@ -73,7 +73,7 @@ export default function AISettingsPage() {
                       <div className="flex flex-wrap gap-1">
                         {t.routes.map((r, i) => (
                           <span key={r.route} className="flex items-center gap-1 text-xs">
-                            {i > 0 && <span className="text-text-subtle">then</span>}
+                            {i > 0 && <span className="text-text-muted">then</span>}
                             <code className="font-mono">{r.route}</code> <LocalBadge local={r.local} />
                           </span>
                         ))}

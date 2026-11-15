@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FileText, Search, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SetupChecklist } from "@/components/core/setup-checklist";
+import { IntelDashboardWidgets } from "@/components/intel/DashboardWidgets";
 
 export default function Home() {
   return (
@@ -32,6 +33,9 @@ export default function Home() {
         </div>
       </header>
       <SetupChecklist />
+      <div className="grid gap-4 md:grid-cols-3">
+        <IntelDashboardWidgets />
+      </div>
     </main>
   );
 }
