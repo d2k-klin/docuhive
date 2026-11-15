@@ -4,6 +4,10 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+### Added
+
+- `deploy/scripts/nas.py` finds a NAS on your home network (WD My Cloud, Synology and others), tells you whether it offers NFS or SMB, and writes the systemd units that mount its share as the vault. See the [NAS guide](docs/setup/nas-wd-ex2-ultra.md#find-the-nas-and-write-the-mount).
+
 ## [0.7.0] - 2026-11-15
 
 ### Added

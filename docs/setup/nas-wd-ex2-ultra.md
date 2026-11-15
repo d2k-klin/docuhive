@@ -4,6 +4,30 @@ Use the NAS for document files; keep PostgreSQL and staging on the host SSD. Bac
 NAS before changing firmware, RAID or shares. Confirm drive health and RAID status in its
 admin console. RAID 1 is availability, not a backup.
 
+## Find the NAS and write the mount
+
+`deploy/scripts/nas.py` does the network part for you. It runs on the host with plain
+Python 3, changes nothing on the host, and never asks for a password:
+
+```sh
+python3 deploy/scripts/nas.py find                       # file servers on this network
+python3 deploy/scripts/nas.py check 192.168.1.50         # NFS, SMB or both; NFS exports
+python3 deploy/scripts/nas.py units 192.168.1.50 --share docuhive --out /tmp/units
+```
+
+`find` scans your home network (the /24 this machine is on) for devices that offer NFS or
+SMB and shows their names, so a My Cloud appears as `mycloudex2ultra…`. `units` writes the
+systemd mount and automount files described below, using NFS when the NAS offers it and
+SMB otherwise, and prints the commands that install them. It works for any NAS: for one
+whose NFS export is not `/nfs/<share>` (Synology uses `/volume1/<share>`), add
+`--export /volume1/docuhive`.
+
+With SMB the password goes into `/etc/docuhive/nas-credentials` (root only), never into a
+unit or a command, and the [library view](#the-library-view) is unavailable because SMB
+shares do not support hardlinks. Prefer NFS when you can switch it on.
+
+## Prepare the NAS
+
 1. Install firmware supported for this device after reading WD's release notes. Confirm the
    device's current support status with WD; this guide does not assume an end-of-support date.
 2. Disable cloud access, UPnP, router port forwards and unused FTP/media services. Set a
