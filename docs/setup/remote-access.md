@@ -1,8 +1,16 @@
-# Private HTTPS access
+# Remote access (advanced)
+
+For reaching DocuHive away from home. At home only, the [local network guide](local-network.md)
+is simpler and needs none of this.
+
+DocuHive has no second sign-in step yet, so do not put it on the open internet with a port
+forward or a public address. This guide uses [Tailscale](https://tailscale.com), a private
+network between your own devices: the app is reachable from your phone anywhere, and from
+nobody else.
 
 The production web service listens on `127.0.0.1:3000`. Internal API, database and converter
-ports are not published. Use Tailscale on the host and phone, enable MagicDNS and HTTPS
-certificates for the tailnet, then on the host run:
+ports are not published. Install Tailscale on the host and on each phone or computer, enable
+MagicDNS and HTTPS certificates for the tailnet, then on the host run:
 
 ```sh
 tailscale serve --bg --https=443 http://127.0.0.1:3000

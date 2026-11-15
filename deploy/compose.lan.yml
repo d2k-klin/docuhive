@@ -1,0 +1,29 @@
+# The easy option: HTTPS for the devices on your home network, no account or app needed.
+# Add it to the production stack: make up PROD_ENV=.env.production LAN=1
+# See docs/setup/local-network.md. For access from outside the house, use remote-access.md.
+services:
+  lan:
+    image: caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0
+    user: "1000:1000"
+    read_only: true
+    init: true
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    environment:
+      DOCUHIVE_LAN_HOST: ${DOCUHIVE_LAN_HOST:?Set the name or address your devices use for this host}
+      XDG_DATA_HOME: /data
+      XDG_CONFIG_HOME: /tmp/config
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    volumes:
+      - ./lan/Caddyfile:/etc/caddy/Caddyfile:ro
+      - lan-authority:/data  # the local certificate authority; keep it, devices trust it
+    tmpfs: ["/tmp:uid=1000,gid=1000,mode=1777,size=16m"]
+    ports:
+      - "${DOCUHIVE_LAN_BIND:-0.0.0.0}:443:8443"
+      - "${DOCUHIVE_LAN_BIND:-0.0.0.0}:80:8080"
+    networks: [entry]
+    depends_on:
+      web: {condition: service_started}
+volumes:
+  lan-authority:

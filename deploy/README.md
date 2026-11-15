@@ -7,6 +7,8 @@
 | Path | What it is |
 | --- | --- |
 | [`compose.yml`](compose.yml) | Production stack with loopback-only web access and isolated internal services |
+| [`compose.lan.yml`](compose.lan.yml) | Optional add-on: HTTPS for the home network (`make up LAN=1`) |
+| [`lan/`](lan/) | Proxy configuration for the home-network add-on |
 | [`systemd/`](systemd/) | Host backup service and nightly timer |
 | [`drills/`](drills/) | Recovery runbooks and snapshot verification |
 | [`scripts/`](scripts/) | Helper scripts used by the `Makefile` and CI |
@@ -17,4 +19,4 @@
 
 ## Extending
 
-Keep services bound to `127.0.0.1`, pin images by digest, and mirror any new command in the `Makefile`.
+Keep services bound to `127.0.0.1` (the home-network add-on is the one deliberate exception), pin images by digest, and mirror any new command in the `Makefile`.

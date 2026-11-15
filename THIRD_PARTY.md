@@ -10,6 +10,7 @@ rejected, including SPDX and full-name variants of the license.
 | Ghostscript | AGPL-3.0 or commercial | Separate OCRmyPDF subprocess |
 | unpaper | GPL-2.0 | Optional separate image-cleaning subprocess |
 | Gotenberg | MIT | Isolated document-conversion service |
+| Caddy | Apache-2.0 | Optional HTTPS proxy for the home network |
 | PostgreSQL | PostgreSQL | Metadata, search and durable queue |
 | pgvector | PostgreSQL | Vector extension for CL's semantic index |
 

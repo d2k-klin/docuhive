@@ -14,7 +14,8 @@
 | [`mobile.md`](mobile.md) | Phone capture, offline queue, scanner folder and token upload |
 | [`operations.md`](operations.md) | Production deployment, backup timer and upgrade path |
 | [`nas-wd-ex2-ultra.md`](nas-wd-ex2-ultra.md) | Mount and protect NAS storage and the library view |
-| [`remote-access.md`](remote-access.md) | Private HTTPS through Tailscale |
+| [`local-network.md`](local-network.md) | The easy option: HTTPS on your home network |
+| [`remote-access.md`](remote-access.md) | The advanced option: access away from home through Tailscale |
 | [`notifications.md`](notifications.md) | Notifications and reminders |
 
 ## Extending

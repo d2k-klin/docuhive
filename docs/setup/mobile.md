@@ -10,7 +10,7 @@ server can't be reached, uploads stay queued; no success is shown until it accep
 
 ## Install on your phone
 
-1. Follow [remote access](remote-access.md) to open the HTTPS address on your phone.
+1. Open DocuHive's HTTPS address on your phone: at home with the [local network guide](local-network.md) (trust the certificate on the phone first), or anywhere with [remote access](remote-access.md).
 2. Sign in, return to `/capture`, and wait for the initial page to finish loading.
 3. iPhone: Safari → Share → Add to Home Screen. Android: Chrome → menu → Install app.
 4. Capture three pages, reorder them, then choose **Upload document**. Keep the original

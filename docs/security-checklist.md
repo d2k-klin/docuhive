@@ -47,7 +47,7 @@ The NFR-02 hardening checklist from [OA-M8](Developer-OA/05-ops-security-cloud.m
 
   CL's privacy tests (`tests/intel/test_privacy_audit.py`) pass.
 - [x] **Files at rest.** New vault and staging files are created with `DOCUHIVE_UMASK` (default `027`), so other accounts on the host or NAS cannot read them (`test_cli.py::test_created_files_are_closed_to_other_accounts`). Disk or volume encryption is the host's job; the [operations guide](setup/operations.md#protect-the-storage) says how.
-- [x] **Network.** Only the web app publishes a port, on `127.0.0.1:3000`. The operations guide shows how to check this with `ss -tlnp`.
+- [x] **Network.** Only the web app publishes a port, on `127.0.0.1:3000`. The optional [home-network add-on](setup/local-network.md) also publishes 80 and 443 to the local network, through a non-root, read-only proxy; port 80 serves only a redirect and the certificate authority's public certificate. The operations guide shows how to check this with `ss -tlnp`.
 
 - [x] **OWASP ZAP baseline** (2026-11-05, ZAP stable, local production stack from the 0.3.1 images): signed out and signed in as a household member, 63 rules passed, no failures. Remaining warnings:
   - `'unsafe-inline'` in the CSP (the known limit above);

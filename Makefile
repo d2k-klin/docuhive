@@ -71,7 +71,8 @@ ocr-smoke:
 	docker run --rm -i --entrypoint python docuhive-worker:ocr-smoke - < deploy/scripts/ocr_smoke.py
 
 PROD_ENV ?= .env.production
-PROD_COMPOSE = docker compose --env-file $(PROD_ENV) -f deploy/compose.yml
+# LAN=1 adds HTTPS for the home network (docs/setup/local-network.md).
+PROD_COMPOSE = docker compose --env-file $(PROD_ENV) -f deploy/compose.yml $(if $(LAN),-f deploy/compose.lan.yml)
 
 up:
 	$(PROD_COMPOSE) up -d --wait

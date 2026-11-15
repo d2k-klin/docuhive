@@ -11,7 +11,8 @@
 | [setup/mobile.md](setup/mobile.md) | Phone capture, offline uploads, scanner folders and personal tokens |
 | [setup/operations.md](setup/operations.md) | Production containers, nightly backups, recovery and upgrades |
 | [setup/nas-wd-ex2-ultra.md](setup/nas-wd-ex2-ultra.md) | Mounting the NAS and securing the generated library |
-| [setup/remote-access.md](setup/remote-access.md) | Private HTTPS for phones through Tailscale |
+| [setup/local-network.md](setup/local-network.md) | The easy option: HTTPS on your home network |
+| [setup/remote-access.md](setup/remote-access.md) | The advanced option: access away from home through Tailscale |
 | [setup/development.md](setup/development.md) | Running DocuHive locally, and the checks to run before a pull request |
 | [setup/knowledge-bases.md](setup/knowledge-bases.md) | Saved scopes, indexing status and API token privacy |
 | [setup/ai-providers.md](setup/ai-providers.md) | Local and cloud AI, which model does what, privacy and budgets |

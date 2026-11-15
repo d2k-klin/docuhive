@@ -6,7 +6,7 @@ backups and a full host-loss rehearsal remain release gates, not results implied
 
 ## Prepare a Linux host
 
-Use Docker Engine with Compose 2.24 or newer, a supported Python 3, Tailscale, and the pinned
+Use Docker Engine with Compose 2.24 or newer, a supported Python 3, Tailscale if you want [remote access](remote-access.md), and the pinned
 [restic 0.18.1 release](https://github.com/restic/restic/releases/tag/v0.18.1). Verify its
 published SHA-256 before installing it; the backup script refuses other versions. No
 installer is downloaded or run by this repository. Docker builds use digest-pinned bases
@@ -33,7 +33,8 @@ DOCUHIVE_WEB_IMAGE=docuhive-web:<checked-out-git-sha>
 POSTGRES_PASSWORD=<random-password>
 DOCUHIVE_DATABASE_URL=postgresql+psycopg://docuhive:<url-encoded-password>@postgres:5432/docuhive
 DOCUHIVE_SECRET_KEY=<at-least-32-random-bytes>
-DOCUHIVE_PUBLIC_URL=https://your-host.your-tailnet.ts.net
+DOCUHIVE_PUBLIC_URL=https://your-host.your-tailnet.ts.net   # or your home address
+# DOCUHIVE_LAN_HOST=docuhive.fritz.box                      # home-network option, with LAN=1
 DOCUHIVE_VAULT_HOST_DIR=/srv/docuhive/vault
 DOCUHIVE_STAGING_HOST_DIR=/srv/docuhive/staging
 DOCUHIVE_PG_HOST_DIR=/srv/docuhive/pg
@@ -67,7 +68,8 @@ Check what the host exposes after every install or upgrade:
 sudo ss -tlnp
 ```
 
-DocuHive's only listener is `127.0.0.1:3000` (the web app). Anything else on `0.0.0.0` or
+DocuHive's only listener is `127.0.0.1:3000` (the web app), plus ports 80 and 443 if you
+started it with the [home-network option](local-network.md). Anything else on `0.0.0.0` or
 `[::]` must be a service you chose, such as SSH or Tailscale. A DocuHive port there means
 the Compose file was changed; put it back on loopback.
 
@@ -89,7 +91,7 @@ not encrypted. Protect them where they live:
   `chmod -R o-rwx` on the vault folder.
 - **Backups** made by the nightly restic job are encrypted with the restic password. Keep that
   password off this host.
-- **Access** stays on the tailnet or your LAN; the web app is the only published port.
+- **Access** stays on your home network or your tailnet; never forward a router port to DocuHive.
 
 ## Nightly backups
 

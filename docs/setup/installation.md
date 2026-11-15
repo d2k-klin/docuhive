@@ -13,7 +13,7 @@ To try DocuHive on your own computer first, use the [quick start](../../README.m
 | A Linux host with an SSD | Runs the containers; the database and the upload staging area live on the SSD |
 | Docker Engine with Compose 2.24 or newer | Runs DocuHive |
 | A NAS or a second disk | Holds the vault, the folder with your documents |
-| [Tailscale](https://tailscale.com) on the host and on your phones | Private HTTPS, with no ports opened on your router |
+| Optional: [Tailscale](https://tailscale.com) on the host and on your phones | Only for reaching DocuHive away from home ([remote access](remote-access.md)) |
 | [restic 0.18.1](https://github.com/restic/restic/releases/tag/v0.18.1) and a backup disk or remote | Nightly backups |
 | Optional: 16–32 GB RAM for [Ollama](https://ollama.com) | Local AI, so private documents never leave the house |
 
@@ -93,15 +93,26 @@ Create an account for each household member the same way, without `--admin`. The
 
 ## 6. Turn on HTTPS
 
-Serve the web app over your tailnet and set the resulting `https://…ts.net` address as `DOCUHIVE_PUBLIC_URL`. See [private HTTPS](remote-access.md). Then run `make up PROD_ENV=.env.production` again so the containers pick up the address.
+Sign-in and phone capture need HTTPS. Choose how your devices reach DocuHive:
 
-Check that DocuHive listens on loopback only:
+| | Easy: home network | Advanced: also away from home |
+| --- | --- | --- |
+| Works | On your Wi-Fi or cable network | Anywhere, on devices you add |
+| You need | Nothing extra | A Tailscale account, and its app on every device |
+| Once per device | Trust DocuHive's certificate | Sign in to Tailscale |
+| Guide | [Local network](local-network.md) | [Remote access](remote-access.md) |
+
+Follow one guide, set the address it gives you as `DOCUHIVE_PUBLIC_URL`, and start the
+containers again so they pick it up.
+
+Then check what DocuHive listens on:
 
 ```bash
 sudo ss -tlnp
 ```
 
-The only DocuHive line is `127.0.0.1:3000`.
+With the home-network option the DocuHive lines are ports 80 and 443 plus `127.0.0.1:3000`;
+with remote access only `127.0.0.1:3000`. No database or converter port may appear.
 
 ## 7. Sign in and finish setup
 

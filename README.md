@@ -75,7 +75,8 @@ Open <http://localhost:3000> and sign in with the account you just created. The 
 
 | Guide | What's in it |
 | --- | --- |
-| [Installation guide](docs/setup/installation.md) | From an empty Linux host to a signed-in household archive, step by step |
+| [Installation guide](docs/setup/installation.md) | From an empty Linux host to a signed-in archive, step by step |
+| [Local network](docs/setup/local-network.md) / [Remote access](docs/setup/remote-access.md) | The easy option for home use, and the advanced one for reaching it from anywhere |
 | [User guide](docs/user-guide.md) | Adding, finding, correcting and asking about documents, day to day |
 | [Features](docs/FEATURES.md) | Every feature in one sentence, and what works today |
 | [AI providers](docs/setup/ai-providers.md) | Local (Ollama) and cloud models, which model does what, privacy and budgets |

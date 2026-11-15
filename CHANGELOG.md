@@ -6,6 +6,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- **An easy way to use DocuHive at home.** `make up LAN=1` serves it over HTTPS to every device on your home network, with no extra account or app; you trust DocuHive's certificate once per device. See the [local network guide](docs/setup/local-network.md). Access from outside the house stays the advanced option ([remote access](docs/setup/remote-access.md)).
 - `deploy/scripts/nas.py` finds a NAS on your home network (WD My Cloud, Synology and others), tells you whether it offers NFS or SMB, and writes the systemd units that mount its share as the vault. See the [NAS guide](docs/setup/nas-wd-ex2-ultra.md#find-the-nas-and-write-the-mount).
 
 ## [0.7.0] - 2026-11-15
