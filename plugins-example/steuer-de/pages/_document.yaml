@@ -1,0 +1,12 @@
+title: Bookings
+for: { document_types: [invoice, receipt] }
+blocks:
+  - type: table
+    source: document_entries
+    columns:
+      - { field: book_name, label: Book }
+      - { field: account, label: Account }
+      - { field: vat_label, label: VAT }
+      - { field: gross, label: Gross, format: number, align: right }
+      - { field: state_label, label: State, format: badge, tones: { Booked: ok, To confirm: warn, Closed: muted } }
+    empty: Not booked. It appears under Tax inbox once it is classified as an invoice or receipt.

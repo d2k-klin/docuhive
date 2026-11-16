@@ -14,6 +14,9 @@ x-backend: &backend
     DOCUHIVE_OVERLAY_DIR: /app/tests/mocks/config
     DOCUHIVE_AI_OPENAI_API_KEY: synthetic-qa-key
     DOCUHIVE_PUBLIC_URL: https://127.0.0.1:53100
+    DOCUHIVE_PLUGINS_DIR: /app/plugins-example  # the example plugins, switched on by the seed
+    DOCUHIVE_GUEST_LINKS: "true"
+    DOCUHIVE_MAIL_TOKEN_KEY: 2vYV3y1WlqZ5mK9oA0n8Xc4dE6fG7hJ1kL2pQ3rS4tU=  # synthetic, QA only
   volumes:
     - e2e-vault:/srv/vault
     - e2e-staging:/srv/staging

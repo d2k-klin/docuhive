@@ -62,8 +62,10 @@ class DocumentPage(BaseModel):
     next_offset: int | None
 
 
-def problem(status: int, code: str, message: str) -> HTTPException:
-    return HTTPException(status, detail={"code": code, "message": message, "details": {}})
+def problem(status: int, code: str, message: str, details: dict | None = None) -> HTTPException:
+    return HTTPException(
+        status, detail={"code": code, "message": message, "details": details or {}}
+    )
 
 
 def visible(user: CurrentUser):  # type: ignore[no-untyped-def]

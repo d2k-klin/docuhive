@@ -10,9 +10,10 @@ CLEARABLE = ("title", "document_date", "language", "category", "document_type", 
 def apply_view(
     doc: DocumentView, patch: MetadataPatch, *, actor: str, force: bool = False
 ) -> ApplyResult:
-    if actor != "system" and not (actor.startswith("user:") or actor.startswith("ai:")):
+    if actor != "system" and not actor.startswith(("user:", "ai:", "plugin:")):
         raise ValueError("Unknown metadata actor")
-    is_user, is_ai = actor.startswith("user:"), actor.startswith("ai:")
+    # A plugin is automation like the AI: it never overrides what a person set.
+    is_user, is_ai = actor.startswith("user:"), actor.startswith(("ai:", "plugin:"))
     if patch.unlock_fields and not is_user:
         raise ValueError("Only a user can unlock manual fields")
     changes: dict = {}

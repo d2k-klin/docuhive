@@ -5,6 +5,7 @@ export function proxy(request: NextRequest) {
   if (
     path.startsWith("/api/") ||
     path === "/login" ||
+    path.startsWith("/guest/") ||
     path.startsWith("/_next/") ||
     path === "/favicon.ico" ||
     [

@@ -1,0 +1,65 @@
+title: { en: Item, de: Gegenstand }
+params: [id]
+blocks:
+  - type: detail
+    source: item
+    fields:
+      - { field: name, label: Name }
+      - { field: category_label, label: Category }
+      - { field: location, label: Place }
+      - { field: manufacturer, label: Manufacturer }
+      - { field: model, label: Model }
+      - { field: serial_number, label: Serial number }
+      - { field: purchase_date, label: Bought, format: date }
+      - { field: seller, label: Shop }
+      - { field: value, label: Price, format: money }
+      - { field: warranty_until, label: Warranty until, format: date }
+      - { field: warranty_source, label: Warranty date is, format: badge }
+      - { field: business_flag, label: For the books, format: badge }
+  - type: table
+    title: Documents
+    source: item_documents
+    columns:
+      - { field: title, label: Document, link: { document: id } }
+      - { field: role, label: Role, format: badge }
+      - { field: status, label: Note, format: badge, tones: { Suggested: warn } }
+    row_actions:
+      - { label: Belongs to this item, action: confirm_document, when: status }
+    empty: No documents yet.
+  - type: form
+    title: Correct
+    initial: item
+    fields:
+      - { name: name, type: text, label: Name }
+      - { name: category, type: choice, label: Category, options: category_options }
+      - { name: location_id, type: choice, label: Place, options: location_options }
+      - { name: manufacturer, type: text, label: Manufacturer }
+      - { name: model, type: text, label: Model }
+      - { name: serial_number, type: text, label: Serial number }
+      - { name: assigned_to, type: text, label: Used by }
+      - { name: purchase_date, type: date, label: Bought on }
+      - { name: price, type: money, label: Price }
+      - { name: warranty_until, type: date, label: Warranty until }
+      - { name: shared, type: boolean, label: The household can see it }
+      - { name: notes, type: textarea, label: Notes }
+    action: save_item
+    submit: Save
+  - type: form
+    title: Add a document
+    help: A manual, a repair bill, or a photo of the type plate (its serial number is read).
+    fields:
+      - { name: document, type: choice, label: Document, options: recent_documents, required: true }
+      - { name: role, type: choice, label: It is, options: roles }
+    action: attach_document
+    submit: Add
+  - type: actions
+    title: For a claim
+    actions:
+      - { label: Claim bundle (one PDF with all documents), action: claim_bundle, primary: true }
+  - type: form
+    title: No longer here
+    fields:
+      - { name: state, type: choice, label: What happened, options: states, required: true }
+    action: leave
+    submit: Remove from the lists
+    confirm: "Remove this item from your lists? It stays in the history."

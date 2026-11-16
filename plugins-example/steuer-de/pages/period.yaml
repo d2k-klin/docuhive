@@ -1,0 +1,40 @@
+title: { en: VAT advance return, de: Umsatzsteuer-Voranmeldung }
+description: The figures for the form, in the form's order. Type them into Mein ELSTER, then upload the confirmation.
+params: [book, key]
+blocks:
+  - type: summary
+    source: period_summary
+  - type: steps
+    title: Before you close
+    source: period_missing
+    empty: Nothing is missing.
+  - type: table
+    title: Form fields
+    source: period_fields
+    columns:
+      - { field: field, label: Field }
+      - { field: label, label: What }
+      - { field: value, label: Value for the form, format: money }
+      - { field: tax, label: Tax, format: money }
+      - { field: entries, label: Bookings, format: number }
+    empty: No confirmed bookings in this period yet.
+  - type: actions
+    actions:
+      - { label: Propose bookings for documents not booked yet, action: book_missing }
+      - { label: Close this period, action: close_period, primary: true, confirm: "Closing freezes every booking in this period. Corrections then go into a later period. Close it?" }
+  - type: summary
+    title: Paying
+    source: payment_reference
+  - type: form
+    title: I have filed it
+    help: Type the form fields above into Mein ELSTER, send, and save the transfer confirmation (Übertragungsprotokoll) as a PDF. Upload it to DocuHive, then choose it here.
+    fields:
+      - { name: filed_on, type: date, label: Filed on }
+      - { name: confirmation, type: choice, label: The confirmation, options: recent_documents, required: true }
+    action: mark_filed
+    submit: Mark as filed
+  - type: actions
+    title: For your tax advisor
+    actions:
+      - { label: Download bookings and documents (ZIP), action: advisor_zip, download: true }
+      - { label: Read-only link for 14 days, action: advisor_link, confirm: "Make a link anyone holding it can use to read this period's documents for 14 days?" }

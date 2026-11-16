@@ -34,6 +34,10 @@ def _date(s: str | None) -> date | None:
     return date.fromisoformat(s) if s else None
 
 
+# Tool factories from running plugins: fn(user, scope, route, masked ids) -> list of tools.
+EXTRA: list[Any] = []
+
+
 def build_tools(user: CurrentUser, scope: SearchFilters, route: Route) -> list:
     from strands import tool
 
@@ -190,6 +194,8 @@ def build_tools(user: CurrentUser, scope: SearchFilters, route: Route) -> list:
         }
 
     tools: list[Any] = [search_documents, read_document, query_facts, list_vocabulary]
+    for factory in EXTRA:
+        tools += factory(user, scope, route, masked)
     return tools
 
 

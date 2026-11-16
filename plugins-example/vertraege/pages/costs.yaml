@@ -1,0 +1,10 @@
+title: { en: Contract costs, de: Vertragskosten }
+nav: { label: { en: Contract costs, de: Kosten }, icon: chart-column, order: 32 }
+blocks:
+  - type: chart
+    title: Per month, by kind
+    source: costs
+    x: kind
+    y: per_month
+    format: money
+    empty: No active contracts with a price.

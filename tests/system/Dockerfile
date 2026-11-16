@@ -15,6 +15,7 @@ COPY config/ config/
 COPY LICENSE ./
 RUN uv sync --frozen --all-packages --all-extras --no-dev
 COPY tests/mocks/ tests/mocks/
+COPY plugins-example/ plugins-example/
 COPY services/docuhive/tests/intel/fixtures/ services/docuhive/tests/intel/fixtures/
 COPY tests/system/tools/seed.py tests/system/tools/seed.py
 RUN mkdir -p /srv/vault /srv/staging /srv/captures && chown -R 10001:10001 /srv

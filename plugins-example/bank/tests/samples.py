@@ -1,0 +1,59 @@
+# ruff: noqa: E501 - statement lines are as long as the banks make them
+"""Made-up statements in each format. No real account or person appears here."""
+
+CAMT = """<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
+ <BkToCstmrStmt><Stmt>
+  <Acct><Id><IBAN>DE02120300000000202051</IBAN></Id><Ccy>EUR</Ccy></Acct>
+  <Bal><Tp><CdOrPrtry><Cd>OPBD</Cd></CdOrPrtry></Tp><Amt Ccy="EUR">1000.00</Amt>
+   <CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2026-03-01</Dt></Dt></Bal>
+  <Bal><Tp><CdOrPrtry><Cd>CLBD</Cd></CdOrPrtry></Tp><Amt Ccy="EUR">2715.80</Amt>
+   <CdtDbtInd>CRDT</CdtDbtInd><Dt><Dt>2026-03-31</Dt></Dt></Bal>
+  <Ntry><Amt Ccy="EUR">84.20</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts><Cd>BOOK</Cd></Sts>
+   <BookgDt><Dt>2026-03-03</Dt></BookgDt><ValDt><Dt>2026-03-03</Dt></ValDt>
+   <AcctSvcrRef>2026030300001</AcctSvcrRef>
+   <NtryDtls><TxDtls><Refs><EndToEndId>RE-2026-0042</EndToEndId></Refs>
+    <RltdPties><Cdtr><Pty><Nm>Stadtwerke Beispiel</Nm></Pty></Cdtr>
+     <CdtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></CdtrAcct></RltdPties>
+    <RmtInf><Ustrd>Rechnung RE-2026-0042 Strom Maerz</Ustrd></RmtInf></TxDtls></NtryDtls></Ntry>
+  <Ntry><Amt Ccy="EUR">2000.00</Amt><CdtDbtInd>CRDT</CdtDbtInd><Sts><Cd>BOOK</Cd></Sts>
+   <BookgDt><Dt>2026-03-15</Dt></BookgDt>
+   <NtryDtls>
+    <TxDtls><AmtDtls><TxAmt><Amt Ccy="EUR">1500.00</Amt></TxAmt></AmtDtls>
+     <RltdPties><Dbtr><Pty><Nm>Kunde Eins GmbH</Nm></Pty></Dbtr></RltdPties>
+     <RmtInf><Ustrd>RG 2026-007</Ustrd></RmtInf></TxDtls>
+    <TxDtls><AmtDtls><TxAmt><Amt Ccy="EUR">500.00</Amt></TxAmt></AmtDtls>
+     <RltdPties><Dbtr><Pty><Nm>Kunde Zwei</Nm></Pty></Dbtr></RltdPties>
+     <RmtInf><Ustrd>RG 2026-008</Ustrd></RmtInf></TxDtls>
+   </NtryDtls></Ntry>
+  <Ntry><Amt Ccy="EUR">200.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts><Cd>BOOK</Cd></Sts>
+   <BookgDt><Dt>2026-03-20</Dt></BookgDt>
+   <NtryDtls><TxDtls><RltdPties><Cdtr><Pty><Nm>Bargeldauszahlung Automat</Nm></Pty></Cdtr></RltdPties>
+   </TxDtls></NtryDtls></Ntry>
+  <Ntry><Amt Ccy="EUR">50.00</Amt><CdtDbtInd>DBIT</CdtDbtInd><Sts><Cd>PDNG</Cd></Sts>
+   <BookgDt><Dt>2026-03-31</Dt></BookgDt></Ntry>
+ </Stmt></BkToCstmrStmt>
+</Document>
+"""
+
+MT940 = """:20:STARTUMSE
+:25:12030000/0000202051
+:28C:00003/001
+:60F:C260301EUR1000,00
+:61:2603030303DR84,20NDDTNONREF//2026030300001
+:86:105?00SEPA-BASIS-LASTSCHRIFT?20EREF+RE-2026-0042?21SVWZ+Rechnung RE-2026-0042?22Strom
+ Maerz?30COBADEFFXXX?31DE89370400440532013000?32Stadtwerke Beispiel
+:61:2603150315CR2000,00NTRFNONREF
+:86:166?00GUTSCHRIFT?20RG 2026-007 und 008?32Kunde Eins GmbH
+:62F:C260331EUR2915,80
+-
+"""
+
+# Windows-1252, the way older bank software writes it ("ä" and "€" as single bytes).
+ING_CSV = (
+    "Umsatzanzeige;Datei erstellt am: 05.03.2026\n"
+    "IBAN;DE02 1203 0000 0000 2020 51\n"
+    "Buchung;Valuta;Auftraggeber/Empfänger;Buchungstext;Verwendungszweck;Saldo;Währung;Betrag;Währung\n"
+    "03.03.2026;03.03.2026;Stadtwerke Beispiel;Lastschrift;RE-2026-0042 Strom Maerz;1.915,80;EUR;-84,20;EUR\n"
+    "15.03.2026;15.03.2026;Kunde Eins GmbH;Gutschrift;RG 2026-007;3.915,80;EUR;2.000,00;EUR\n"
+).encode("cp1252")

@@ -1,0 +1,13 @@
+# Item categories and the warranty months assumed when a document states none. The assumption
+# is a reminder aid, not a statement of your rights: the seller's legal liability depends on the
+# country and on whether you bought as a consumer. Extend with custom/rules/categories.yaml.
+categories:
+  - { id: appliance, label: Household appliances, warranty_months: 24 }
+  - { id: electronics, label: Electronics and computers, warranty_months: 24 }
+  - { id: phone, label: Phones and tablets, warranty_months: 24 }
+  - { id: furniture, label: Furniture, warranty_months: 24 }
+  - { id: tools, label: Tools and garden, warranty_months: 24 }
+  - { id: bicycle, label: Bicycles and sports, warranty_months: 24 }
+  - { id: jewellery, label: Jewellery and watches, warranty_months: 24 }
+  - { id: instrument, label: Musical instruments, warranty_months: 24 }
+  - { id: other, label: Other, warranty_months: 24 }

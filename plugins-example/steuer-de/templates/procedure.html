@@ -1,0 +1,23 @@
+{#- A starting point for the procedure documentation the GoBD expect. It describes how this
+    installation works; the owner completes it and keeps it current. -#}
+<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
+  @page { size: A4; margin: 20mm; } body { font: 10.5pt/1.5 "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 16pt; } h2 { font-size: 12pt; margin-top: 7mm; } .todo { color: #8a4b00; }
+</style></head><body>
+<h1>Verfahrensdokumentation – {{ book.name }}</h1>
+<p>{{ me.name }}, Stand {{ today }}. Erstellt von DocuHive als Ausgangspunkt; bitte prüfen und ergänzen.</p>
+<h2>1. Allgemeines</h2>
+<p>Belege werden in DocuHive gesammelt, gelesen, gebucht und aufbewahrt. Buchführungsart: {{ "Einnahmenüberschussrechnung" if book.kind == "euer" else "Übergabe an den Steuerberater" if book.kind == "hand_over" else "Privat" }}. Kontenrahmen: {{ (book.chart or "–")|upper }}.</p>
+<h2>2. Belegeingang</h2>
+<p>Belege kommen per Hochladen, Foto, E-Mail-Postfach oder Scanner-Ordner. Jedes Original wird unverändert gespeichert ({{ vault }}), mit Prüfsumme; eine durchsuchbare PDF-Fassung und die Metadaten liegen daneben.</p>
+<h2>3. Buchung</h2>
+<p>E-Rechnungen werden aus ihren strukturierten Daten gelesen. Andere Belege liest ein KI-Modell; Beträge werden nur übernommen, wenn Netto und Steuer je Steuersatz rechnerisch aufgehen. Jede Buchung wird von einer Person bestätigt. Eigene Rechnungen werden beim Ausstellen gebucht und erhalten fortlaufende Nummern ohne Lücken.</p>
+<h2>4. Unveränderbarkeit</h2>
+<p>Abgeschlossene Zeiträume, ausgestellte Rechnungen und gesendete Schreiben werden gesperrt: die Anwendung lässt keine Änderung und kein Löschen zu, bis ein Administrator die Sperre mit Begründung aufhebt (protokolliert). Eine regelmäßige Prüfung erkennt veränderte Originaldateien. <span class="todo">[Hinweis: Wer direkten Zugriff auf den Speicher hat, kann Dateien technisch verändern; beschreiben Sie hier, wer diesen Zugriff hat.]</span></p>
+<h2>5. Zugriffe</h2>
+<p class="todo">[Wer hat welche Rolle (Administrator, Mitglied, Buchhalter)? Wer kennt welche Kennwörter?]</p>
+<h2>6. Datensicherung</h2>
+<p class="todo">[Wie oft, wohin, wie wird die Wiederherstellung geprüft? Siehe die Betriebsanleitung von DocuHive.]</p>
+<h2>7. Aufbewahrung</h2>
+<p>Buchungsbelege 8 Jahre, Bücher und Erklärungen 10 Jahre, Geschäftsbriefe 6 Jahre, jeweils ab Ende des Kalenderjahres (AO § 147). Gesperrte Dokumente tragen das Ende ihrer Frist.</p>
+</body></html>

@@ -1,0 +1,37 @@
+# A subset of DATEV SKR03 for a small business. `euer` is the line of the income-surplus
+# statement the account feeds; `vat` the usual VAT treatment; `deductible` the share that
+# counts as a business expense. Source: DATEV Kontenrahmen SKR03, to be checked against the
+# current edition. Add accounts in custom/rules/accounts-skr03.yaml with _merge: true.
+chart: skr03
+bank: "1200"
+cash: "1000"
+private: "1800"
+accounts:
+  - { id: "8400", name: "Revenue 19 %", kind: income, euer: revenue, vat: sale_19 }
+  - { id: "8300", name: "Revenue 7 %", kind: income, euer: revenue, vat: sale_7 }
+  - { id: "8125", name: "Tax-free intra-EU supplies", kind: income, euer: revenue_tax_free, vat: sale_eu_goods }
+  - { id: "8338", name: "Services to EU businesses (reverse charge)", kind: income, euer: revenue_tax_free, vat: sale_eu_service }
+  - { id: "8195", name: "Revenue under the small-business rule", kind: income, euer: revenue, vat: sale_small_business }
+  - { id: "2700", name: "Other income", kind: income, euer: other_income, vat: sale_19 }
+  - { id: "3400", name: "Goods 19 %", kind: expense, euer: goods, vat: purchase_19 }
+  - { id: "3300", name: "Goods 7 %", kind: expense, euer: goods, vat: purchase_7 }
+  - { id: "3100", name: "Bought-in services", kind: expense, euer: subcontractors, vat: purchase_19 }
+  - { id: "3123", name: "Services from EU businesses", kind: expense, euer: subcontractors, vat: purchase_rc_eu }
+  - { id: "4210", name: "Rent", kind: expense, euer: rent, vat: purchase_none }
+  - { id: "4240", name: "Gas, electricity, water", kind: expense, euer: utilities, vat: purchase_19 }
+  - { id: "4360", name: "Insurance", kind: expense, euer: insurance, vat: purchase_none }
+  - { id: "4530", name: "Running vehicle costs", kind: expense, euer: vehicle, vat: purchase_19 }
+  - { id: "4670", name: "Travel (owner)", kind: expense, euer: travel, vat: purchase_7 }
+  - { id: "4650", name: "Business meals", kind: expense, euer: entertainment, vat: purchase_19, deductible: 0.7 }
+  - { id: "4630", name: "Gifts (deductible)", kind: expense, euer: gifts, vat: purchase_19 }
+  - { id: "4920", name: "Telephone", kind: expense, euer: telecom, vat: purchase_19 }
+  - { id: "4925", name: "Internet", kind: expense, euer: telecom, vat: purchase_19 }
+  - { id: "4910", name: "Postage", kind: expense, euer: office, vat: purchase_none }
+  - { id: "4930", name: "Office supplies", kind: expense, euer: office, vat: purchase_19 }
+  - { id: "4806", name: "Software and maintenance", kind: expense, euer: software, vat: purchase_19 }
+  - { id: "4940", name: "Books and journals", kind: expense, euer: training, vat: purchase_7 }
+  - { id: "4945", name: "Training", kind: expense, euer: training, vat: purchase_19 }
+  - { id: "4950", name: "Legal and advisory fees", kind: expense, euer: advice, vat: purchase_19 }
+  - { id: "4955", name: "Bookkeeping", kind: expense, euer: advice, vat: purchase_19 }
+  - { id: "4970", name: "Bank fees", kind: expense, euer: fees, vat: purchase_none }
+  - { id: "4900", name: "Other business expenses", kind: expense, euer: other, vat: purchase_19 }

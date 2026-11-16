@@ -1,0 +1,7 @@
+# From what price an item on a receipt is proposed, and the business thresholds (a flag only,
+# no depreciation). The business values are net amounts under German rules (EStG § 6 (2), (2a))
+# and must be checked against the current law before relying on them.
+propose_from: 50
+low_value_up_to: 800     # flagged "low_value" up to here (net)
+asset_from: 800.01       # flagged "asset" from here (net)
+document_categories: [purchases, purchases/receipts, purchases/warranties, other]

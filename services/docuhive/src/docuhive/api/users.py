@@ -20,11 +20,11 @@ Admin = Annotated[CurrentUser, Depends(require_admin)]
 class UserCreate(BaseModel):
     username: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=12, max_length=1024)
-    role: Literal["admin", "member"] = "member"
+    role: Literal["admin", "member", "bookkeeper"] = "member"
 
 
 class UserPatch(BaseModel):
-    role: Literal["admin", "member"] | None = None
+    role: Literal["admin", "member", "bookkeeper"] | None = None
     disabled: bool | None = None
     password: str | None = Field(default=None, min_length=12, max_length=1024)
 
@@ -58,7 +58,7 @@ def users(
 @router.post("", status_code=201)
 def add_user(body: UserCreate, user: Admin) -> dict:
     try:
-        user_id = create_user(body.username, body.password, admin=body.role == "admin")
+        user_id = create_user(body.username, body.password, role=body.role)
     except IntegrityError as error:
         raise HTTPException(409, "That username is already in use") from error
     except ValueError as error:
@@ -83,3 +83,36 @@ def edit_user(user_id: int, body: UserPatch, user: Admin) -> None:
         db.execute(delete(AuthSession).where(AuthSession.user_id == row.id))
         for token in db.scalars(select(ApiToken).where(ApiToken.user_id == row.id)):
             token.revoked_at = datetime.now(UTC)
+
+
+class BookkeeperAccess(BaseModel):
+    categories: list[str] = Field(default=[], max_length=50)
+
+
+@router.get("/roles/bookkeeper", response_model=BookkeeperAccess)
+def bookkeeper_access(admin: Admin) -> BookkeeperAccess:
+    """The categories a bookkeeper sees besides their own and shared documents."""
+    from docuhive.auth.permissions import BOOKKEEPER_CATEGORIES
+    from docuhive.config import get_setting
+
+    return BookkeeperAccess(categories=get_setting(BOOKKEEPER_CATEGORIES) or [])
+
+
+@router.put("/roles/bookkeeper", response_model=BookkeeperAccess)
+def set_bookkeeper_access(body: BookkeeperAccess, admin: Admin) -> BookkeeperAccess:
+    from docuhive import taxonomy
+    from docuhive.auth.permissions import BOOKKEEPER_CATEGORIES
+    from docuhive.config import set_setting
+
+    known = {c.id for c in taxonomy.load().categories}
+    if unknown := sorted(set(body.categories) - known):
+        raise HTTPException(
+            422,
+            {
+                "code": "unknown_category",
+                "message": f"Not a category: {', '.join(unknown)}",
+                "details": {},
+            },
+        )
+    set_setting(BOOKKEEPER_CATEGORIES, sorted(set(body.categories)))
+    return BookkeeperAccess(categories=sorted(set(body.categories)))

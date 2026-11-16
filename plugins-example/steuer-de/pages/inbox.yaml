@@ -1,0 +1,28 @@
+title: { en: Bookings to confirm, de: Buchungen bestätigen }
+description: Every invoice and receipt becomes a proposed booking. Nothing counts until you confirm it.
+nav: { label: { en: Tax inbox, de: Steuer-Eingang }, icon: receipt, order: 11 }
+params: [book]
+blocks:
+  - type: table
+    source: proposals
+    columns:
+      - { field: entry_date, label: Date, format: date }
+      - { field: title, label: Document, link: { document: document_id } }
+      - { field: counterparty, label: From }
+      - { field: account, label: Account }
+      - { field: vat_label, label: VAT }
+      - { field: amount, label: Amount, format: money, total: true }
+      - { field: note, label: Note }
+    row_actions:
+      - { label: Confirm as proposed, action: confirm_as_proposed, when: account }
+    empty: Nothing to confirm. New invoices and receipts appear here.
+  - type: form
+    title: Confirm with changes
+    fields:
+      - { name: entry, type: choice, label: Booking, options: proposal_options, required: true }
+      - { name: account, type: choice, label: Account, options: accounts }
+      - { name: vat_code, type: choice, label: VAT treatment, options: vat_code_options }
+      - { name: paid_on, type: date, label: Paid on, help: Income-surplus accounting counts a booking in the year it was paid. }
+      - { name: always, type: boolean, label: Always book this sender like this }
+    action: confirm_entry
+    submit: Confirm booking

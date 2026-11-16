@@ -1,0 +1,31 @@
+# Sentences an invoice must carry in certain cases, per language, with their source. They are
+# printed on the invoice and, for e-invoices, sent as the VAT exemption reason (BT-120).
+# To be confirmed in the review with a tax advisor. Change wording in custom/rules/invoice-texts.yaml.
+texts:
+  small_business:
+    de: "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
+    en: "No VAT is charged under section 19 of the German VAT Act (small business)."
+    source: "UStG § 19 (1), § 34a UStDV"
+  reverse_charge:
+    de: "Steuerschuldnerschaft des Leistungsempfängers."
+    en: "Reverse charge: the recipient is liable for VAT."
+    source: "UStG § 14a (5), Art. 226 Nr. 11a MwStSystRL"
+  eu_supply:
+    de: "Steuerfreie innergemeinschaftliche Lieferung."
+    en: "Tax-exempt intra-community supply."
+    source: "UStG § 14a (3), § 4 Nr. 1b, § 6a"
+  exempt:
+    de: "Steuerfreie Leistung."
+    en: "VAT-exempt supply."
+    source: "UStG § 14 (4) Nr. 8 — name the exemption in your own custom text"
+labels:
+  de: { invoice: Rechnung, credit_note: Gutschrift, quote: Angebot, number: Nummer, date: Datum,
+        service: Leistungszeitraum, customer_number: Kundennummer, position: Pos., description: Beschreibung,
+        quantity: Menge, unit_price: Einzelpreis, net: Netto, vat: USt., gross: Gesamt,
+        due: "Bitte überweisen Sie den Betrag bis zum {due} auf das unten genannte Konto.",
+        refers: "bezieht sich auf Rechnung", tax_number: Steuernummer, vat_id: USt-IdNr. }
+  en: { invoice: Invoice, credit_note: Credit note, quote: Quote, number: Number, date: Date,
+        service: Service period, customer_number: Customer number, position: Pos., description: Description,
+        quantity: Qty, unit_price: Unit price, net: Net, vat: VAT, gross: Total,
+        due: "Please transfer the amount by {due} to the account below.",
+        refers: "refers to invoice", tax_number: Tax number, vat_id: VAT id }

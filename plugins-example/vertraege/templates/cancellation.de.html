@@ -1,0 +1,16 @@
+{% extends "_letter.html" %}
+{% block subject %}Kündigung{% if contract.contract_number %} – Vertragsnummer {{ contract.contract_number }}{% endif %}{% endblock %}
+{% block body %}
+<p>Sehr geehrte Damen und Herren,</p>
+<p>hiermit kündige ich den folgenden Vertrag{% if reason %} {{ reason }}{% endif %}
+{% if to_date %}zum {{ end }}{% else %}fristgerecht zum nächstmöglichen Zeitpunkt, nach meiner Berechnung zum {{ end }}{% endif %}:</p>
+<p>
+{% if contract.product %}Produkt: {{ contract.product }}<br>{% endif %}
+{% if contract.customer_number %}Kundennummer: {{ contract.customer_number }}<br>{% endif %}
+{% if contract.contract_number %}Vertragsnummer: {{ contract.contract_number }}<br>{% endif %}
+Vertragspartner: {{ name }}
+</p>
+<p>Bitte bestätigen Sie mir die Kündigung und das Vertragsende schriftlich.</p>
+<p>Mit freundlichen Grüßen</p>
+<p style="margin-top: 18mm">{{ name }}</p>
+{% endblock %}

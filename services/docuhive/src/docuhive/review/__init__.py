@@ -237,6 +237,7 @@ def accept(
         item.document_id, to_patch(item.field or "", payload), actor=f"user:{user.id}"
     )
     _resolve([item.id], "accepted", user)
+    _accepted(item.document_id, result.applied, f"item{item.id}")
     return result
 
 
@@ -268,7 +269,15 @@ def accept_all(doc_id: str, user: CurrentUser) -> ApplyResult:
     patch = merge([to_patch(i.field or "", i.suggested or {}) for i in items])
     result = documents.apply_metadata(doc_id, patch, actor=f"user:{user.id}")
     _resolve([i.id for i in items], "accepted", user)
+    _accepted(doc_id, result.applied, "items" + ",".join(str(i.id) for i in items))
     return result
+
+
+def _accepted(doc_id: str, fields: list[str], key: str) -> None:
+    from docuhive import events
+
+    payload = {"document_id": doc_id, "fields": fields}
+    events.emit("review.accepted", payload, key=f"{doc_id}:{key}")
 
 
 def reject_all(doc_id: str, user: CurrentUser) -> int:

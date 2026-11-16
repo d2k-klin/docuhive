@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from docuhive import __version__
 from docuhive.config.settings import get_settings
-from docuhive.startup import start_intelligence
+from docuhive.startup import start_intelligence, start_plugins
 
 from .routers import ROUTERS
 
@@ -17,6 +17,7 @@ from .routers import ROUTERS
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     get_settings()
+    start_plugins("api")
     start_intelligence()
     yield
 
@@ -43,6 +44,24 @@ def create_app() -> FastAPI:
             }
         )
         return JSONResponse({"error": body}, status_code=error.status_code, headers=error.headers)
+
+    from docuhive.documents.holds import Held
+
+    @app.exception_handler(Held)
+    async def held(request: Request, error: Held) -> JSONResponse:
+        return JSONResponse(
+            {
+                "error": {
+                    "code": "document_held",
+                    "message": str(error),
+                    "details": {
+                        "fields": error.fields,
+                        "until": error.until.isoformat() if error.until else None,
+                    },
+                }
+            },
+            status_code=409,
+        )
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, error: RequestValidationError) -> JSONResponse:

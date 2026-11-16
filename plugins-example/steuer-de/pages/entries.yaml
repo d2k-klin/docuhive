@@ -1,0 +1,40 @@
+title: { en: Bookings, de: Buchungen }
+nav: { label: { en: Bookings, de: Buchungen }, icon: scroll-text, order: 12 }
+params: [book, year]
+blocks:
+  - type: table
+    source: entries
+    columns:
+      - { field: entry_date, label: Date, format: date }
+      - { field: counterparty, label: With }
+      - { field: direction, label: Direction, format: badge }
+      - { field: account, label: Account }
+      - { field: vat_label, label: VAT }
+      - { field: net, label: Net, format: number, align: right, total: true }
+      - { field: vat, label: VAT, format: number, align: right, total: true }
+      - { field: gross, label: Gross, format: number, align: right, total: true }
+      - { field: paid_on, label: Paid, format: date }
+      - { field: state_label, label: State, format: badge, tones: { Booked: ok, To confirm: warn, Closed: muted } }
+      - { field: document_id, label: Document, format: document }
+    filters:
+      - { field: entry_date, type: year, label: Year }
+      - { field: counterparty, type: text, label: Search }
+    empty: No bookings yet.
+  - type: form
+    title: Book without a document
+    help: A cash sale, a bank fee, or an invoice you wrote elsewhere. Enter the gross amount; the VAT is worked out from the treatment.
+    fields:
+      - { name: direction, type: choice, label: Direction, options: directions, required: true }
+      - { name: entry_date, type: date, label: Date, required: true }
+      - { name: counterparty, type: text, label: Customer or supplier }
+      - { name: gross, type: money, label: Gross amount, required: true }
+      - { name: vat_code, type: choice, label: VAT treatment, options: vat_code_options, required: true }
+      - { name: account, type: choice, label: Account, options: accounts }
+      - { name: paid_on, type: date, label: Paid on }
+    action: add_entry
+    submit: Book it
+  - type: actions
+    title: Hand over
+    help: Every confirmed booking of the year as a CSV file, for your tax advisor or a spreadsheet.
+    actions:
+      - { label: Download the year as CSV, action: export_entries, download: true }

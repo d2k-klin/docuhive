@@ -1,0 +1,82 @@
+# Rates, limits, form fields and deadlines for 2026. Every value names its source.
+# reviewed: false means no tax advisor has checked this file yet; the plugin says so on every
+# figure it shows. Replace or extend it in custom/rules/years/2026.yaml (use _merge: true).
+year: 2026
+reviewed: false
+draft: false
+
+vat_rates:
+  standard: { rate: 19, source: "UStG § 12 (1)" }
+  reduced: { rate: 7, source: "UStG § 12 (2)" }
+
+small_business:
+  prior_year_limit: 25000
+  current_year_limit: 100000
+  basis: net   # sources disagree on net or gross; check before relying on it
+  source: "UStG § 19 (1)"
+
+advance_return:
+  monthly_above: 9000           # previous year's VAT above this: monthly returns
+  quarterly_above: 2000         # between the two: quarterly; below: the office may waive returns
+  due_day: 10                   # the 10th day after the period ends
+  extension_months: 1           # with a standing extension
+  special_advance: "1/11"       # monthly filers with an extension pay 1/11 of last year's total
+  source: "UStG § 18 (1), (2), (2a); UStDV §§ 46–48"
+
+# Form fields of the VAT advance return. "base" fields take the net amount, "tax" fields the
+# VAT; tax on the 19 % and 7 % bases is calculated by the form.
+forms:
+  ustva:
+    "81": { label: "Taxable sales at 19 %", kind: base, rate: 19, round: euro_down }
+    "86": { label: "Taxable sales at 7 %", kind: base, rate: 7, round: euro_down }
+    "41": { label: "Tax-free intra-EU supplies to businesses with a VAT id", kind: base, rate: 0, round: euro_down }
+    "21": { label: "Services to EU businesses, taxed in the customer's country", kind: base, rate: 0, round: euro_down }
+    "48": { label: "Other tax-free sales without input tax deduction", kind: base, rate: 0, round: euro_down }
+    "89": { label: "Intra-EU acquisitions at 19 %", kind: base, rate: 19, round: euro_down }
+    "46": { label: "Services from EU businesses (reverse charge), net", kind: base, rate: 0, round: euro_down }
+    "47": { label: "Tax on services from EU businesses", kind: tax, round: cent }
+    "84": { label: "Other reverse-charge purchases, net", kind: base, rate: 0, round: euro_down }
+    "85": { label: "Tax on other reverse-charge purchases", kind: tax, round: cent }
+    "66": { label: "Input tax from invoices of other businesses", kind: input, round: cent }
+    "61": { label: "Input tax on intra-EU acquisitions", kind: input, round: cent }
+    "67": { label: "Input tax on reverse-charge purchases", kind: input, round: cent }
+    "39": { label: "Special advance payment to deduct (December or Q4 return)", kind: deduct, round: cent }
+    "83": { label: "Amount due (negative: refund)", kind: result, round: cent }
+  source: "Form USt 1 A 2026 (Umsatzsteuer-Voranmeldung); field numbers to be confirmed against the year's form"
+
+euer:
+  income: [revenue, revenue_tax_free, vat_received, vat_refunded, other_income]
+  expenses: [goods, subcontractors, rent, utilities, insurance, vehicle, travel, entertainment,
+             gifts, telecom, office, software, training, advice, fees, other, input_tax, vat_paid]
+  labels:
+    revenue: "Business income subject to VAT"
+    revenue_tax_free: "Tax-free or non-taxable business income"
+    vat_received: "VAT received"
+    vat_refunded: "VAT refunded by the tax office"
+    other_income: "Other business income"
+    goods: "Goods and materials"
+    subcontractors: "Bought-in services"
+    rent: "Rent for business premises"
+    utilities: "Energy and water"
+    insurance: "Business insurance"
+    vehicle: "Vehicle costs"
+    travel: "Travel"
+    entertainment: "Business meals (deductible part)"
+    gifts: "Gifts to business contacts"
+    telecom: "Phone and internet"
+    office: "Office supplies and postage"
+    software: "Software and subscriptions"
+    training: "Training and literature"
+    advice: "Legal and tax advice, bookkeeping"
+    fees: "Bank fees"
+    other: "Other expenses"
+    input_tax: "Input tax paid"
+    vat_paid: "VAT paid to the tax office"
+  source: "Anlage EÜR 2026; line numbers are not printed here because they change; the order follows the form"
+
+deadlines:
+  annual_returns: { without_advisor: "2027-07-31", with_advisor: "2028-02-28" }
+  source: "AO § 149 (2), (3); check the current year's extensions"
+
+low_value_asset_limit: { net: 800, source: "EStG § 6 (2)" }
+retention_years: { booking_documents: 8, books: 10, business_letters: 6, source: "AO § 147 (3)" }

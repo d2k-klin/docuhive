@@ -109,6 +109,12 @@ Answers only use documents you are allowed to see.
 
 **API tokens** creates personal tokens for scripts and other tools. Give each token only what it needs, such as upload only, calendar feed only, or read one knowledge base. Treat a token like a password, and delete it when you stop using it.
 
+## Locked documents, identities and sharing by link
+
+- **Locked documents.** An issued invoice, a closed tax period or a letter you sent is locked: nobody can change or delete it, you included. The document page says why and until when. Only an administrator can lift a lock, and must give a reason, which stays in the history.
+- **Identities.** Under **Settings → Identities**, enter yourself, your household or your business once: name, address, tax number, bank account, and optionally a mail server to send from. Plugins use it for letters and invoices.
+- **Share by link.** On a document's page, **Share by link** gives a read-only link for seven days, for someone without an account, such as your tax advisor. Every view is recorded in the document's history. An administrator must switch this on (`DOCUHIVE_GUEST_LINKS=true`), and it only helps if that person can reach your DocuHive.
+
 ## For administrators
 
 - **Storage health** shows which storage the archive uses: its location, whether it is a network share or a local disk (on Linux, where that can be told), its vault ID, the number of documents and the free space. It also shows uploads waiting in local staging, a check that every document's files are complete and unchanged, and when the last backup ran. **Change storage** picks the vault folder on a mounted share or disk: an empty folder while the archive has no documents, or the archive's own vault at a new place. It never moves or deletes anything. It appears when the server mounts a storage folder for it (see the installation guide).

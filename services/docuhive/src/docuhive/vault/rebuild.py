@@ -16,7 +16,15 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from docuhive import db, documents, jobs, vault
-from docuhive.db.models import DocFact, DocSource, Document, DocumentTag, Note, User
+from docuhive.db.models import (
+    DocFact,
+    DocSource,
+    Document,
+    DocumentHold,
+    DocumentTag,
+    Note,
+    User,
+)
 from docuhive.ingest.text import extract_text
 
 from . import meta
@@ -95,6 +103,9 @@ def upsert(
         session.add(
             Note(document_id=data.id, user_id=author, body=note.body, created_at=note.created_at)
         )
+    session.execute(delete(DocumentHold).where(DocumentHold.document_id == data.id))
+    for hold in data.holds:
+        session.add(DocumentHold(document_id=data.id, **hold.model_dump()))
     session.flush()
     documents.refresh_tsv(session, data.id)
     return created, owner

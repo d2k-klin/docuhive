@@ -1,0 +1,25 @@
+title: { en: Proposed items, de: Vorgeschlagene Gegenstände }
+description: Durable goods found on your receipts. Add them with a place, or say once that something is not an item.
+nav: { label: { en: Inventory inbox, de: Inventar-Eingang }, icon: package, order: 40 }
+blocks:
+  - type: table
+    source: proposals
+    columns:
+      - { field: name, label: Item }
+      - { field: category_label, label: Category }
+      - { field: seller, label: Shop }
+      - { field: purchase_date, label: Bought, format: date }
+      - { field: value, label: Price, format: money }
+      - { field: created_from_document_id, label: Receipt, format: document }
+    row_actions:
+      - { label: Add, action: add_item }
+      - { label: Not an item, action: not_an_item }
+    empty: Nothing proposed. Receipts for durable goods appear here once they are read.
+  - type: form
+    title: Add with a name and a place
+    fields:
+      - { name: id, type: choice, label: Proposal, options: proposal_options, required: true }
+      - { name: name, type: text, label: Name }
+      - { name: location, type: text, label: "Place (a room, a car, an office)" }
+    action: add_item
+    submit: Add to inventory

@@ -1,0 +1,10 @@
+{% extends "_letter.html" %}
+{% block body %}
+<p>Sehr geehrte Damen und Herren,</p>
+<p>sicher ist es Ihrer Aufmerksamkeit entgangen: unsere Rechnung {{ invoice.number }} vom {{ invoice.issue_date.strftime("%d.%m.%Y") }} über {{ "%.2f"|format(invoice.gross) }} € war am {{ invoice.due_date.strftime("%d.%m.%Y") }} fällig. Offen sind noch {{ "%.2f"|format(open) }} €.</p><p>Bitte überweisen Sie den Betrag in den nächsten Tagen. Sollten Sie bereits bezahlt haben, betrachten Sie dieses Schreiben bitte als gegenstandslos.</p>
+
+
+<p>Mit freundlichen Grüßen</p>
+<p>{{ seller.name }}</p>
+{% endblock %}
+{% block footer %}{% if seller.iban %}IBAN {{ seller.iban }}{% endif %}{% endblock %}

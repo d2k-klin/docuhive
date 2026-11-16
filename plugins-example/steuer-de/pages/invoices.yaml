@@ -1,0 +1,40 @@
+title: { en: Invoices, de: Rechnungen }
+description: Write an invoice as a draft, then issue it. Issuing gives it its number and makes the PDF with the e-invoice inside; after that it cannot change.
+nav: { label: { en: Invoices, de: Rechnungen }, icon: file-text, order: 17 }
+params: [book]
+blocks:
+  - type: table
+    source: invoices
+    columns:
+      - { field: number, label: Number, link: { page: invoice, params: { id: id } } }
+      - { field: kind_label, label: Kind }
+      - { field: customer, label: Customer, link: { page: invoice, params: { id: id } } }
+      - { field: issue_date, label: Issued, format: date }
+      - { field: total, label: Total, format: money, total: true }
+      - { field: open, label: Open, format: money, total: true }
+      - { field: state_label, label: State, format: badge, tones: { Draft: muted, Issued: info, Sent: info, Paid: ok, Partly paid: warn, Cancelled: muted } }
+    filters:
+      - { field: state_label, type: choice, label: State, options: [Draft, Issued, Sent, Partly paid, Paid, Cancelled] }
+      - { field: issue_date, type: year, label: Year }
+      - { field: customer, type: text, label: Customer }
+    empty: No invoices yet. Write the first one below.
+  - type: form
+    title: New invoice
+    fields:
+      - { name: customer_id, type: choice, label: Customer, options: customer_options, required: true }
+      - { name: service_from, type: date, label: Service from }
+      - { name: service_to, type: date, label: Service until (or the day of the service) }
+      - name: lines
+        type: lines
+        label: Lines
+        columns:
+          - { name: description, label: Description, required: true }
+          - { name: quantity, label: Quantity, type: number }
+          - { name: unit, label: Unit, type: choice, options: unit_options }
+          - { name: unit_price, label: Net price, type: money }
+          - { name: discount_percent, label: Discount %, type: number }
+          - { name: vat_code, label: VAT, type: choice, options: sales_codes }
+      - { name: notes, type: textarea, label: Text on the invoice }
+      - { name: recurring_months, type: number, label: "Repeat every … months (empty: once)", min: 1 }
+    action: save_draft
+    submit: Save draft

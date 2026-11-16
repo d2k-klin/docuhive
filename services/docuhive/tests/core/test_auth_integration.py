@@ -159,12 +159,12 @@ def test_admin_users_and_password_revokes_old_credentials(client):
     assert client.get("/api/auth/me").status_code == 401
 
 
-@pytest.mark.parametrize("role", ["admin", "member"])
+@pytest.mark.parametrize("role", ["admin", "member", "bookkeeper"])
 @pytest.mark.parametrize("shared", [False, True])
 @pytest.mark.parametrize("trashed", [False, True])
 def test_visibility_matrix(postgres, role, shared, trashed):
     owner_id = create_user("owner", PASSWORD)
-    other_id = create_user("other", PASSWORD, admin=role == "admin")
+    other_id = create_user("other", PASSWORD, role=role)
     with session() as db:
         db.add(
             Document(
@@ -184,3 +184,35 @@ def test_visibility_matrix(postgres, role, shared, trashed):
             assert bool(db.scalar(select(Document.id).where(visible_docs_incl_trash(user)))) is (
                 user_id == owner_id or shared
             )
+
+
+def test_a_bookkeeper_sees_exactly_the_assigned_categories(postgres):
+    from docuhive.config import set_setting
+
+    owner_id = create_user("owner", PASSWORD)
+    keeper = CurrentUser(
+        id=create_user("keeper", PASSWORD, role="bookkeeper"), username="k", role="bookkeeper"
+    )
+    member = CurrentUser(id=create_user("member", PASSWORD), username="m", role="member")
+    with session() as db:
+        for doc_id, category in (("tax", "finance/tax"), ("bank", "finance"), ("health", "health")):
+            db.add(
+                Document(
+                    id=doc_id,
+                    owner_id=owner_id,
+                    shared=False,
+                    status="stored",
+                    sha256=doc_id.ljust(64, "0"),
+                    mime="application/pdf",
+                    category=category,
+                )
+            )
+
+    def seen(user):
+        with session() as db:
+            return sorted(db.scalars(select(Document.id).where(visible_docs(user))))
+
+    assert seen(keeper) == [] == seen(member)  # off until an administrator assigns categories
+    set_setting("roles.bookkeeper.categories", ["finance"])
+    assert seen(keeper) == ["bank", "tax"]  # a category includes its subcategories
+    assert seen(member) == []

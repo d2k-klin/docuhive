@@ -1,0 +1,11 @@
+# How payments are matched to documents.
+window_days_before: 7      # a payment may come this many days before the document's date
+window_days_after: 120     # … or this many days after it
+discount_percent: [2, 3]   # a payment this much short of an invoice is offered as paid with discount
+name_similarity: 0.8       # 0..1: how alike the payee's name and the document's sender must be
+# Which documents a payment can belong to. Money out pays these:
+expense_types: [invoice, receipt, tax-notice]
+# Money in pays these (the tax plugin's own invoices):
+income_types: [outgoing_invoice]
+# Facts that carry a reference a payment text may quote:
+reference_facts: [invoice_number, customer_number, payment_reference, contract_number]

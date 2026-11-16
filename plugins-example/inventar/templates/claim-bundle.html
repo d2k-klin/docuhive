@@ -1,0 +1,18 @@
+{#- The first page of a claim bundle. What happened is left for you to write. -#}
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><style>
+  @page { size: A4; margin: 20mm; } body { font: 11pt/1.5 "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 16pt; } dt { font-weight: 600; margin-top: 3mm; } .box { border: 0.5pt solid #555; height: 60mm; margin-top: 3mm; }
+</style></head><body>
+<h1>Claim / Schadensmeldung: {{ item.name }}</h1>
+<dl>
+  <dt>Item</dt><dd>{{ item.name }}{% if item.manufacturer %} · {{ item.manufacturer }} {{ item.model or "" }}{% endif %}</dd>
+  {% if item.serial_number %}<dt>Serial number</dt><dd>{{ item.serial_number }}</dd>{% endif %}
+  <dt>Bought</dt><dd>{{ item.purchase_date.strftime("%d.%m.%Y") if item.purchase_date else "unknown" }}{% if item.seller %} at {{ item.seller }}{% endif %}{% if item.price is not none %} for {{ "%.2f"|format(item.price) }} {{ item.currency }}{% endif %}</dd>
+  {% if item.warranty_until %}<dt>Warranty until</dt><dd>{{ item.warranty_until.strftime("%d.%m.%Y") }}</dd>{% endif %}
+  <dt>Enclosed</dt><dd>{% for d in documents %}{{ loop.index }}. {{ d }}<br>{% endfor %}</dd>
+</dl>
+<p><b>What happened / Schadenshergang</b> (date, place, how):</p>
+<div class="box"></div>
+<p>Prepared on {{ on }}.</p>
+</body></html>

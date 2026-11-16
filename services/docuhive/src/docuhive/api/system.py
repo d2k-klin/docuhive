@@ -267,6 +267,8 @@ def setup_status(user: Annotated[CurrentUser, Depends(current_user)]) -> list[Se
     backup = backup_status()
     consume = settings.consume_dir or vault.root() / "consume"
     https = settings.public_url.startswith("https://")
+    from docuhive.plugins import runtime
+
     return [
         SetupCheck(
             id="vault",
@@ -320,4 +322,5 @@ def setup_status(user: Annotated[CurrentUser, Depends(current_user)]) -> list[Se
             action_href="/capture",
             help_doc="docs/setup/mobile.md",
         ),
+        *runtime.setup_checks(user),
     ]

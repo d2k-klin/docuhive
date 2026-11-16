@@ -1,0 +1,26 @@
+title: { en: Payments to check, de: Zahlungen prüfen }
+description: Payments the plugin could not match by itself, and documents still waiting for a payment.
+nav: { label: { en: Bank, de: Bank }, icon: landmark, order: 20 }
+blocks:
+  - type: table
+    title: Payments without a document
+    help: Pick the document a payment belongs to, or say it needs none.
+    source: suggestions
+    columns:
+      - { field: booking_date, label: Date, format: date }
+      - { field: counterparty, label: Paid to or from }
+      - { field: amount, label: Amount, format: money }
+      - { field: document_title, label: Probably for, link: { document: document_id } }
+    row_actions:
+      - { label: This is it, action: accept, when: document_id }
+      - { label: No document needed, action: no_document, confirm: "Payments to or from this name will no longer need a document. Continue?" }
+    empty: Every payment has its document, or needs none.
+  - type: table
+    title: Documents without a payment
+    source: unpaid
+    columns:
+      - { field: title, label: Document, link: document }
+      - { field: document_date, label: Date, format: date }
+      - { field: correspondent, label: From }
+      - { field: amount, label: Amount, format: money, total: true }
+    empty: Every invoice and receipt has a matching payment.

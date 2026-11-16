@@ -1,0 +1,16 @@
+title: { en: Rental income, de: Mieteinkünfte }
+description: For your tax return (Anlage V). No depreciation and no interest; give these to your advisor with the bills.
+params: [year]
+blocks:
+  - type: table
+    source: tax
+    columns:
+      - { field: property, label: Property }
+      - { field: year, label: Year }
+      - { field: received, label: Rent received, format: money }
+      - { field: passed_on, label: Costs passed on, format: money }
+      - { field: borne, label: Costs you bore, format: money }
+    empty: No properties.
+  - type: actions
+    actions:
+      - { label: Download as CSV, action: tax_csv, download: true }

@@ -1,0 +1,12 @@
+title: { en: VAT periods, de: Voranmeldungszeiträume }
+nav: { label: { en: VAT returns, de: Umsatzsteuer }, icon: landmark, order: 13 }
+params: [book]
+blocks:
+  - type: table
+    source: periods
+    columns:
+      - { field: key, label: Period, link: { page: period, params: { key: key, book: book } } }
+      - { field: payable, label: Due (negative is a refund), format: money }
+      - { field: due, label: Deadline, format: date }
+      - { field: state, label: State, format: badge, tones: { Open: warn, Checked: info, Closed: ok, Filed: ok } }
+    empty: No VAT periods. Books under the small-business rule or without VAT returns have none.

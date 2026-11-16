@@ -1,0 +1,7 @@
+Guten Tag,
+
+anbei erhalten Sie {% if invoice.kind == "credit_note" %}unsere Gutschrift{% else %}unsere Rechnung{% endif %} {{ invoice.number }} über {{ "%.2f"|format(invoice.gross) }} €.{% if invoice.due_date %} Bitte überweisen Sie den Betrag bis zum {{ invoice.due_date.strftime("%d.%m.%Y") }}.{% endif %}
+
+Die PDF-Datei enthält die Rechnung auch als E-Rechnung (ZUGFeRD), die Ihre Buchhaltungssoftware direkt einlesen kann.
+
+Mit freundlichen Grüßen

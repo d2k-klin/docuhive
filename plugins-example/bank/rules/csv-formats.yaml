@@ -1,0 +1,66 @@
+# How each bank's CSV export is read. Add your bank in custom/rules/csv-formats.yaml with
+# `_merge: true` at the top. Give it a `sample` (a few lines of your file with made-up values)
+# and `docuhive plugins test bank` checks that it is read.
+#
+# Keys: delimiter, header (column names that identify the file), date (column, format),
+# value_date, amount (column, decimal separator), currency (column or a fixed value),
+# name, iban, text (one column or a list joined with spaces), reference.
+# These layouts follow the column names the banks publish; check them against your own file.
+
+_generic_de:
+  delimiter: ";"
+  header: [Buchungstag, Betrag]
+  date: { column: Buchungstag, format: "%d.%m.%Y" }
+  value_date: { column: Valuta, format: "%d.%m.%Y" }
+  amount: { column: Betrag, decimal: "," }
+  currency: { value: EUR }
+  name: { column: Empfänger }
+  iban: { column: IBAN }
+  text: { column: Verwendungszweck }
+
+sparkasse:
+  delimiter: ";"
+  header: [Auftragskonto, Buchungstag, Valutadatum, Verwendungszweck, Betrag]
+  date: { column: Buchungstag, format: "%d.%m.%y" }
+  value_date: { column: Valutadatum, format: "%d.%m.%y" }
+  amount: { column: Betrag, decimal: "," }
+  currency: { column: Waehrung }
+  name: { column: Beguenstigter/Zahlungspflichtiger }
+  iban: { column: Kontonummer/IBAN }
+  text: { column: Verwendungszweck }
+  account: { column: Auftragskonto }
+  sample: |
+    "Auftragskonto";"Buchungstag";"Valutadatum";"Buchungstext";"Verwendungszweck";"Beguenstigter/Zahlungspflichtiger";"Kontonummer/IBAN";"BIC (SWIFT-Code)";"Betrag";"Waehrung";"Info"
+    "DE02120300000000202051";"03.03.26";"03.03.26";"LASTSCHRIFT";"RE-2026-0042 Strom Maerz";"Stadtwerke Beispiel";"DE89370400440532013000";"COBADEFFXXX";"-84,20";"EUR";"Umsatz gebucht"
+
+ing:
+  delimiter: ";"
+  header: [Buchung, Valuta, Auftraggeber/Empfänger, Verwendungszweck, Betrag]
+  date: { column: Buchung, format: "%d.%m.%Y" }
+  value_date: { column: Valuta, format: "%d.%m.%Y" }
+  amount: { column: Betrag, decimal: ",", thousands: "." }
+  currency: { value: EUR }
+  name: { column: Auftraggeber/Empfänger }
+  text: { column: Verwendungszweck }
+  sample: |
+    Umsatzanzeige;Datei erstellt am: 05.03.2026
+    IBAN;DE02 5001 0517 0000 0000 00
+    Buchung;Valuta;Auftraggeber/Empfänger;Buchungstext;Verwendungszweck;Saldo;Währung;Betrag;Währung
+    03.03.2026;03.03.2026;Stadtwerke Beispiel;Lastschrift;RE-2026-0042 Strom Maerz;1.915,80;EUR;-84,20;EUR
+
+dkb:
+  delimiter: ";"
+  header: [Buchungsdatum, Zahlungsempfänger*in, Verwendungszweck, Betrag (€)]
+  date: { column: Buchungsdatum, format: "%d.%m.%y" }
+  value_date: { column: Wertstellung, format: "%d.%m.%y" }
+  amount: { column: "Betrag (€)", decimal: ",", thousands: "." }
+  currency: { value: EUR }
+  name: { column: Zahlungsempfänger*in }
+  iban: { column: IBAN }
+  text: { column: Verwendungszweck }
+  reference: { column: Kundenreferenz }
+  sample: |
+    "Konto";"Girokonto DE02120300000000202051"
+    ""
+    "Buchungsdatum";"Wertstellung";"Status";"Zahlungspflichtige*r";"Zahlungsempfänger*in";"Verwendungszweck";"Umsatztyp";"IBAN";"Betrag (€)";"Gläubiger-ID";"Mandatsreferenz";"Kundenreferenz"
+    "03.03.26";"03.03.26";"Gebucht";"Max Mustermann";"Stadtwerke Beispiel";"RE-2026-0042 Strom Maerz";"Ausgang";"DE89370400440532013000";"-84,20";"";"";""

@@ -1,0 +1,14 @@
+title: { en: Income-surplus statement, de: Einnahmenüberschussrechnung }
+description: Income and expenses by the line of the form, counted in the year the money moved. This is not tax advice.
+nav: { label: { en: Year (EÜR), de: Jahr (EÜR) }, icon: chart-column, order: 14 }
+params: [book, year]
+blocks:
+  - type: table
+    source: year_statement
+    columns:
+      - { field: side, label: Side, format: badge }
+      - { field: label, label: Position }
+      - { field: amount, label: Amount, format: money }
+    filters:
+      - { field: year, type: year, label: Year }
+    empty: No paid, confirmed bookings in this year.

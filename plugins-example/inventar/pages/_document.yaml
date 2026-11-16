@@ -1,0 +1,10 @@
+title: Inventory
+for: { document_types: [receipt, invoice, warranty, manual, type_plate] }
+blocks:
+  - type: table
+    source: document_items
+    columns:
+      - { field: name, label: Item, link: { page: item, params: { id: id } } }
+      - { field: state, label: State, format: badge }
+      - { field: location, label: Place }
+    empty: Not linked to an item.

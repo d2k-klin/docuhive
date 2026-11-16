@@ -1,0 +1,21 @@
+# Cost types, the key each is divided by unless you choose another for a property, whether it is
+# usually passed on to tenants, and words that point a bill to it. These are defaults: your
+# tenancy agreements and the operating-costs ordinance (BetrKV § 2) decide. Extend in
+# custom/rules/cost-types.yaml with _merge: true.
+types:
+  - { id: property_tax, label: Property tax (Grundsteuer), key: area, passable: true, words: [grundsteuer, grundbesitzabgaben] }
+  - { id: water, label: Water and sewage, key: persons, passable: true, words: [wasser, abwasser, schmutzwasser] }
+  - { id: heating, label: Heating and hot water, key: metered, passable: true, words: [heizkosten, wärme, warmwasser, ista, techem, brunata] }
+  - { id: waste, label: Waste collection, key: persons, passable: true, words: [abfall, müll, entsorgung] }
+  - { id: street_cleaning, label: Street cleaning, key: area, passable: true, words: [straßenreinigung] }
+  - { id: building_cleaning, label: Building cleaning, key: area, passable: true, words: [hausreinigung, treppenhaus] }
+  - { id: garden, label: Garden care, key: area, passable: true, words: [garten, grünpflege] }
+  - { id: lighting, label: Shared electricity, key: area, passable: true, words: [allgemeinstrom, treppenhausbeleuchtung] }
+  - { id: chimney, label: Chimney sweep, key: units, passable: true, words: [schornsteinfeger] }
+  - { id: insurance, label: Building insurance, key: area, passable: true, words: [gebäudeversicherung, haftpflicht, wohngebäude] }
+  - { id: caretaker, label: Caretaker, key: area, passable: true, words: [hausmeister] }
+  - { id: cable, label: Cable or antenna, key: units, passable: true, words: [kabel, antenne] }
+  - { id: elevator, label: Lift, key: area, passable: true, words: [aufzug, fahrstuhl] }
+  - { id: repairs, label: Repairs and maintenance, key: area, passable: false, words: [reparatur, instandhaltung, handwerker] }
+  - { id: management, label: Management and bank fees, key: area, passable: false, words: [verwaltung, kontoführung] }
+  - { id: other, label: Other, key: area, passable: false, words: [] }

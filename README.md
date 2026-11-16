@@ -19,6 +19,7 @@ Invoices arrive by email, letters come by post, contracts sit in a drawer, and a
 4. **Keep.** Originals are stored unchanged on your own storage (a NAS or a disk), next to a readable description of each document. The archive stays usable even without DocuHive.
 5. **Find and ask.** Search by words or by meaning, or just ask: *"How much did I spend on electricity in 2025?"* Answers link to the documents they came from, and totals are calculated, not guessed.
 6. **Remind.** Due dates, renewal dates and contract notice deadlines become reminders on your phone or in your calendar.
+7. **Do more with plugins.** Optional plugins turn the archive into tools: bookkeeping and VAT for the self-employed in Germany, with invoices and e-invoices; bank statements matched to invoices; contracts with notice dates and cancellation letters; an inventory with warranties; and service-charge statements for landlords. Each one is a folder you can read and change ([plugins](plugins-example/README.md)).
 
 You choose where the AI runs: entirely on your own machine, with a cloud provider, or both. Health and identity documents always stay local.
 
@@ -78,6 +79,7 @@ Open <http://localhost:3000> and sign in with the account you just created. The 
 | [Installation guide](docs/setup/installation.md) | From an empty Linux host to a signed-in archive, step by step |
 | [Local network](docs/setup/local-network.md) / [Remote access](docs/setup/remote-access.md) | The easy option for home use, and the advanced one for reaching it from anywhere |
 | [User guide](docs/user-guide.md) | Adding, finding, correcting and asking about documents, day to day |
+| [Plugins](plugins-example/README.md) / [Building plugins](plugins-example/BUILDING.md) | The five example plugins, how to switch them on and make them yours, and how to write your own |
 | [Features](docs/FEATURES.md) | Every feature in one sentence, and what works today |
 | [AI providers](docs/setup/ai-providers.md) | Local (Ollama) and cloud models, which model does what, privacy and budgets |
 | [Email accounts](docs/setup/mail-accounts.md) | Connecting Gmail, Outlook and IMAP; importing old mail |

@@ -1,0 +1,38 @@
+id: steuer-de
+name: Tax and bookkeeping (Germany)
+description: Receipts and invoices become bookings, and bookings become the figures for your VAT returns and income-surplus statement. It calculates; it does not give tax advice.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+capabilities: [documents:read, documents:write-metadata, documents:create, documents:hold, mail:send, ai]
+snapshot: true
+
+taxonomy:
+  document_types:
+    - id: invoice
+      label: Invoice
+      facts:
+        - { name: net_total, type: money }
+        - { name: service_date, type: date }
+        - { name: supplier_vat_id, type: string }
+    - id: receipt
+      label: Receipt
+      facts:
+        - { name: net_total, type: money }
+        - { name: amount_tax, type: money }
+    - id: outgoing_invoice
+      label: Invoice you wrote
+      description: An invoice or credit note issued from your own books.
+      facts:
+        - { name: invoice_number, type: string }
+        - { name: invoice_date, type: date }
+        - { name: amount_total, type: money }
+        - { name: amount_tax, type: money }
+        - { name: due_date, type: date }
+    - id: quote
+      label: Quote
+      description: A quote or offer you wrote.
+  tags: [tax-work, tax-household-services, tax-donations, tax-medical, tax-insurance, tax-childcare]
+
+ai_tasks:
+  - { prompt: invoice-fields, like: extract }
+  - { prompt: booking, like: classify }

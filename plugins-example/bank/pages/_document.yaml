@@ -1,0 +1,11 @@
+title: Payments
+for: { document_types: [invoice, receipt, bank-statement, outgoing_invoice] }
+blocks:
+  - type: table
+    source: document_payments
+    columns:
+      - { field: booking_date, label: Date, format: date }
+      - { field: counterparty, label: Paid to or from }
+      - { field: amount, label: Amount, format: money }
+      - { field: account, label: Account }
+    empty: No payment found for it yet.

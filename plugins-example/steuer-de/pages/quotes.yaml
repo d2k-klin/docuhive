@@ -1,0 +1,28 @@
+title: { en: Quotes, de: Angebote }
+params: [book]
+blocks:
+  - type: table
+    source: quotes
+    columns:
+      - { field: number, label: Number, link: { page: invoice, params: { id: id } } }
+      - { field: customer, label: Customer, link: { page: invoice, params: { id: id } } }
+      - { field: issue_date, label: Date, format: date }
+      - { field: total, label: Total, format: money }
+      - { field: state_label, label: State, format: badge }
+    empty: No quotes yet.
+  - type: form
+    title: New quote
+    fields:
+      - { name: customer_id, type: choice, label: Customer, options: customer_options, required: true }
+      - name: lines
+        type: lines
+        label: Lines
+        columns:
+          - { name: description, label: Description }
+          - { name: quantity, label: Quantity, type: number }
+          - { name: unit, label: Unit, type: choice, options: unit_options }
+          - { name: unit_price, label: Net price, type: money }
+          - { name: vat_code, label: VAT, type: choice, options: sales_codes }
+      - { name: notes, type: textarea, label: Text on the quote }
+    action: save_quote
+    submit: Save quote draft

@@ -1,0 +1,16 @@
+# Kinds of contract, and the archive categories that count as each. Extend in
+# custom/rules/kinds.yaml with _merge: true.
+kinds:
+  - { id: energy, label: Energy, categories: [utilities/electricity, utilities/gas-heating, utilities/water, utilities] }
+  - { id: telecom, label: Phone and internet, categories: [utilities/internet-phone] }
+  - { id: insurance, label: Insurance, categories: [insurance, insurance/health, insurance/vehicle, insurance/home, insurance/life] }
+  - { id: lease, label: Rent and leasing, categories: [housing/rent, vehicle] }
+  - { id: subscription, label: Subscriptions, categories: [personal] }
+  - { id: membership, label: Memberships, categories: [] }
+  - { id: software, label: Software, categories: [] }
+  - { id: service, label: Services, categories: [] }
+  - { id: other, label: Other, categories: [] }
+special_reasons:
+  - { id: price_increase, de: "wegen der angekündigten Preiserhöhung", en: "because of the announced price increase" }
+  - { id: relocation, de: "wegen meines Umzugs", en: "because I am moving house" }
+  - { id: death, de: "wegen des Todes der Vertragspartei", en: "because of the death of the contracting party" }

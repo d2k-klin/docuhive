@@ -108,6 +108,8 @@ def _view(session: Session, doc: Document) -> DocumentView:
             email_from=source.email_from if source else None,
             subject=source.subject if source else None,
             received_at=source.received_at if source else None,
+            generator=source.generator if source else None,
+            derived_from=list(source.derived_from or []) if source else [],
         ),
         deleted_at=doc.deleted_at,
     )
@@ -240,6 +242,10 @@ def apply_metadata(
         before = _view(session, doc)
         after = before.model_copy(deep=True)
         result = apply_view(after, patch, actor=actor, force=force)
+        if result.applied:
+            from .holds import check
+
+            check(session, doc_id, result.applied)  # raises Held: nothing is written
         unlocked = sorted(set(before.manual_fields) - set(after.manual_fields))
         for name in SCALARS:
             setattr(doc, name, getattr(after, name))
@@ -326,6 +332,10 @@ def set_trashed(doc_id: str, user: CurrentUser, trashed: bool) -> None:
             raise NotFound(doc_id)
         if (doc.deleted_at is not None) == trashed:
             return
+        if trashed:
+            from .holds import check_trash
+
+            check_trash(session, doc_id)
         doc.deleted_at = datetime.now(UTC) if trashed else None
         session.add(
             AuditLog(

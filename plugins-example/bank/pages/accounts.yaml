@@ -1,0 +1,20 @@
+title: { en: Bank accounts, de: Bankkonten }
+nav: { label: { en: Accounts, de: Konten }, icon: wallet, order: 22 }
+blocks:
+  - type: table
+    source: accounts
+    columns:
+      - { field: name, label: Name }
+      - { field: iban, label: IBAN }
+      - { field: last_statement, label: Last statement, format: date }
+      - { field: payments, label: Payments, format: number }
+      - { field: shared, label: Household can see it, format: boolean }
+    empty: Accounts appear when you upload their first statement.
+  - type: form
+    title: Name an account
+    fields:
+      - { name: account, type: choice, label: Account, options: account_options, required: true }
+      - { name: name, type: text, label: Name, required: true }
+      - { name: shared, type: boolean, label: The household can see its payments }
+    action: rename_account
+    submit: Save

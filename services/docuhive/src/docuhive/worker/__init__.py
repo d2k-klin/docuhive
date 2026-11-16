@@ -12,7 +12,7 @@ from docuhive.config.settings import get_settings
 from docuhive.db import get_engine
 from docuhive.jobs import scheduler
 from docuhive.jobs.runner import claim, reap, release_orphans, run
-from docuhive.startup import start_intelligence
+from docuhive.startup import start_intelligence, start_plugins
 from docuhive.worker.handlers import HANDLER_MODULES
 
 log = logging.getLogger(__name__)
@@ -59,6 +59,7 @@ def serve(queues: list[str], concurrency: int) -> None:
         raise ValueError("Worker requires queues and positive concurrency")
     for module in HANDLER_MODULES:
         import_module(module)
+    start_plugins("worker")
     start_intelligence()
     # Before claiming anything, so a lease carrying our own PID can only be a predecessor's.
     if released := release_orphans():

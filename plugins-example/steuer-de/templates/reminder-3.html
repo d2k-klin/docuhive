@@ -1,0 +1,10 @@
+{% extends "_letter.html" %}
+{% block body %}
+<p>Sehr geehrte Damen und Herren,</p>
+
+
+<p>trotz zweier Erinnerungen ist unsere Rechnung {{ invoice.number }} vom {{ invoice.issue_date.strftime("%d.%m.%Y") }} noch nicht bezahlt. Offen sind {{ "%.2f"|format(open) }} €.</p><p>Bitte überweisen Sie den Betrag innerhalb von 7 Tagen. Danach behalten wir uns vor, Verzugszinsen zu berechnen und ohne weitere Ankündigung rechtliche Schritte einzuleiten.</p>
+<p>Mit freundlichen Grüßen</p>
+<p>{{ seller.name }}</p>
+{% endblock %}
+{% block footer %}{% if seller.iban %}IBAN {{ seller.iban }}{% endif %}{% endblock %}

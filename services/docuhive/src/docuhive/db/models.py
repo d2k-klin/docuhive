@@ -13,10 +13,12 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
     UniqueConstraint,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, INET, JSONB, REGCONFIG, TSVECTOR
@@ -27,7 +29,7 @@ from . import CoreBase
 
 class User(CoreBase):
     __tablename__ = "users"
-    __table_args__ = (CheckConstraint("role IN ('admin','member')"),)
+    __table_args__ = (CheckConstraint("role IN ('admin','member','bookkeeper')"),)
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str] = mapped_column(Text, unique=True)
     pw_hash: Mapped[str] = mapped_column(Text)
@@ -115,6 +117,8 @@ class DocSource(CoreBase):
     email_from: Mapped[str | None] = mapped_column(Text)
     subject: Mapped[str | None] = mapped_column(Text)
     received_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    generator: Mapped[str | None] = mapped_column(Text)
+    derived_from: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
 
 
 class AuthSession(CoreBase):
@@ -266,6 +270,20 @@ class Job(CoreBase):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class PluginState(CoreBase):
+    """Installed plugins are off until an administrator switches them on (docs: plugins)."""
+
+    __tablename__ = "plugins"
+    id: Mapped[str] = mapped_column(Text, primary_key=True)
+    version: Mapped[str | None] = mapped_column(Text)
+    enabled: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    enabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    enabled_by: Mapped[str | None] = mapped_column(Text)
+    granted: Mapped[list] = mapped_column(JSONB, server_default=text("'[]'"))
+    last_error: Mapped[str | None] = mapped_column(Text)
+    migration: Mapped[int] = mapped_column(Integer, server_default="0")
+
+
 class Setting(CoreBase):
     __tablename__ = "settings"
     key: Mapped[str] = mapped_column(String, primary_key=True)
@@ -296,3 +314,65 @@ Index("documents_owner", Document.owner_id, Document.deleted_at)
 Index("documents_date", Document.document_date)
 Index("documents_status", Document.status)
 Index("doc_facts_field", DocFact.field, DocFact.value_date)
+
+
+class DocumentHold(CoreBase):
+    """A document, or some of its fields, that may not change (docs: holds). Never deleted."""
+
+    __tablename__ = "document_holds"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    document_id: Mapped[str] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"))
+    reason: Mapped[str] = mapped_column(Text)
+    fields: Mapped[list[str]] = mapped_column(ARRAY(Text))  # ["*"], ["title", "facts.amount"]
+    until: Mapped[date | None] = mapped_column(Date)
+    placed_by: Mapped[str] = mapped_column(Text)
+    placed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    lifted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    lifted_by: Mapped[str | None] = mapped_column(Text)
+    lift_reason: Mapped[str | None] = mapped_column(Text)
+
+
+class Profile(CoreBase):
+    """Who the household or business is when it writes or sends something (docs: profiles)."""
+
+    __tablename__ = "profiles"
+    __table_args__ = (
+        CheckConstraint("kind IN ('person', 'business', 'household')", name="profiles_kind"),
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    shared: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    kind: Mapped[str] = mapped_column(Text)
+    name: Mapped[str] = mapped_column(Text)
+    legal_form: Mapped[str | None] = mapped_column(Text)
+    address: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'"))
+    email: Mapped[str | None] = mapped_column(Text)
+    phone: Mapped[str | None] = mapped_column(Text)
+    website: Mapped[str | None] = mapped_column(Text)
+    tax_number: Mapped[str | None] = mapped_column(Text)
+    vat_id: Mapped[str | None] = mapped_column(Text)
+    tax_office: Mapped[str | None] = mapped_column(Text)
+    bank: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'"))
+    logo_document_id: Mapped[str | None] = mapped_column(
+        ForeignKey("documents.id", ondelete="SET NULL")
+    )
+    extra: Mapped[dict] = mapped_column(JSONB, server_default=text("'{}'"))
+    smtp: Mapped[dict | None] = mapped_column(JSONB)
+    smtp_secret: Mapped[bytes | None] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class GuestLink(CoreBase):
+    """Read-only access to a fixed list of documents, by a token in a link (docs: guest links)."""
+
+    __tablename__ = "guest_links"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    token_hash: Mapped[str] = mapped_column(Text, unique=True)
+    created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    label: Mapped[str] = mapped_column(Text)
+    document_ids: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

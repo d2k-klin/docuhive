@@ -1,0 +1,11 @@
+title: School letters
+nav: { label: School, icon: graduation-cap }
+blocks:
+  - type: table
+    documents: { document_type: school_letter, facts: { reply_by: { from: today } } }
+    sort: reply_by
+    columns:
+      - { field: title, label: Letter, link: document }
+      - { field: facts.reply_by, label: Reply by, format: date }
+      - { field: correspondent, label: From }
+    empty: "No letters waiting for an answer."

@@ -1,0 +1,10 @@
+title: Property costs
+for: { document_types: [invoice], categories: [housing, housing/property] }
+blocks:
+  - type: table
+    source: document_cost
+    columns:
+      - { field: property, label: Property }
+      - { field: type_label, label: Cost type }
+      - { field: state_label, label: State, format: badge }
+    empty: Not a property cost.

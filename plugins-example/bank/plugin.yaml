@@ -1,0 +1,25 @@
+id: bank
+name: Bank statements
+description: Reads the statement files your bank lets you download, and matches payments to your invoices and receipts.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+capabilities: [documents:read, documents:write-metadata]
+snapshot: true
+
+taxonomy:
+  document_types:
+    - id: invoice
+      label: Invoice
+      facts:
+        - { name: paid_on, type: date, description: "Date the payment left or reached the bank account" }
+    - id: receipt
+      label: Receipt
+      facts:
+        - { name: paid_on, type: date, description: "Date the payment left the bank account" }
+
+settings:
+  - key: private_statements
+    type: boolean
+    label: Treat bank statements as private
+    help: Private documents are only ever read by local AI models.
+    default: true

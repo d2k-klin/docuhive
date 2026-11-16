@@ -83,7 +83,11 @@ def send_email(cfg: dict, n: Notification) -> None:
 
 def senders() -> dict[str, Callable[[dict, Notification], None]]:
     out: dict[str, Callable[[dict, Notification], None]] = {"ntfy": send_ntfy, "email": send_email}
-    for fn in config.plugins("notify_channel"):
+    from docuhive.plugins import runtime
+
+    for name, channel in runtime.notify_channels().items():
+        out.setdefault(name, channel)
+    for fn in config.plugins("notify_channel"):  # the pre-registry hook, kept for one release
         if kind := getattr(fn, "kind", None):
             out.setdefault(kind, fn)
     return out

@@ -1,0 +1,5 @@
+Sehr geehrte Damen und Herren,
+
+anbei meine Kündigung{% if contract.contract_number %} zum Vertrag {{ contract.contract_number }}{% endif %}. Bitte bestätigen Sie den Eingang und das Vertragsende.
+
+Dear Sir or Madam, please find my cancellation attached and confirm its receipt and the end date.

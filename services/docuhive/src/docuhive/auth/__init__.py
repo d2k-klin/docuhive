@@ -140,7 +140,9 @@ def scope(required: str) -> Callable:
     return dependency
 
 
-def create_user(username: str, password: str, *, admin: bool = False) -> int:
+def create_user(
+    username: str, password: str, *, admin: bool = False, role: str | None = None
+) -> int:
     username = username.strip()
     if (
         not username
@@ -151,7 +153,9 @@ def create_user(username: str, password: str, *, admin: bool = False) -> int:
         raise ValueError("Username must contain 1–100 characters without spaces or path separators")
     hashed = hash_password(password)
     with session() as db:
-        user = User(username=username, pw_hash=hashed, role="admin" if admin else "member")
+        user = User(
+            username=username, pw_hash=hashed, role=role or ("admin" if admin else "member")
+        )
         db.add(user)
         db.flush()
         return user.id

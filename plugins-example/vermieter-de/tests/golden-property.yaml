@@ -1,0 +1,44 @@
+# One made-up building, four flats (50, 60, 80, 110 m² = 300 m²), five tenancies in 2026 (365
+# days): a move-out on 31 March, two months of vacancy, a move-in on 1 June, a change from two to
+# three persons on 1 July. Every share worked out by hand; rounded down to the cent.
+year: [2026-01-01, 2026-12-31]
+units:
+  - { id: 1, name: A, area: 50 }
+  - { id: 2, name: B, area: 60 }
+  - { id: 3, name: C, area: 80 }
+  - { id: 4, name: D, area: 110 }
+tenancies:
+  - { id: 1, unit: 1, start: 2026-01-01, end: null, persons: [[2026-01-01, 1]], advance: "150" }
+  - { id: 2, unit: 2, start: 2026-01-01, end: null, persons: [[2026-01-01, 2], [2026-07-01, 3]], advance: "200" }
+  - { id: 3, unit: 3, start: 2025-05-01, end: 2026-03-31, persons: [[2025-05-01, 2]], advance: "180" }
+  - { id: 4, unit: 3, start: 2026-06-01, end: null, persons: [[2026-06-01, 1]], advance: "120" }
+  - { id: 5, unit: 4, start: 2020-01-01, end: null, persons: [[2020-01-01, 4]], advance: "300" }
+keys:
+  property_tax: { key: area, passable: true }
+  water: { key: persons, passable: true }
+  waste: { key: units, passable: true }
+  heating: { key: metered, passable: true }
+  chimney: { key: direct, passable: true }
+  repairs: { key: area, passable: false }      # not passable: never on a statement
+costs:
+  - [property_tax, "1200.00", null]
+  - [water, "1825.00", null]
+  - [waste, "800.00", null]
+  - [heating, "2330.00", null]
+  - [chimney, "90.00", 4]
+  - [repairs, "500.00", null]
+metered:   # the metering company's amounts per tenancy
+  1: "400.00"
+  2: "520.00"
+  3: "210.00"
+  4: "300.00"
+  5: "900.00"
+# person-days: 365 + (2×181 + 3×184 = 914) + 2×90 + 1×214 + 4×365 = 3133
+expected:
+  1: { property_tax: "200.00", water: "212.61", waste: "200.00", heating: "400.00", advances: "1800", balance: "-787.39" }
+  2: { property_tax: "240.00", water: "532.41", waste: "200.00", heating: "520.00", advances: "2400", balance: "-907.59" }
+  # 90 of 365 days: 320 × 90/365 = 78.904…; 200 × 90/365 = 49.315…; 1825 × 180/3133 = 104.851…
+  3: { property_tax: "78.90", water: "104.85", waste: "49.31", heating: "210.00", advances: "540", balance: "-96.94" }
+  # 214 of 365 days: 320 × 214/365 = 187.616…; 200 × 214/365 = 117.260…; 1825 × 214/3133 = 124.656…
+  4: { property_tax: "187.61", water: "124.65", waste: "117.26", heating: "300.00", advances: "840", balance: "-110.48" }
+  5: { property_tax: "440.00", water: "850.46", waste: "200.00", heating: "900.00", chimney: "90.00", advances: "3600", balance: "-1119.54" }

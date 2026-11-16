@@ -1,0 +1,22 @@
+title: { en: Contracts, de: Verträge }
+description: What each contract costs, when it renews and the last day for notice. The dates are read from the contract; the law may allow a shorter period, which the plugin does not check.
+nav: { label: { en: Contracts, de: Verträge }, icon: file-pen, order: 30 }
+blocks:
+  - type: table
+    source: contracts
+    columns:
+      - { field: provider, label: Provider, link: { page: contract, params: { id: id } } }
+      - { field: product, label: Product }
+      - { field: kind_label, label: Kind }
+      - { field: per_month, label: Per month, format: money, total: true }
+      - { field: per_year, label: Per year, format: money, total: true }
+      - { field: term_end, label: Term ends, format: date }
+      - { field: notice_by, label: Notice by, format: date }
+      - { field: status, label: Note, format: badge, tones: { Notice soon: warn, Dates missing: warn, Notice date passed: muted } }
+      - { field: state_label, label: State, format: badge, tones: { Active: ok, Cancelled: info, Ended: muted } }
+    filters:
+      - { field: kind, type: choice, label: Kind, options: kinds }
+      - { field: state_label, type: choice, label: State, options: [Active, Cancelled, Ended] }
+      - { field: provider, type: text, label: Search }
+    sort: notice_by
+    empty: No contracts yet. Upload a contract and it appears here once it is read.

@@ -8,12 +8,14 @@ import {
   ShieldAlert,
   Tags,
   BookOpen,
+  IdCard,
   KeyRound,
   Bookmark,
   Copy,
   HardDrive,
   ListPlus,
   Trash2,
+  Puzzle,
 } from "lucide-react";
 import {
   BarChart3,
@@ -66,6 +68,19 @@ export const nav: NavItem[] = [
     adminOnly: true,
   },
   {
+    href: "/settings/plugins",
+    label: "Plugins",
+    icon: Puzzle,
+    section: "core",
+    adminOnly: true,
+  },
+  {
+    href: "/settings/identities",
+    label: "Identities",
+    icon: IdCard,
+    section: "core",
+  },
+  {
     href: "/settings/tokens",
     label: "API tokens",
     icon: KeyRound,
@@ -105,6 +120,6 @@ export const nav: NavItem[] = [
   },
 ];
 
-export function visibleNav(role: "admin" | "member"): NavItem[] {
+export function visibleNav(role: "admin" | "member" | "bookkeeper"): NavItem[] {
   return nav.filter((item) => !item.adminOnly || role === "admin");
 }

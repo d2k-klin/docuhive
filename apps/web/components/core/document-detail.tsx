@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   Download,
   History,
+  Link2,
   Lock,
   LockOpen,
   RotateCcw,
@@ -34,6 +35,7 @@ import {
 } from "@/components/intel/common";
 import { DocumentAIPanel } from "@/components/intel/DocumentAIPanel";
 import { SimilarDocuments } from "@/components/intel/SimilarDocuments";
+import { PluginDocumentPanels } from "@/components/plugins/plugin-page";
 import { reasonText } from "./document-queues";
 import { labelsOf } from "./documents";
 
@@ -190,6 +192,39 @@ export function DocumentDetailView({
     void save(patch, "Saved. Your changes are locked against the AI.");
   }
 
+  /** A read-only link for someone without an account (an advisor), valid for seven days. */
+  async function shareLink(includePrivate = false): Promise<void> {
+    setError("");
+    setMessage("");
+    try {
+      const made = await api<{ path: string; expires_at: string }>(
+        "/api/guest-links",
+        {
+          method: "POST",
+          json: {
+            label: doc.data?.title || "Shared document",
+            document_ids: [id],
+            days: 7,
+            include_private: includePrivate,
+          },
+        },
+      );
+      const url = `${window.location.origin}${made.path}`;
+      await navigator.clipboard?.writeText(url).catch(() => undefined);
+      setMessage(
+        `Link copied. Anyone with it can read this document until ${formatDate(made.expires_at)}: ${url}`,
+      );
+    } catch (e) {
+      const err = e as ApiError;
+      if (
+        err.code === "confirm_private" &&
+        window.confirm(`${err.message} Share it anyway?`)
+      )
+        return shareLink(true);
+      setError(err.message);
+    }
+  }
+
   async function trash(restore: boolean) {
     setError("");
     try {
@@ -224,6 +259,11 @@ export function DocumentDetailView({
   const editing = draft !== null;
   // Editing, sharing, unlocking and trash are the owner's; shared readers only read.
   const owner = d.owner_id === viewerId;
+  // A hold (an issued invoice, a filed return) locks the record for everyone, the owner too.
+  const held = d.holds?.[0];
+  const heldText = held
+    ? `Locked${held.until ? ` until ${formatDate(held.until)}` : ""}: ${held.reason}.`
+    : "";
   const set = (key: keyof Draft) => (event: { target: { value: string } }) =>
     setDraft({ ...(draft as Draft), [key]: event.target.value });
   const unlock = (field: string) =>
@@ -260,6 +300,12 @@ export function DocumentDetailView({
                 </a>
               </Button>
             )}
+            {owner && !d.deleted_at && (
+              <Button variant="secondary" onClick={() => void shareLink()}>
+                <Link2 aria-hidden="true" />
+                Share by link
+              </Button>
+            )}
             {owner &&
               (d.deleted_at ? (
                 <Button variant="secondary" onClick={() => void trash(true)}>
@@ -267,7 +313,12 @@ export function DocumentDetailView({
                   Restore
                 </Button>
               ) : (
-                <Button variant="danger" onClick={() => void trash(false)}>
+                <Button
+                  variant="danger"
+                  disabled={Boolean(held)}
+                  title={heldText || undefined}
+                  onClick={() => void trash(false)}
+                >
                   <Trash2 aria-hidden="true" />
                   Move to trash
                 </Button>
@@ -287,6 +338,18 @@ export function DocumentDetailView({
           <Link href="/quarantine" className="text-primary hover:underline">
             Open quarantine
           </Link>
+        </div>
+      )}
+      {held && (
+        <div
+          role="status"
+          className="mb-4 flex flex-wrap items-center gap-3 text-sm"
+        >
+          <Badge tone="info" icon={Lock}>
+            Locked
+          </Badge>
+          {heldText.replace(/^Locked/, "This record cannot change")} Only an
+          administrator can lift the lock, with a reason.
         </div>
       )}
       {d.status === "staged" || d.status === "processing" ? (
@@ -331,6 +394,8 @@ export function DocumentDetailView({
                 <Button
                   variant="secondary"
                   size="sm"
+                  disabled={Boolean(held)}
+                  title={heldText || undefined}
                   onClick={() => setDraft(draftOf(d))}
                 >
                   Edit
@@ -468,6 +533,14 @@ export function DocumentDetailView({
                     {d.shared ? "Visible to the household" : "Only the owner"}
                   </dd>
                 </div>
+                {d.source.generator && (
+                  <div>
+                    <dt className="text-sm text-text-muted">Created by</dt>
+                    <dd>The {d.source.generator} plugin</dd>
+                  </div>
+                )}
+                <Related label="Made from" ids={d.source.derived_from ?? []} />
+                <Related label="Used in" ids={d.used_in ?? []} />
               </dl>
             )}
           </Card>
@@ -532,9 +605,31 @@ export function DocumentDetailView({
             )}
           </Card>
           <SimilarDocuments documentId={id} />
+          <PluginDocumentPanels documentId={id} />
         </div>
       </div>
     </Page>
+  );
+}
+
+/** Links to documents this one was made from, or that were made from it. */
+function Related({ label, ids }: { label: string; ids: string[] }) {
+  if (!ids.length) return null;
+  return (
+    <div>
+      <dt className="text-sm text-text-muted">{label}</dt>
+      <dd className="flex flex-wrap gap-x-3">
+        {ids.map((other, index) => (
+          <Link
+            key={other}
+            href={`/documents/${other}`}
+            className="text-primary hover:underline"
+          >
+            Document {index + 1}
+          </Link>
+        ))}
+      </dd>
+    </div>
   );
 }
 
@@ -546,7 +641,9 @@ function describe(entry: HistoryEntry, viewerId: number): string {
         ? "A household member"
         : entry.actor.startsWith("ai:")
           ? "The AI"
-          : "DocuHive";
+          : entry.actor.startsWith("plugin:")
+            ? `The ${entry.actor.slice(7)} plugin`
+            : "DocuHive";
   const fields = Object.keys(entry.after || {})
     .filter((f) => f !== "unlocked")
     .map(fieldLabel);
@@ -561,6 +658,10 @@ function describe(entry: HistoryEntry, viewerId: number): string {
       return `${who} moved it to the trash`;
     case "restore":
       return `${who} restored it`;
+    case "hold":
+      return `${who} locked it: ${String(entry.after?.reason ?? "")}`;
+    case "hold_lifted":
+      return `${who} lifted a lock: ${String(entry.after?.lift_reason ?? "")}`;
     default:
       return fields.length
         ? `${who} changed ${fields.join(", ").toLowerCase()}`

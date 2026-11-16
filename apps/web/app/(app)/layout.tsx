@@ -5,6 +5,7 @@ import { serverClient } from "@/lib/api/server";
 import { visibleNav } from "@/lib/nav";
 import { UserActions } from "@/components/core/user-actions";
 import { OperationsStatus } from "@/components/core/operations-status";
+import { ICONS } from "@/components/plugins/icons";
 
 export default async function AppLayout({
   children,
@@ -23,6 +24,7 @@ export default async function AppLayout({
     "/settings/fields",
     "/settings/storage",
     "/settings/tokens",
+    "/settings/identities",
     "/capture",
     "/documents",
     "/search",
@@ -31,8 +33,11 @@ export default async function AppLayout({
     "/trash",
     "/vocabulary",
     "/settings/account",
+    "/settings/plugins",
   ]);
   const views = await client.GET("/api/views").catch(() => null);
+  const plugins = await client.GET("/api/plugin-pages/nav").catch(() => null);
+  const pluginNav = plugins?.data || [];
   const pinned = (views?.data || []).filter((view) => view.pinned);
   const items = visibleNav(user.role).filter(
     (item) => item.section === "intel" || implemented.has(item.href),
@@ -58,9 +63,37 @@ export default async function AppLayout({
             </Link>
           ))}
         </nav>
+        {pluginNav.length > 0 && (
+          <nav aria-label="Plugins" className="mt-6 space-y-1">
+            <h2 className="px-3 text-xs font-semibold text-text-muted">
+              Plugins
+            </h2>
+            <div className="flex flex-wrap gap-2 md:flex-col">
+              {pluginNav.map((entry) => {
+                const Icon = ICONS[entry.icon] ?? ICONS.puzzle;
+                const label =
+                  typeof entry.label === "string"
+                    ? entry.label
+                    : (Object.values(
+                        entry.label as Record<string, string>,
+                      )[0] ?? entry.page);
+                return (
+                  <Link
+                    key={`${entry.plugin}/${entry.page}`}
+                    href={`/plugins/${entry.plugin}/${entry.page}`}
+                    className="flex min-h-control items-center gap-2 break-words rounded px-3 text-sm hover:bg-surface-2"
+                  >
+                    <Icon className="size-4 shrink-0" aria-hidden="true" />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        )}
         {pinned.length > 0 && (
           <nav aria-label="Pinned views" className="mt-6 space-y-1">
-            <h2 className="px-3 text-xs font-medium text-text-muted">
+            <h2 className="px-3 text-xs font-semibold text-text-muted">
               Pinned views
             </h2>
             <div className="flex flex-wrap gap-2 md:flex-col">

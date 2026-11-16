@@ -1,0 +1,73 @@
+title: { en: Invoice, de: Rechnung }
+params: [id]
+blocks:
+  - type: detail
+    source: invoice
+    fields:
+      - { field: number, label: Number }
+      - { field: kind, label: Kind, format: badge }
+      - { field: customer, label: Customer }
+      - { field: issue_date, label: Issued, format: date }
+      - { field: due_date, label: Due, format: date }
+      - { field: total, label: Total, format: money }
+      - { field: paid_amount, label: Paid, format: money }
+      - { field: state_label, label: State, format: badge }
+      - { field: document_id, label: PDF, format: document }
+  - type: actions
+    title: Draft
+    help: Issuing checks everything the law requires on an invoice and then fixes it for good.
+    actions:
+      - { label: Issue, action: issue, primary: true, confirm: "Issue this invoice? It gets its number and can no longer be changed." }
+      - { label: Delete draft, action: delete_draft, confirm: "Delete this draft?" }
+  - type: form
+    title: Change the draft
+    initial: invoice
+    fields:
+      - { name: customer_id, type: choice, label: Customer, options: customer_options, required: true }
+      - { name: service_from, type: date, label: Service from }
+      - { name: service_to, type: date, label: Service until }
+      - name: lines
+        type: lines
+        label: Lines
+        columns:
+          - { name: description, label: Description, required: true }
+          - { name: quantity, label: Quantity, type: number }
+          - { name: unit, label: Unit, type: choice, options: unit_options }
+          - { name: unit_price, label: Net price, type: money }
+          - { name: discount_percent, label: Discount %, type: number }
+          - { name: vat_code, label: VAT, type: choice, options: sales_codes }
+      - { name: notes, type: textarea, label: Text on the invoice }
+      - { name: recurring_months, type: number, label: Repeat every … months, min: 1 }
+    action: save_draft
+    submit: Save draft
+  - type: form
+    title: Send
+    fields:
+      - { name: to, type: text, label: "To (empty: the customer's mail address)" }
+    action: send_invoice
+    submit: Send by mail
+    confirm: "Send this invoice by mail now?"
+  - type: actions
+    title: After sending
+    actions:
+      - { label: Mark as sent (post or portal), action: mark_sent }
+      - { label: Payment reminder, action: payment_reminder }
+      - { label: Cancel with a credit note, action: credit_note, confirm: "Prepare a credit note that cancels this invoice?" }
+      - { label: Turn quote into invoice, action: to_invoice }
+  - type: form
+    title: Record a payment
+    help: With the bank plugin, payments are found on your statements by themselves.
+    fields:
+      - { name: amount, type: money, label: Amount, required: true }
+      - { name: paid_on, type: date, label: Paid on, required: true }
+      - { name: note, type: text, label: Note }
+    action: record_payment
+    submit: Record payment
+  - type: table
+    title: Payments
+    source: invoice_payments
+    columns:
+      - { field: paid_on, label: Date, format: date }
+      - { field: money, label: Amount, format: money, total: true }
+      - { field: note, label: Note }
+    empty: No payment yet.

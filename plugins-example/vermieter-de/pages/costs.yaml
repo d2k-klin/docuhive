@@ -1,0 +1,30 @@
+title: { en: Property costs, de: Nebenkosten }
+description: Bills with the category Housing are proposed here. Nothing counts in a statement until you confirm it.
+nav: { label: { en: Property costs, de: Nebenkosten }, icon: receipt, order: 51 }
+blocks:
+  - type: table
+    source: costs
+    columns:
+      - { field: period_to, label: Date, format: date }
+      - { field: property, label: Property }
+      - { field: type_label, label: Cost type }
+      - { field: money, label: Amount, format: money, total: true }
+      - { field: document_id, label: Bill, format: document }
+      - { field: state_label, label: State, format: badge, tones: { To confirm: warn, Confirmed: ok } }
+    row_actions:
+      - { label: Confirm, action: confirm_cost, when: to_confirm }
+    filters:
+      - { field: period_to, type: year, label: Year }
+      - { field: state_label, type: choice, label: State, options: [To confirm, Confirmed] }
+    empty: No bills yet. Give your property's bills the category Housing.
+  - type: form
+    title: Confirm with changes
+    help: A bill for two years is split by days in each year's statement.
+    fields:
+      - { name: item, type: choice, label: Bill, options: cost_options, required: true }
+      - { name: cost_type, type: choice, label: Cost type, options: type_options, required: true }
+      - { name: period_from, type: date, label: Covers from }
+      - { name: period_to, type: date, label: Covers until }
+      - { name: unit_id, type: choice, label: "Only for one flat (empty: the whole building)", options: unit_options }
+    action: confirm_cost
+    submit: Confirm

@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from docuhive import auth, db, documents, taxonomy, vault
-from docuhive.auth import current_user
+from docuhive.auth import current_user, require_admin
 from docuhive.contracts import (
     ApplyResult,
     CurrentUser,
@@ -24,6 +24,7 @@ from docuhive.contracts import (
     SourceKind,
 )
 from docuhive.db.models import AuditLog, Correspondent, Document, DocumentTag, Tag
+from docuhive.documents.holds import Held
 from docuhive.ingest.process import retry
 from docuhive.vault.meta import write_or_queue
 
@@ -36,10 +37,28 @@ INLINE_ORIGINALS = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
 CHUNK = 1 << 20
 
 
+class Hold(BaseModel):
+    id: int
+    reason: str
+    fields: list[str]
+    until: date | None
+    placed_by: str
+    placed_at: datetime
+    lifted_at: datetime | None
+    lifted_by: str | None
+    lift_reason: str | None
+
+
 class DocumentDetail(DocumentView):
     quarantine_reason: str | None
     provenance: dict[str, Any]
     files: list[Literal["original", "archive", "thumb"]]
+    holds: list[Hold] = []  # active ones: the document page shows a lock and why
+    used_in: list[str] = []  # documents made from this one (a letter it was attached to)
+
+
+class LiftHold(BaseModel):
+    reason: str = Field(default="", max_length=500)  # checked after access, see lift_hold
 
 
 class DocumentEdit(MetadataPatch):
@@ -58,7 +77,7 @@ class BulkEdit(BaseModel):
 
 class BulkResult(BaseModel):
     updated: int
-    skipped: list[str]  # not found or not owned
+    skipped: list[str]  # not found, not owned, or locked by a hold
 
 
 class HistoryEntry(BaseModel):
@@ -87,11 +106,30 @@ def owned(doc_id: str, user: CurrentUser) -> DocumentView:
     return view
 
 
-def detail(view: DocumentView) -> DocumentDetail:
+def detail(view: DocumentView, user: CurrentUser | None = None) -> DocumentDetail:
+    from docuhive.db.models import DocSource
+    from docuhive.documents import holds as held
+
     with db.session() as session:
         row = session.get(Document, view.id)
         assert row is not None
         reason, provenance, vault_path = row.quarantine_reason, row.ai_provenance, row.vault_path
+        active = [
+            Hold.model_validate(h, from_attributes=True) for h in held.active(session, view.id)
+        ]
+        used_in = (
+            list(
+                session.scalars(
+                    select(DocSource.document_id)
+                    .join(Document, Document.id == DocSource.document_id)
+                    .where(DocSource.derived_from.contains([view.id]), auth.visible_docs(user))
+                    .order_by(DocSource.document_id)
+                )
+            )
+            # array containment is PostgreSQL's; the SQLite unit tests have no generated docs
+            if user is not None and session.get_bind().dialect.name == "postgresql"
+            else []
+        )
     files: list[Literal["original", "archive", "thumb"]] = []
     if vault_path:
         folder = vault.root() / vault_path
@@ -103,6 +141,8 @@ def detail(view: DocumentView) -> DocumentDetail:
         quarantine_reason=reason,
         provenance=provenance or {},
         files=files,
+        holds=active,
+        used_in=used_in,
     )
 
 
@@ -315,7 +355,11 @@ def bulk_edit(body: BulkEdit, user: UserDependency) -> BulkResult:
         except HTTPException:
             skipped.append(doc_id)
             continue
-        edit(doc_id, body.patch, user)
+        try:
+            edit(doc_id, body.patch, user)
+        except Held:
+            skipped.append(doc_id)  # locked: listed with the others the edit could not change
+            continue
         updated += 1
     return BulkResult(updated=updated, skipped=skipped)
 
@@ -323,7 +367,7 @@ def bulk_edit(body: BulkEdit, user: UserDependency) -> BulkResult:
 @router.get("/documents/{doc_id}", response_model=DocumentDetail)
 def get_document(doc_id: str, user: UserDependency) -> DocumentDetail:
     try:
-        return detail(documents.get_for_user(doc_id, user))
+        return detail(documents.get_for_user(doc_id, user), user)
     except documents.NotFound as error:
         raise problem(404, "document_not_found", "Document not found.") from error
 
@@ -383,7 +427,44 @@ def edit_document(doc_id: str, body: DocumentEdit, user: UserDependency) -> Edit
     view = owned(doc_id, user)
     validate(body, current_category=view.category)
     result = edit(doc_id, body, user)
-    return EditResult(document=detail(documents.get(doc_id)), result=result)
+    return EditResult(document=detail(documents.get(doc_id), user), result=result)
+
+
+@router.get("/documents/{doc_id}/holds", response_model=list[Hold])
+def list_holds(doc_id: str, user: UserDependency) -> list[Hold]:
+    """Every hold, lifted ones included."""
+    from docuhive.db.models import DocumentHold
+
+    get_document(doc_id, user)
+    with db.session() as session:
+        rows = session.scalars(
+            select(DocumentHold).where(DocumentHold.document_id == doc_id).order_by(DocumentHold.id)
+        )
+        return [Hold.model_validate(h, from_attributes=True) for h in rows]
+
+
+@router.post("/documents/{doc_id}/holds/{hold_id}/lift", response_model=Hold)
+def lift_hold(
+    doc_id: str, hold_id: int, body: LiftHold, admin: Annotated[CurrentUser, Depends(require_admin)]
+) -> Hold:
+    """An administrator lifts one hold, with a reason that stays in the history."""
+    from docuhive.documents import holds as held
+
+    get_document(doc_id, admin)
+    if len(body.reason.strip()) < 3:
+        raise problem(422, "reason_required", "Say why the lock is lifted.")
+    with db.session() as session:
+        try:
+            hold = held.lift(session, hold_id, lifted_by=f"user:{admin.id}", reason=body.reason)
+        except LookupError as error:
+            raise problem(
+                404, "hold_not_found", "This hold does not exist or was lifted."
+            ) from error
+        if hold.document_id != doc_id:
+            raise problem(404, "hold_not_found", "This hold does not exist or was lifted.")
+        out = Hold.model_validate(hold, from_attributes=True)
+    write_or_queue(doc_id)
+    return out
 
 
 @router.post("/documents/{doc_id}/trash", status_code=204)

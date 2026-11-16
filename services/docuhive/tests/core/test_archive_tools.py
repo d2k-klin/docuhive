@@ -20,6 +20,7 @@ from docuhive.db.models import (
     DocFact,
     DocSource,
     Document,
+    DocumentHold,
     DocumentTag,
     DuplicatePair,
     Job,
@@ -58,6 +59,7 @@ def tools(client, monkeypatch, tmp_path):
         SavedView.__table__,
         DuplicatePair.__table__,
         Note.__table__,
+        DocumentHold.__table__,
     ]
     originals = [(c, c.type, c.server_default) for t in tables for c in t.columns]
     try:

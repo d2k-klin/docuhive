@@ -1,0 +1,17 @@
+# How each VAT treatment feeds the advance return; `category` is the EN 16931 VAT category
+# (BT-151) on invoices you write, and `text` the mandatory sentence from invoice-texts.yaml.
+# `base`, `tax` and `input` name form fields
+# from rules/years/<year>.yaml. Add your own with custom/rules/vat-codes.yaml and _merge: true.
+codes:
+  - { id: sale_19, label: "Sale, 19 %", direction: sales, rate: 19, base: "81", category: S }
+  - { id: sale_7, label: "Sale, 7 %", direction: sales, rate: 7, base: "86", category: S }
+  - { id: sale_eu_goods, label: "Supply of goods to an EU business (tax-free)", direction: sales, rate: 0, base: "41", needs_vat_ids: true, category: K, text: eu_supply }
+  - { id: sale_eu_service, label: "Service to an EU business (reverse charge)", direction: sales, rate: 0, base: "21", needs_vat_ids: true, category: AE, text: reverse_charge }
+  - { id: sale_exempt, label: "Tax-exempt sale", direction: sales, rate: 0, base: "48", category: E, text: exempt }
+  - { id: sale_small_business, label: "Sale under the small-business rule", direction: sales, rate: 0, category: E, text: small_business }
+  - { id: purchase_19, label: "Purchase, 19 % input tax", direction: purchases, rate: 19, input: "66" }
+  - { id: purchase_7, label: "Purchase, 7 % input tax", direction: purchases, rate: 7, input: "66" }
+  - { id: purchase_none, label: "Purchase without input tax", direction: purchases, rate: 0 }
+  - { id: purchase_rc_eu, label: "Service from an EU business (reverse charge)", direction: purchases, rate: 19, base: "46", tax: "47", input: "67", reverse_charge: true }
+  - { id: purchase_rc_other, label: "Other reverse-charge purchase (e.g. construction)", direction: purchases, rate: 19, base: "84", tax: "85", input: "67", reverse_charge: true }
+  - { id: purchase_eu_goods, label: "Goods from an EU business", direction: purchases, rate: 19, base: "89", input: "61", reverse_charge: true }

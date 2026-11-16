@@ -1,0 +1,14 @@
+title: { en: Booking rules, de: Buchungsregeln }
+description: Rules you made with “Always book this sender like this”. They come before anything the AI suggests.
+params: [book]
+blocks:
+  - type: table
+    source: rules_rows
+    columns:
+      - { field: counterparty, label: Sender }
+      - { field: account, label: Account }
+      - { field: vat_label, label: VAT }
+      - { field: uses, label: Used, format: number }
+    row_actions:
+      - { label: Remove, action: delete_rule, confirm: "New documents from this sender will be proposed again. Remove the rule?" }
+    empty: No rules yet. Confirm a booking with “Always book this sender like this”.

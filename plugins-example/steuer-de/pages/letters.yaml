@@ -1,0 +1,20 @@
+title: { en: Letters to the tax office, de: Schreiben ans Finanzamt }
+description: The formal parts are filled in; the reasons are yours. Nothing is sent — read, sign and post it, or send it yourself.
+nav: { label: { en: Tax letters, de: Schreiben }, icon: mail, order: 19 }
+params: [book]
+blocks:
+  - type: form
+    fields:
+      - { name: kind, type: choice, label: Letter, options: letter_kinds, required: true }
+      - { name: office_address, type: textarea, label: "Tax office's postal address (one line each)", required: true }
+      - { name: tax_type, type: text, label: "Tax (empty: Umsatzsteuer)" }
+      - { name: year, type: text, label: Year }
+      - { name: notice_date, type: date, label: Date on the notice (objection only), help: "The deadline for the objection is added to your reminders." }
+      - { name: until, type: text, label: Extension until (extension only) }
+    action: write_letter
+    submit: Prepare the letter
+  - type: actions
+    title: Procedure documentation
+    help: A description of how you capture, book and keep records, as the tax office expects (GoBD). A starting point to complete.
+    actions:
+      - { label: Create the description, action: procedure }

@@ -1,0 +1,5 @@
+# Payments that never need a document. `counterparty` is compared case-insensitively and
+# may be part of the name. Add your own in custom/rules/ignore.yaml with `_merge: true`.
+ignore:
+  - { id: cash, counterparty: "Bargeldauszahlung", reason: Cash withdrawal }
+  - { id: fees, counterparty: "Kontoführung", reason: Account fees }

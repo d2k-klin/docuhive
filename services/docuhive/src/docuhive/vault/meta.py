@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from docuhive import db, jobs, vault
 from docuhive.contracts import FactValue, SourceInfo
-from docuhive.db.models import Document, Note, User
+from docuhive.db.models import Document, DocumentHold, Note, User
 
 from .migrate import CURRENT as SCHEMA
 from .migrate import upgrade
@@ -25,6 +25,17 @@ class NoteV1(BaseModel):
     author: str
     body: str
     created_at: datetime
+
+
+class HoldV1(BaseModel):
+    reason: str
+    fields: list[str]
+    until: date | None = None
+    placed_by: str
+    placed_at: datetime
+    lifted_at: datetime | None = None
+    lifted_by: str | None = None
+    lift_reason: str | None = None
 
 
 class MetaV1(BaseModel):
@@ -51,6 +62,7 @@ class MetaV1(BaseModel):
     ai: dict[str, Any]
     manual_fields: list[str]
     deleted_at: datetime | None
+    holds: list[HoldV1] = []  # lifted ones too: the history of why a record was locked
 
     def dump(self) -> bytes:
         data = self.model_dump(mode="json", by_alias=True)
@@ -89,6 +101,12 @@ def _render(session: Session, doc: Document) -> MetaV1:
             .order_by(Note.created_at, Note.id)
         )
     ]
+    holds = [
+        HoldV1.model_validate(h, from_attributes=True)
+        for h in session.scalars(
+            select(DocumentHold).where(DocumentHold.document_id == doc_id).order_by(DocumentHold.id)
+        )
+    ]
     sha, ai = doc.sha256, dict(doc.ai_provenance or {})
     return MetaV1(
         id=view.id,
@@ -112,6 +130,7 @@ def _render(session: Session, doc: Document) -> MetaV1:
         ai=ai,
         manual_fields=view.manual_fields,
         deleted_at=view.deleted_at,
+        holds=holds,
     )
 
 

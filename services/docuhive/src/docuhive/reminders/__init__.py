@@ -6,7 +6,7 @@ Contracts with end_date + notice_period_days also get a derived "Notice deadline
 
 from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import and_, delete, func, or_, select
 
 from docuhive import auth, db, documents, fields, taxonomy
 from docuhive.ai import coretables
@@ -89,12 +89,12 @@ def scan(today: date | None = None) -> int:
     d = coretables.table("documents")
     with db.session() as s:
         due = s.execute(
-            select(Reminder, d.c.owner_id, d.c.title)
-            .join(d, d.c.id == Reminder.document_id)
+            select(Reminder, func.coalesce(d.c.owner_id, Reminder.owner_id), d.c.title)
+            .join(d, d.c.id == Reminder.document_id, isouter=True)
             .where(
                 Reminder.status == "scheduled",
                 Reminder.remind_on <= today,
-                d.c.deleted_at.is_(None),
+                or_(Reminder.document_id.is_(None), d.c.deleted_at.is_(None)),
             )
         ).all()
         s.expunge_all()
@@ -104,9 +104,9 @@ def scan(today: date | None = None) -> int:
         send(
             Notification(
                 kind="reminder",
-                title=f"{r.label}: {title or 'document'}",
+                title=f"{r.label}: {title}" if title else r.label,
                 body=f"{r.label} on {r.due_on.isoformat()} ({when}).",
-                url=f"/documents/{r.document_id}",
+                url=r.link or f"/documents/{r.document_id}",
                 user_id=owner,
                 priority="high" if days <= 7 else "default",
             )
@@ -123,8 +123,14 @@ def upcoming(
     d = coretables.table("documents")
     q = (
         select(Reminder, d.c.title)
-        .join(d, d.c.id == Reminder.document_id)
-        .where(auth.visible_docs(user), Reminder.status.in_(("scheduled", "sent")))
+        .join(d, d.c.id == Reminder.document_id, isouter=True)
+        .where(
+            or_(
+                and_(Reminder.document_id.is_not(None), auth.visible_docs(user)),
+                and_(Reminder.document_id.is_(None), Reminder.owner_id == user.id),
+            ),
+            Reminder.status.in_(("scheduled", "sent")),
+        )
         .order_by(Reminder.due_on, Reminder.id)
     )
     if date_from:
@@ -135,11 +141,12 @@ def upcoming(
     seen: dict[tuple[str, str], dict] = {}
     with db.session() as s:
         for r, title in s.execute(q):
-            key = (r.document_id, r.fact)  # one row per deadline; earliest pending reminder id
+            key = (r.document_id or f"owner{r.owner_id}", r.fact)  # one row per deadline
             if key not in seen:
                 seen[key] = {
                     "id": r.id,
                     "document_id": r.document_id,
+                    "link": r.link or f"/documents/{r.document_id}",
                     "title": title,
                     "fact": r.fact,
                     "label": r.label,
@@ -157,14 +164,18 @@ def resolve(reminder_id: int, user: CurrentUser, status: str) -> None:
         r = s.get(Reminder, reminder_id)
         if r is None:
             raise LookupError("not found")
-        doc_id, fact = r.document_id, r.fact
-    view = documents.get_for_user(doc_id, user)
-    if view.owner_id != user.id:
-        raise PermissionError("Only the document owner can change its reminders")
+        doc_id, fact, owner = r.document_id, r.fact, r.owner_id
+    if doc_id is None:
+        if owner != user.id:
+            raise PermissionError("Only its owner can change this reminder")
+        same = and_(Reminder.document_id.is_(None), Reminder.owner_id == owner)
+    else:
+        view = documents.get_for_user(doc_id, user)
+        if view.owner_id != user.id:
+            raise PermissionError("Only the document owner can change its reminders")
+        same = Reminder.document_id == doc_id
     with db.session() as s:
-        for row in s.scalars(
-            select(Reminder).where(Reminder.document_id == doc_id, Reminder.fact == fact)
-        ):
+        for row in s.scalars(select(Reminder).where(same, Reminder.fact == fact)):
             row.status = status
 
 
@@ -180,12 +191,11 @@ def ics(items: list[dict]) -> str:
     ]
     for it in items:
         due: date = it["due_on"]
-        summary = f"{it['label']}: {it['title'] or 'document'}".replace(",", "\\,").replace(
-            ";", "\\;"
-        )
+        title = f"{it['label']}: {it['title']}" if it["title"] else it["label"]
+        summary = title.replace(",", "\\,").replace(";", "\\;")
         lines += [
             "BEGIN:VEVENT",
-            f"UID:docuhive-{it['document_id']}-{it['fact']}@docuhive",
+            f"UID:docuhive-{it['document_id'] or 'own'}-{it['fact']}@docuhive",
             f"DTSTAMP:{stamp}",
             f"DTSTART;VALUE=DATE:{due:%Y%m%d}",
             f"DTEND;VALUE=DATE:{due + timedelta(days=1):%Y%m%d}",
@@ -199,3 +209,42 @@ def ics(items: list[dict]) -> str:
         ]
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines) + "\r\n"
+
+
+def set_owned(
+    owner_id: int, fact: str, label: str, due_on: date, days_before: list[int], link: str
+) -> None:
+    """A deadline that belongs to a person, not to a document (for example a tax return).
+    Setting the same `fact` again replaces it; dates already passed are left out."""
+    today = date.today()
+    with db.session() as s:
+        s.execute(
+            delete(Reminder).where(
+                Reminder.document_id.is_(None),
+                Reminder.owner_id == owner_id,
+                Reminder.fact == fact,
+                Reminder.status == "scheduled",
+            )
+        )
+        for n in sorted(set(days_before)) or [0]:
+            remind_on = due_on - timedelta(days=n)
+            if remind_on >= today:
+                s.add(
+                    Reminder(
+                        owner_id=owner_id,
+                        fact=fact,
+                        label=label,
+                        due_on=due_on,
+                        remind_on=remind_on,
+                        link=link,
+                    )
+                )
+
+
+def clear_owned(owner_id: int, fact: str) -> None:
+    with db.session() as s:
+        s.execute(
+            delete(Reminder).where(
+                Reminder.document_id.is_(None), Reminder.owner_id == owner_id, Reminder.fact == fact
+            )
+        )

@@ -1,0 +1,8 @@
+{% extends "_letter.html" %}
+{% block body %}
+<p>Sehr geehrte Damen und Herren,</p>
+<p>für die {{ tax_type }}-Erklärung {{ year }} beantrage ich eine Verlängerung der Abgabefrist{% if until %} bis zum {{ until }}{% endif %}.</p>
+<p>Begründung: <i>[Bitte hier ergänzen, zum Beispiel: Unterlagen liegen noch nicht vollständig vor.]</i></p>
+<p>Mit freundlichen Grüßen</p>
+<p style="margin-top: 16mm">{{ name }}</p>
+{% endblock %}

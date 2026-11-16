@@ -12,7 +12,7 @@ from pillow_heif import register_heif_opener
 
 from docuhive.config.settings import get_settings
 
-from .detect import Detected
+from .detect import Detected, read_text
 from .errors import Quarantine, Transient
 from .html import html_document, render_email, sanitize
 from .safety import MAX_IMAGE_PIXELS, MAX_PAGES
@@ -66,9 +66,7 @@ def to_pdf(path: Path, detected: Detected) -> Path:
             elif detected.kind == "html":
                 rendered = html_document(sanitize(path.read_text(encoding="utf-8-sig")))
             else:
-                rendered = html_document(
-                    f"<pre>{escape(path.read_text(encoding='utf-8-sig'))}</pre>"
-                )
+                rendered = html_document(f"<pre>{escape(read_text(path))}</pre>")
             data = rendered.encode()
         with httpx.Client(timeout=120, follow_redirects=False, trust_env=False) as client:
             try:

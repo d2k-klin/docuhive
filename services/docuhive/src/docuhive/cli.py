@@ -92,6 +92,9 @@ def parser() -> argparse.ArgumentParser:
     spike_ingest = spike_sub.add_parser("ingest")
     spike_ingest.add_argument("input_dir")
     spike_ingest.add_argument("--out", required=True)
+    from docuhive.plugins.cli import register as register_plugins
+
+    register_plugins(subs)
     try:
         module = import_module("docuhive.ai.cli")
     except ImportError:
@@ -159,6 +162,11 @@ def main() -> None:
                 summary = rebuild.rebuild(dry_run=args.dry_run)
                 print(summary.model_dump_json(indent=2))
                 failed = bool(summary.errors)
+                if not args.dry_run:
+                    from docuhive.plugins import runtime
+
+                    for line in runtime.restore_after_rebuild():
+                        print(f"plugin {line}")
             if failed:
                 raise SystemExit(1)
         elif args.command == "ingest":

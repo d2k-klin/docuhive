@@ -4,6 +4,32 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-16
+
+### Added
+
+- **Plugins.** A plugin is a folder you can read and change: it adds document types, screens, background work and questions you can ask, and only does what its declared permissions allow. Switch plugins on under **Settings → Plugins**; change their wording, rules and screens with your own files in `custom/`, which updates never touch. See the [plugin guide](plugins-example/README.md) and [building plugins](plugins-example/BUILDING.md).
+- **Five example plugins**, complete enough to use every day:
+  - **Tax and bookkeeping for Germany** (`steuer-de`): receipts and e-invoices become bookings you confirm; VAT advance return figures in form order; the income-surplus statement; deadlines; your own invoices with numbers without gaps, issued as a PDF with the e-invoice inside (ZUGFeRD) or as XRechnung, and booked; payments and reminders; letters to the tax office; a hand-over package for your advisor. It calculates; it does not give tax advice. Filing directly through ELSTER is planned.
+  - **Bank statements** (`bank`): CAMT, MT940 and CSV statements become payments, matched to your invoices.
+  - **Contracts** (`vertraege`): every contract with its cost and last day for notice, and a cancellation letter.
+  - **Inventory** (`inventar`): durable goods from receipts, warranties, a contents list and claim bundle for your insurer.
+  - **Landlords** (`vermieter-de`): flats and tenancies, the rent ledger and the yearly service-charge statement per tenant.
+- **Locked documents.** Issued invoices, closed periods and sent letters cannot be changed or deleted by anyone; an administrator can lift a lock with a reason that stays in the history. Locks survive a rebuild from the vault.
+- **Identities** (Settings → Identities): your name, address, tax number and bank account once, for letters and invoices, with an optional mail server to send from.
+- **Share by link**: a read-only link to a document for seven days, for someone without an account. Off unless `DOCUHIVE_GUEST_LINKS=true`.
+- A **bookkeeper** role: sees what a member sees, plus the categories an administrator assigns.
+
+### Fixed
+
+- Section headings in the sidebar use the same weight as every other heading.
+
+### Security
+
+- Plugins import only `docuhive.sdk`; `docuhive plugins check` refuses anything else. Plugin templates run in a sandbox and PDFs are printed without network access.
+- Mail and guest links happen only when a person presses a button; a password is never sent to a mail server without encryption.
+- Every view through a guest link is recorded; tokens are stored hashed, links last at most 30 days, and wrong tokens are throttled.
+
 ## [0.8.0] - 2026-11-15
 
 ### Added

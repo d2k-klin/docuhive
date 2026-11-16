@@ -1,0 +1,71 @@
+# Three made-up businesses for 2026, every expected figure worked out by hand (the working is in
+# the comments). The regression suite for every rules release: a change that moves one cent
+# here is a change in what people file. Entries: direction, date, net, vat, VAT code, account,
+# paid (and service, when it differs from the date).
+
+freelancer:  # services at 19 % only, quarterly, VAT when invoiced
+  book: { vat_period: quarterly, vat_basis: invoice }
+  entries:
+    - [income, 2026-01-15, "2000.00", "380.00", sale_19, "8400", 2026-01-30]
+    - [income, 2026-03-31, "1500.50", "285.10", sale_19, "8400", 2026-04-14]  # Q1 for VAT, paid in Q2
+    - [expense, 2026-02-03, "100.00", "19.00", purchase_19, "4806", 2026-02-03]
+    - [expense, 2026-05-10, "50.00", "9.50", purchase_19, "4925", 2026-05-10]
+    - [income, 2026-12-20, "1000.00", "190.00", sale_19, "8400", 2027-01-05]  # EÜR 2027: paid in January
+  vat:
+    # Q1: 81 = 3500.50 -> 3500, tax 665.00; 66 = 19.00; 665.00 - 19.00
+    2026-Q1: { "81": "3500", "66": "19.00", "83": "646.00" }
+    2026-Q2: { "66": "9.50", "83": "-9.50" }
+    2026-Q3: { "83": "0" }
+    2026-Q4: { "81": "1000", "83": "190.00" }
+    # the year: 81 = 4500.50 -> 4500, tax 855.00; 66 = 28.50
+    "2026": { "81": "4500", "66": "28.50", "83": "826.50" }
+  euer:
+    # paid in 2026: income 3500.50 + VAT 665.10; software 100, telecom 50, input tax 28.50
+    year: 2026
+    revenue: "3500.50"
+    vat_received: "665.10"
+    software: "100.00"
+    telecom: "50.00"
+    input_tax: "28.50"
+    surplus: "3987.10"
+
+trader:  # 7 % and 19 %, EU purchases, monthly with a standing extension and a special advance
+  book: { vat_period: monthly, vat_basis: invoice, standing_extension: true, special_advance: "100.00" }
+  entries:
+    - [income, 2026-01-10, "1000.00", "70.00", sale_7, "8300", 2026-01-20]
+    - [income, 2026-01-12, "500.00", "95.00", sale_19, "8400", 2026-01-25]
+    - [expense, 2026-01-05, "400.00", "28.00", purchase_7, "3300", 2026-01-05]
+    - [expense, 2026-01-20, "300.00", "0.00", purchase_rc_eu, "3123", 2026-01-21]
+    - [income, 2026-12-01, "200.99", "38.19", sale_19, "8400", 2026-12-10]
+    - [expense, 2026-12-03, "100.00", "0.00", purchase_eu_goods, "3400", 2026-12-04]
+  vat:
+    # January: 86 tax 70.00, 81 tax 95.00, 47 = 19 % of 300 = 57.00 owed;
+    # 66 = 28.00 and 67 = 57.00 deducted: 222.00 - 85.00
+    2026-01: { "81": "500", "86": "1000", "46": "300", "47": "57.00", "66": "28.00", "67": "57.00", "83": "137.00" }
+    2026-02: { "83": "0" }
+    # December: 81 = 200.99 -> 200, tax 38.00; 89 = 100, tax 19.00; 61 = 19.00 deducted;
+    # the special advance 100.00 deducted in the last period: 57.00 - 19.00 - 100.00
+    2026-12: { "81": "200", "89": "100", "61": "19.00", "39": "100.00", "83": "-62.00" }
+  euer:
+    # income 1700.99 + VAT 203.19; goods 400 + 100, services from the EU 300; input tax 28.00
+    # (reverse-charge VAT is owed and deducted at once: no money moves, so it is not an expense)
+    year: 2026
+    revenue: "1700.99"
+    vat_received: "203.19"
+    goods: "500.00"
+    subcontractors: "300.00"
+    input_tax: "28.00"
+    surplus: "1076.18"
+
+small_business:  # small-business rule: no VAT returns, expenses booked gross
+  book: { vat_status: small_business, vat_period: none, vat_basis: invoice }
+  entries:
+    - [income, 2026-02-01, "800.00", "0.00", sale_small_business, "8195", 2026-02-15]
+    - [income, 2026-06-01, "1200.00", "0.00", sale_small_business, "8195", 2026-06-10]
+    - [expense, 2026-03-01, "119.00", "0.00", purchase_none, "4930", 2026-03-01]
+  vat: {}
+  euer:
+    year: 2026
+    revenue: "2000.00"
+    office: "119.00"
+    surplus: "1881.00"

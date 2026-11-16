@@ -10,7 +10,7 @@ from typing import Any
 
 from sqlalchemy import delete, update
 
-from docuhive import db, fields, jobs, taxonomy
+from docuhive import db, events, fields, jobs, taxonomy
 from docuhive.agents.base import AIDisabled, AllRoutesFailed, InvalidOutput
 from docuhive.ai.budgets import BudgetExceeded, next_month_start
 from docuhive.ai.privacy import NoAllowedRoute
@@ -72,7 +72,8 @@ def on_stored(payload: dict, ctx: Any) -> None:
     doc_id = payload["document_id"]
     ledger.on_document(doc_id, "stored")
     hints = payload.get("hints") or {}
-    if hints.get("rebuild") == "true":  # vault rebuild: metadata already known, only re-index
+    if hints.get("rebuild") == "true" or hints.get("skip_ai") == "1":
+        # A rebuild, or a document a plugin generated: what it is is known; only make it findable.
         enqueue_doc("index.embed", doc_id)
     else:
         enqueue_doc("ai.classify", doc_id, hints=hints)
@@ -91,6 +92,7 @@ def run_classify(payload: dict, ctx: Any) -> None:
         enqueue_doc("ai.extract", doc_id, document_type=dt.id)
     else:
         enqueue_doc("index.embed", doc_id)
+        classified(doc_id, summary["document_type"], ctx)
 
 
 @jobs.handler("ai.extract", queue="ai", timeout_s=900)
@@ -101,6 +103,16 @@ def run_extract(payload: dict, ctx: Any) -> None:
     if guarded(doc_id, ctx, extract, doc_id, payload.get("document_type")) is not None:
         enqueue_doc("reminders.sync", doc_id)
     enqueue_doc("index.embed", doc_id)
+    classified(doc_id, payload.get("document_type"), ctx)
+
+
+def classified(doc_id: str, document_type: str | None, ctx: Any) -> None:
+    """Tell listeners (plugins) that the AI has proposed this document's type and values."""
+    events.emit(
+        "document.classified",
+        {"document_id": doc_id, "document_type": document_type},
+        key=f"{doc_id}:job{getattr(ctx, 'job_id', '')}",
+    )
 
 
 @jobs.handler("document.metadata_changed", queue="ai")

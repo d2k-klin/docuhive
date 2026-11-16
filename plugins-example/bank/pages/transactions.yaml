@@ -1,0 +1,19 @@
+title: { en: Payments, de: Umsätze }
+description: Everything read from your bank statements.
+nav: { label: { en: Payments, de: Umsätze }, icon: banknote, order: 21 }
+blocks:
+  - type: table
+    source: transactions
+    filters:
+      - { field: account, type: choice, label: Account, options: account_options }
+      - { field: booking_date, type: year, label: Year }
+      - { field: q, type: text, label: Search }
+    columns:
+      - { field: booking_date, label: Date, format: date }
+      - { field: counterparty, label: Paid to or from }
+      - { field: purpose, label: Text }
+      - { field: amount, label: Amount, format: money, total: true }
+      - { field: state, label: State, format: badge, tones: { Matched: ok, Open: warn, "No document needed": muted } }
+      - { field: statement, label: Statement, link: { document: statement_id } }
+    sort: -booking_date
+    empty: No payments yet. Download a statement from your online banking (CAMT, MT940 or CSV) and upload it.

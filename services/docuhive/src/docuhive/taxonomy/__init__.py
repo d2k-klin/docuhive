@@ -3,10 +3,10 @@
 import re
 from functools import lru_cache
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from docuhive import config
-from docuhive.contracts import Category, Taxonomy
+from docuhive.contracts import Category, DocumentType, Taxonomy
 
 _CATEGORY_ID = re.compile(r"^[a-z0-9-]+(/[a-z0-9-]+)*$")
 _SNAKE = re.compile(r"^[a-z][a-z0-9_]*$")
@@ -60,12 +60,45 @@ def defaults() -> Taxonomy:
     return validate(config.load_yaml("taxonomy.yaml"))
 
 
+# (plugin id, contribution) for every running plugin, in dependency order (filled at start).
+CONTRIBUTIONS: list[tuple[str, "Contribution"]] = []
+
+
+class Contribution(BaseModel):
+    """What a plugin adds: new categories, document types and tags, and new facts on existing
+    document types. It never changes or removes an entry someone else defined."""
+
+    model_config = ConfigDict(extra="forbid")
+    categories: list[Category] = []
+    document_types: list[DocumentType] = []
+    tags: list[str] = []
+
+
+def contribute(tax: Taxonomy, plugin_id: str, add: Contribution) -> None:
+    source = f"plugin:{plugin_id}"
+    categories = {c.id for c in tax.categories}
+    for c in add.categories:
+        if c.id not in categories:
+            tax.categories.append(c.model_copy(update={"source": source}))
+            categories.add(c.id)
+    types = {t.id: t for t in tax.document_types}
+    for t in add.document_types:
+        if t.id not in types:
+            tax.document_types.append(t.model_copy(update={"source": source}, deep=True))
+            continue
+        names = {f.name for f in types[t.id].facts}
+        types[t.id].facts += [f for f in t.facts if f.name not in names]
+    tax.tags += [tag for tag in add.tags if tag not in tax.tags]
+
+
 def load() -> Taxonomy:
     tax = defaults().model_copy(deep=True)
     categories = config.get_setting("taxonomy.categories")
-    return (
-        validate(tax.model_dump() | {"categories": categories}) if categories is not None else tax
-    )
+    if categories is not None:
+        tax = validate(tax.model_dump() | {"categories": categories})
+    for plugin_id, add in CONTRIBUTIONS:
+        contribute(tax, plugin_id, add)
+    return validate(tax.model_dump()) if CONTRIBUTIONS else tax
 
 
 def reload() -> None:

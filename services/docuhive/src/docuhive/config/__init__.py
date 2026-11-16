@@ -73,9 +73,18 @@ def load_yaml(name: str) -> dict:
     return deepcopy(_load_yaml(name))
 
 
+# Running plugins' folders by id: their prompts are named "<plugin id>.<file name>".
+PLUGIN_PROMPTS: dict[str, Path] = {}
+
+
 @lru_cache
 def prompt(name: str) -> tuple[str, str]:
     path = overlay_path("prompts", f"{name}.md")
+    plugin, _, stem = name.partition(".")
+    if path is None and stem and plugin in PLUGIN_PROMPTS:
+        from docuhive.plugins import files
+
+        path = files.resolve(PLUGIN_PROMPTS[plugin], "prompts", f"{stem}.md")
     if path is None:
         path = _within(get_settings().defaults_dir, "prompts", f"{name}.md")
     content = path.read_text(encoding="utf-8")

@@ -25,3 +25,6 @@ playwright-report/
 *.tsbuildinfo
 .DS_Store
 .claude/worktrees/
+
+# Internal planning documents: never published
+/internal/

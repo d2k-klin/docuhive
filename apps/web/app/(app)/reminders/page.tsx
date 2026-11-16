@@ -19,7 +19,7 @@ import {
   useApi,
 } from "@/components/intel/common";
 
-type Reminder = { id: number; document_id: string; title: string | null; fact: string; label: string; due_on: string; days_left: number; status: string };
+type Reminder = { id: number; document_id: string | null; link: string; title: string | null; fact: string; label: string; due_on: string; days_left: number; status: string };
 
 export default function RemindersPage() {
   const list = useApi<{ items: Reminder[] }>("/api/reminders");
@@ -54,7 +54,7 @@ export default function RemindersPage() {
                     <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                       <div className="min-w-0">
                         <div className="font-medium">{r.label}</div>
-                        <Link href={`/documents/${r.document_id}`} className="block truncate text-sm text-text-muted hover:underline">{r.title ?? "Document"}</Link>
+                        <Link href={r.link} className="block truncate text-sm text-text-muted hover:underline">{r.title ?? "Open"}</Link>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="tabular text-sm">{formatDate(r.due_on)}</span>

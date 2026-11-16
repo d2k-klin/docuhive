@@ -3,6 +3,7 @@ import { FileText, Search, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SetupChecklist } from "@/components/core/setup-checklist";
 import { IntelDashboardWidgets } from "@/components/intel/DashboardWidgets";
+import { PluginDashboardCards } from "@/components/plugins/plugin-page";
 
 export default function Home() {
   return (
@@ -35,6 +36,7 @@ export default function Home() {
       <SetupChecklist />
       <div className="grid gap-4 md:grid-cols-3">
         <IntelDashboardWidgets />
+        <PluginDashboardCards />
       </div>
     </main>
   );

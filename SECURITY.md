@@ -10,3 +10,9 @@ another user's private documents. Production mode refuses disabled authenticatio
 or a missing/short secret. These guarantees require the milestone acceptance
 checks in [OA status](docs/Developer-OA/STATUS.md); unfinished archive endpoints
 remain unavailable.
+
+Records that must not change (an issued invoice, a closed tax period, a sent letter) are
+locked against every change through the application, administrators included until one lifts
+the lock with a reason. Read-only guest links for an outside advisor are off by default. The
+details and their tests are in the [security checklist](docs/security-checklist.md).
+

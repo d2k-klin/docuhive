@@ -1,0 +1,7 @@
+Hello,
+
+please find attached our {% if invoice.kind == "credit_note" %}credit note{% else %}invoice{% endif %} {{ invoice.number }} for {{ "%.2f"|format(invoice.gross) }} EUR.{% if invoice.due_date %} Please pay by {{ invoice.due_date.strftime("%d %B %Y") }}.{% endif %}
+
+The PDF also carries the invoice as a structured e-invoice (ZUGFeRD / Factur-X) that accounting software can read.
+
+Kind regards

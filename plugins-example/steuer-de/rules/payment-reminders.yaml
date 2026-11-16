@@ -1,0 +1,4 @@
+# Payment reminders for your own invoices: never sent automatically. Interest and the flat fee
+# for late payment are not calculated (they depend on whether the customer is a business or a
+# consumer and when default began); the third letter only mentions them.
+days_between: 7     # at least this many days after the due date, and between two reminders

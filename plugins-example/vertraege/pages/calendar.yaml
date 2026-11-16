@@ -1,0 +1,12 @@
+title: { en: Notice dates, de: Kündigungsfristen }
+nav: { label: { en: Notice dates, de: Fristen }, icon: calendar, order: 31 }
+blocks:
+  - type: table
+    title: The next 12 months
+    source: calendar
+    columns:
+      - { field: month, label: Month }
+      - { field: notice_by, label: Notice by, format: date }
+      - { field: provider, label: Provider, link: { page: contract, params: { id: id } } }
+      - { field: per_month, label: Per month, format: money }
+    empty: No notice dates in the next 12 months.

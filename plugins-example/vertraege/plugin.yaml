@@ -1,0 +1,34 @@
+id: vertraege
+name: Contracts and cancellations
+description: Your contracts in one list with cost, term and the last day for notice, and a cancellation letter one click away.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+capabilities: [documents:read, documents:write-metadata, documents:create, documents:hold, mail:send, ai]
+snapshot: true
+
+taxonomy:
+  document_types:
+    - id: contract
+      label: Contract
+      facts:
+        - { name: customer_number, type: string }
+        - { name: product, type: string }
+        - { name: price, type: money }
+    - id: contract_change
+      label: Contract change
+      description: A letter from a provider that changes an existing contract, such as a price increase or new terms.
+      facts:
+        - { name: effective_date, type: date }
+        - { name: new_price, type: money }
+        - { name: contract_number, type: string }
+
+settings:
+  - key: letter_language
+    type: choice
+    label: Language of cancellation letters
+    options: [de, en]
+    default: de
+
+ai_tasks:
+  - { prompt: contract-terms, like: extract }
+  - { prompt: cancellation-confirmation, like: extract }

@@ -1,0 +1,10 @@
+{#- The formal parts only. The grounds are the person's: DocuHive never writes them. -#}
+{% extends "_letter.html" %}
+{% block body %}
+<p>Sehr geehrte Damen und Herren,</p>
+<p>gegen den Bescheid über {{ tax_type }} {{ year }} vom {{ notice_date }} lege ich hiermit Einspruch ein.</p>
+<p>Begründung: <i>[Schreiben Sie hier Ihre Gründe. Sie können den Einspruch auch zunächst ohne Begründung einlegen, um die Frist zu wahren, und die Begründung nachreichen.]</i></p>
+<p>Ich beantrage, die Vollziehung des Bescheids auszusetzen, soweit er angefochten ist. <i>[Streichen, wenn nicht gewünscht.]</i></p>
+<p>Mit freundlichen Grüßen</p>
+<p style="margin-top: 16mm">{{ name }}</p>
+{% endblock %}

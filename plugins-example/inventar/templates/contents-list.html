@@ -1,0 +1,29 @@
+{#- The list for your insurer: what you own, room by room, with what it cost. -#}
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font: 10pt/1.4 "Helvetica Neue", Arial, sans-serif; color: #111; }
+  h1 { font-size: 16pt; margin: 0 0 2mm; } h2 { font-size: 12pt; margin: 8mm 0 2mm; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 1.2mm 1mm; border-bottom: 0.3pt solid #bbb; vertical-align: top; }
+  .num { text-align: right; white-space: nowrap; } .total td { font-weight: 700; border-top: 0.6pt solid #111; }
+</style></head><body>
+<h1>Inventory / Hausratliste</h1>
+<p>As of {{ on }}{% if minimum %}, items from {{ "%.2f"|format(minimum) }} €{% endif %}. Prices are what was paid, not today's value.</p>
+{% for place, items in groups.items() %}
+<h2>{{ place }}</h2>
+<table>
+  <tr><th>Item</th><th>Category</th><th>Bought</th><th>Serial number</th><th class="num">Qty</th><th class="num">Price</th></tr>
+  {% for i in items %}
+  <tr><td>{{ i.name }}{% if i.manufacturer %}<br><small>{{ i.manufacturer }} {{ i.model or "" }}</small>{% endif %}</td>
+      <td>{{ categories.get(i.category, {}).get("label", i.category) }}</td>
+      <td>{{ i.purchase_date.strftime("%d.%m.%Y") if i.purchase_date else "" }}</td>
+      <td>{{ i.serial_number or "" }}</td>
+      <td class="num">{{ i.quantity }}</td>
+      <td class="num">{{ "%.2f"|format(i.price) if i.price is not none else "" }} {{ i.currency }}</td></tr>
+  {% endfor %}
+  <tr class="total"><td colspan="5">Total {{ place }}</td><td class="num">{{ "%.2f"|format(totals[place]) }} €</td></tr>
+</table>
+{% endfor %}
+<h2>Total: {{ "%.2f"|format(total) }} €</h2>
+</body></html>

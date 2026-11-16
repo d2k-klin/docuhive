@@ -1,0 +1,33 @@
+title: { en: Customers, de: Kunden }
+nav: { label: { en: Customers, de: Kunden }, icon: users, order: 16 }
+params: [book]
+blocks:
+  - type: table
+    source: customers
+    columns:
+      - { field: name, label: Customer }
+      - { field: city, label: City }
+      - { field: email, label: Mail }
+      - { field: e_invoice_format, label: Sent as, format: badge }
+      - { field: payment_terms_days, label: Days to pay, format: number }
+    filters:
+      - { field: name, type: text, label: Search }
+    empty: No customers yet. Add the first one below.
+  - type: form
+    title: Add or change a customer
+    fields:
+      - { name: customer, type: choice, label: Customer, options: customer_choice }
+      - { name: name, type: text, label: Name, required: true }
+      - { name: street, type: text, label: Street and number }
+      - { name: postcode, type: text, label: Postcode }
+      - { name: city, type: text, label: City }
+      - { name: country, type: text, label: "Country (DE, AT, …)" }
+      - { name: email, type: text, label: Mail address for invoices }
+      - { name: kind, type: choice, label: Kind, options: customer_kinds }
+      - { name: vat_id, type: text, label: VAT id, help: Needed for reverse charge and EU supplies. }
+      - { name: e_invoice_format, type: choice, label: Send invoices as, options: formats }
+      - { name: routing_id, type: text, label: Routing id (Leitweg-ID), help: Only for public authorities. }
+      - { name: payment_terms_days, type: number, label: Days to pay, min: 0 }
+      - { name: language, type: choice, label: Language, options: languages }
+    action: save_customer
+    submit: Save customer

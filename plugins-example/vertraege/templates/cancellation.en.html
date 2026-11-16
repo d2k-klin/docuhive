@@ -1,0 +1,16 @@
+{% extends "_letter.html" %}
+{% block subject %}Cancellation{% if contract.contract_number %} – contract number {{ contract.contract_number }}{% endif %}{% endblock %}
+{% block body %}
+<p>Dear Sir or Madam,</p>
+<p>I hereby cancel the following contract{% if reason %} {{ reason }}{% endif %}
+{% if to_date %}with effect from {{ end }}{% else %}at the next possible date, by my calculation {{ end }}{% endif %}:</p>
+<p>
+{% if contract.product %}Product: {{ contract.product }}<br>{% endif %}
+{% if contract.customer_number %}Customer number: {{ contract.customer_number }}<br>{% endif %}
+{% if contract.contract_number %}Contract number: {{ contract.contract_number }}<br>{% endif %}
+Contracting party: {{ name }}
+</p>
+<p>Please confirm the cancellation and the end date in writing.</p>
+<p>Yours faithfully</p>
+<p style="margin-top: 18mm">{{ name }}</p>
+{% endblock %}

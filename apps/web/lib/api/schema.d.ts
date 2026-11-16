@@ -357,6 +357,27 @@ export interface paths {
         patch: operations["edit_user_api_users__user_id__patch"];
         trace?: never;
     };
+    "/api/users/roles/bookkeeper": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bookkeeper Access
+         * @description The categories a bookkeeper sees besides their own and shared documents.
+         */
+        get: operations["bookkeeper_access_api_users_roles_bookkeeper_get"];
+        /** Set Bookkeeper Access */
+        put: operations["set_bookkeeper_access_api_users_roles_bookkeeper_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/taxonomy": {
         parameters: {
             query?: never;
@@ -1598,6 +1619,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/documents/{doc_id}/holds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Holds
+         * @description Every hold, lifted ones included.
+         */
+        get: operations["list_holds_api_documents__doc_id__holds_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/documents/{doc_id}/holds/{hold_id}/lift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lift Hold
+         * @description An administrator lifts one hold, with a reason that stays in the history.
+         */
+        post: operations["lift_hold_api_documents__doc_id__holds__hold_id__lift_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/documents/{doc_id}/trash": {
         parameters: {
             query?: never;
@@ -1717,6 +1778,304 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plugins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Plugins */
+        get: operations["list_plugins_api_plugins_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugins/{plugin_id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enable */
+        post: operations["enable_api_plugins__plugin_id__enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugins/{plugin_id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Disable */
+        post: operations["disable_api_plugins__plugin_id__disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugins/{plugin_id}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Settings */
+        put: operations["save_settings_api_plugins__plugin_id__settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugin-pages/nav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nav */
+        get: operations["nav_api_plugin_pages_nav_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugin-pages/slots/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dashboard */
+        get: operations["dashboard_api_plugin_pages_slots_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugin-pages/slots/document/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Document Slot */
+        get: operations["document_slot_api_plugin_pages_slots_document__doc_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugin-pages/{plugin}/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Page Description */
+        get: operations["page_description_api_plugin_pages__plugin___name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugin-pages/{plugin}/{name}/blocks/{index}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Block Data */
+        get: operations["block_data_api_plugin_pages__plugin___name__blocks__index__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugin-pages/{plugin}/{name}/actions/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run Action */
+        post: operations["run_action_api_plugin_pages__plugin___name__actions__action__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Profiles */
+        get: operations["list_profiles_api_profiles_get"];
+        put?: never;
+        /** Create Profile */
+        post: operations["create_profile_api_profiles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profiles/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Profile */
+        put: operations["update_profile_api_profiles__profile_id__put"];
+        post?: never;
+        /** Delete Profile */
+        delete: operations["delete_profile_api_profiles__profile_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profiles/{profile_id}/test-mail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Mail
+         * @description A short mail from the identity to its own address, to check the server settings.
+         */
+        post: operations["test_mail_api_profiles__profile_id__test_mail_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guest-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Links */
+        get: operations["list_links_api_guest_links_get"];
+        put?: never;
+        /** Create Link */
+        post: operations["create_link_api_guest_links_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guest-links/{link_id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke Link */
+        post: operations["revoke_link_api_guest_links__link_id__revoke_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guest/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Guest Page */
+        get: operations["guest_page_api_guest__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/guest/{token}/documents/{doc_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Guest File
+         * @description The archive PDF only: originals can be HTML or mail, which must not open here.
+         */
+        get: operations["guest_file_api_guest__token__documents__doc_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1738,6 +2097,29 @@ export interface components {
             default_shared?: boolean | null;
             /** Display Name */
             display_name?: string | null;
+        };
+        /** Address */
+        Address: {
+            /**
+             * Street
+             * @default
+             */
+            street: string;
+            /**
+             * Postcode
+             * @default
+             */
+            postcode: string;
+            /**
+             * City
+             * @default
+             */
+            city: string;
+            /**
+             * Country
+             * @default DE
+             */
+            country: string;
         };
         /** AnalysisIn */
         AnalysisIn: {
@@ -1802,6 +2184,37 @@ export interface components {
              */
             stale: boolean;
         };
+        /** Bank */
+        Bank: {
+            /**
+             * Holder
+             * @default
+             */
+            holder: string;
+            /**
+             * Iban
+             * @default
+             */
+            iban: string;
+            /**
+             * Bic
+             * @default
+             */
+            bic: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+        };
+        /** BookkeeperAccess */
+        BookkeeperAccess: {
+            /**
+             * Categories
+             * @default []
+             */
+            categories: string[];
+        };
         /** BulkEdit */
         BulkEdit: {
             /** Ids */
@@ -1814,6 +2227,13 @@ export interface components {
             updated: number;
             /** Skipped */
             skipped: string[];
+        };
+        /** Capability */
+        Capability: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
         };
         /** Category */
         Category: {
@@ -1836,6 +2256,8 @@ export interface components {
              * @default true
              */
             enabled: boolean;
+            /** Source */
+            source?: string | null;
         };
         /** CategoryChoices */
         CategoryChoices: {
@@ -1875,6 +2297,26 @@ export interface components {
             /** Path */
             path: string;
         };
+        /** Created */
+        Created: {
+            /** Id */
+            id: number;
+            /** Label */
+            label: string;
+            /** Documents */
+            documents: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Last Used At */
+            last_used_at: string | null;
+            /** Path */
+            path: string;
+        };
         /** CurrentUser */
         CurrentUser: {
             /** Id */
@@ -1885,7 +2327,7 @@ export interface components {
              * Role
              * @enum {string}
              */
-            role: "admin" | "member";
+            role: "admin" | "member" | "bookkeeper";
         };
         /** CustomCategory */
         CustomCategory: {
@@ -2029,6 +2471,16 @@ export interface components {
             };
             /** Files */
             files: ("original" | "archive" | "thumb")[];
+            /**
+             * Holds
+             * @default []
+             */
+            holds: components["schemas"]["Hold"][];
+            /**
+             * Used In
+             * @default []
+             */
+            used_in: string[];
         };
         /** DocumentEdit */
         DocumentEdit: {
@@ -2118,6 +2570,8 @@ export interface components {
              * @default []
              */
             facts: components["schemas"]["FactField"][];
+            /** Source */
+            source?: string | null;
         };
         /** DuplicateDecision */
         DuplicateDecision: {
@@ -2158,6 +2612,11 @@ export interface components {
         EditResult: {
             document: components["schemas"]["DocumentDetail"];
             result: components["schemas"]["ApplyResult"];
+        };
+        /** EnableIn */
+        EnableIn: {
+            /** Capabilities */
+            capabilities: string[];
         };
         /** ExportRequest */
         ExportRequest: {
@@ -2218,6 +2677,29 @@ export interface components {
              */
             state: "empty" | "this_vault" | "other_vault" | "not_empty" | "not_writable";
         };
+        /** GuestDocument */
+        GuestDocument: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string | null;
+            /** Document Date */
+            document_date: string | null;
+            /** Pages */
+            pages: number | null;
+        };
+        /** GuestPage */
+        GuestPage: {
+            /** Label */
+            label: string;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Documents */
+            documents: components["schemas"]["GuestDocument"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2242,6 +2724,30 @@ export interface components {
             after: {
                 [key: string]: unknown;
             } | null;
+        };
+        /** Hold */
+        Hold: {
+            /** Id */
+            id: number;
+            /** Reason */
+            reason: string;
+            /** Fields */
+            fields: string[];
+            /** Until */
+            until: string | null;
+            /** Placed By */
+            placed_by: string;
+            /**
+             * Placed At
+             * Format: date-time
+             */
+            placed_at: string;
+            /** Lifted At */
+            lifted_at: string | null;
+            /** Lifted By */
+            lifted_by: string | null;
+            /** Lift Reason */
+            lift_reason: string | null;
         };
         /** ImapIn */
         ImapIn: {
@@ -2392,6 +2898,32 @@ export interface components {
              */
             updated_at: string;
         };
+        /** LiftHold */
+        LiftHold: {
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+        };
+        /** LinkOut */
+        LinkOut: {
+            /** Id */
+            id: number;
+            /** Label */
+            label: string;
+            /** Documents */
+            documents: number;
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
+            /** Last Used At */
+            last_used_at: string | null;
+        };
         /** Listing */
         Listing: {
             /** Root */
@@ -2422,6 +2954,21 @@ export interface components {
             /** Content */
             content: string;
         };
+        /** NavEntry */
+        NavEntry: {
+            /** Plugin */
+            plugin: string;
+            /** Plugin Name */
+            plugin_name: string;
+            /** Page */
+            page: string;
+            /** Label */
+            label: unknown;
+            /** Icon */
+            icon: string;
+            /** Order */
+            order: number;
+        };
         /** NewFolder */
         NewFolder: {
             /**
@@ -2431,6 +2978,23 @@ export interface components {
             path: string;
             /** Name */
             name: string;
+        };
+        /** NewLink */
+        NewLink: {
+            /** Label */
+            label: string;
+            /** Document Ids */
+            document_ids: string[];
+            /**
+             * Days
+             * @default 7
+             */
+            days: number;
+            /**
+             * Include Private
+             * @default false
+             */
+            include_private: boolean;
         };
         /** PasswordChange */
         PasswordChange: {
@@ -2454,6 +3018,146 @@ export interface components {
              * Format: date-time
              */
             added_at: string;
+        };
+        /** PluginOut */
+        PluginOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Version */
+            version: string | null;
+            /** Source */
+            source: string;
+            /** Enabled */
+            enabled: boolean;
+            /** Running */
+            running: boolean;
+            /** State */
+            state: string;
+            /** Message */
+            message: string | null;
+            /** Capabilities */
+            capabilities: components["schemas"]["Capability"][];
+            /** Settings */
+            settings: {
+                [key: string]: unknown;
+            }[];
+            /** Values */
+            values: {
+                [key: string]: unknown;
+            };
+        };
+        /** ProfileIn */
+        ProfileIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "person" | "business" | "household";
+            /** Name */
+            name: string;
+            /**
+             * Shared
+             * @default false
+             */
+            shared: boolean;
+            /** Legal Form */
+            legal_form?: string | null;
+            /**
+             * @default {
+             *       "street": "",
+             *       "postcode": "",
+             *       "city": "",
+             *       "country": "DE"
+             *     }
+             */
+            address: components["schemas"]["Address"];
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Website */
+            website?: string | null;
+            /** Tax Number */
+            tax_number?: string | null;
+            /** Vat Id */
+            vat_id?: string | null;
+            /** Tax Office */
+            tax_office?: string | null;
+            /**
+             * @default {
+             *       "holder": "",
+             *       "iban": "",
+             *       "bic": "",
+             *       "name": ""
+             *     }
+             */
+            bank: components["schemas"]["Bank"];
+            /** Logo Document Id */
+            logo_document_id?: string | null;
+            smtp?: components["schemas"]["SmtpIn"] | null;
+        };
+        /** ProfileOut */
+        ProfileOut: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "person" | "business" | "household";
+            /** Name */
+            name: string;
+            /**
+             * Shared
+             * @default false
+             */
+            shared: boolean;
+            /** Legal Form */
+            legal_form?: string | null;
+            /**
+             * @default {
+             *       "street": "",
+             *       "postcode": "",
+             *       "city": "",
+             *       "country": "DE"
+             *     }
+             */
+            address: components["schemas"]["Address"];
+            /** Email */
+            email?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Website */
+            website?: string | null;
+            /** Tax Number */
+            tax_number?: string | null;
+            /** Vat Id */
+            vat_id?: string | null;
+            /** Tax Office */
+            tax_office?: string | null;
+            /**
+             * @default {
+             *       "holder": "",
+             *       "iban": "",
+             *       "bic": "",
+             *       "name": ""
+             *     }
+             */
+            bank: components["schemas"]["Bank"];
+            /** Logo Document Id */
+            logo_document_id?: string | null;
+            smtp?: components["schemas"]["Smtp"] | null;
+            /** Id */
+            id: number;
+            /** Owner Id */
+            owner_id: number;
+            /**
+             * Has Smtp Password
+             * @default false
+             */
+            has_smtp_password: boolean;
         };
         /** ProgressRequest */
         ProgressRequest: {
@@ -2642,7 +3346,7 @@ export interface components {
              * Area
              * @enum {string}
              */
-            area: "storage" | "ai" | "mail" | "capture" | "notifications" | "security" | "backup";
+            area: "storage" | "ai" | "mail" | "capture" | "notifications" | "security" | "backup" | "plugins";
             /** Title */
             title: string;
             /**
@@ -2664,6 +3368,55 @@ export interface components {
              */
             required: boolean;
         };
+        /** SlotEntry */
+        SlotEntry: {
+            /** Plugin */
+            plugin: string;
+            /** Plugin Name */
+            plugin_name: string;
+            /** Page */
+            page: string;
+            /** Description */
+            description: {
+                [key: string]: unknown;
+            };
+        };
+        /** Smtp */
+        Smtp: {
+            /** Host */
+            host: string;
+            /**
+             * Port
+             * @default 587
+             */
+            port: number;
+            /**
+             * Username
+             * @default
+             */
+            username: string;
+            /** From Address */
+            from_address: string;
+        };
+        /** SmtpIn */
+        SmtpIn: {
+            /** Host */
+            host: string;
+            /**
+             * Port
+             * @default 587
+             */
+            port: number;
+            /**
+             * Username
+             * @default
+             */
+            username: string;
+            /** From Address */
+            from_address: string;
+            /** Password */
+            password?: string | null;
+        };
         /** SourceInfo */
         SourceInfo: {
             kind: components["schemas"]["SourceKind"];
@@ -2679,12 +3432,19 @@ export interface components {
             subject?: string | null;
             /** Received At */
             received_at?: string | null;
+            /** Generator */
+            generator?: string | null;
+            /**
+             * Derived From
+             * @default []
+             */
+            derived_from: string[];
         };
         /**
          * SourceKind
          * @enum {string}
          */
-        SourceKind: "upload" | "mobile" | "email" | "consume" | "api";
+        SourceKind: "upload" | "mobile" | "email" | "consume" | "api" | "plugin";
         /** StorageInfo */
         StorageInfo: {
             /** Location */
@@ -2804,12 +3564,12 @@ export interface components {
              * @default member
              * @enum {string}
              */
-            role: "admin" | "member";
+            role: "admin" | "member" | "bookkeeper";
         };
         /** UserPatch */
         UserPatch: {
             /** Role */
-            role?: ("admin" | "member") | null;
+            role?: ("admin" | "member" | "bookkeeper") | null;
             /** Disabled */
             disabled?: boolean | null;
             /** Password */
@@ -3506,6 +4266,59 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bookkeeper_access_api_users_roles_bookkeeper_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookkeeperAccess"];
+                };
+            };
+        };
+    };
+    set_bookkeeper_access_api_users_roles_bookkeeper_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BookkeeperAccess"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BookkeeperAccess"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -6335,6 +7148,73 @@ export interface operations {
             };
         };
     };
+    list_holds_api_documents__doc_id__holds_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Hold"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    lift_hold_api_documents__doc_id__holds__hold_id__lift_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+                hold_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LiftHold"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Hold"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     trash_document_api_documents__doc_id__trash_post: {
         parameters: {
             query?: never;
@@ -6558,6 +7438,603 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Changed"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plugins_api_plugins_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PluginOut"][];
+                };
+            };
+        };
+    };
+    enable_api_plugins__plugin_id__enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnableIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PluginOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_api_plugins__plugin_id__disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PluginOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_settings_api_plugins__plugin_id__settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PluginOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    nav_api_plugin_pages_nav_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavEntry"][];
+                };
+            };
+        };
+    };
+    dashboard_api_plugin_pages_slots_dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlotEntry"][];
+                };
+            };
+        };
+    };
+    document_slot_api_plugin_pages_slots_document__doc_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlotEntry"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    page_description_api_plugin_pages__plugin___name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin: string;
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    block_data_api_plugin_pages__plugin___name__blocks__index__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin: string;
+                name: string;
+                index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    run_action_api_plugin_pages__plugin___name__actions__action__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin: string;
+                name: string;
+                action: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_profiles_api_profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"][];
+                };
+            };
+        };
+    };
+    create_profile_api_profiles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_profile_api_profiles__profile_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_profile_api_profiles__profile_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_mail_api_profiles__profile_id__test_mail_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_links_api_guest_links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkOut"][];
+                };
+            };
+        };
+    };
+    create_link_api_guest_links_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NewLink"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_link_api_guest_links__link_id__revoke_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                link_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guest_page_api_guest__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuestPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    guest_file_api_guest__token__documents__doc_id__file_get: {
+        parameters: {
+            query?: {
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                token: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

@@ -1,0 +1,13 @@
+title: { en: Open invoices, de: Offene Posten }
+nav: { label: { en: Open invoices, de: Offene Posten }, icon: banknote, order: 18 }
+params: [book]
+blocks:
+  - type: table
+    source: receivables
+    columns:
+      - { field: number, label: Number, link: { page: invoice, params: { id: id } } }
+      - { field: customer, label: Customer }
+      - { field: due_date, label: Due, format: date }
+      - { field: overdue_days, label: Days overdue, format: number }
+      - { field: open, label: Open, format: money, total: true }
+    empty: Everything is paid.

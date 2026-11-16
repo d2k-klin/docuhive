@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CalendarClock, Inbox, Mail } from "lucide-react";
 import { Badge, Card, daysLeft, formatDate, Skeleton, useApi } from "@/components/intel/common";
 
-type Reminder = { id: number; document_id: string; title: string | null; label: string; due_on: string; days_left: number };
+type Reminder = { id: number; document_id: string | null; link: string; title: string | null; label: string; due_on: string; days_left: number };
 type Account = { id: number; address: string; status: string };
 
 /** Slot: dashboard grid, after OA's core widgets. */
@@ -30,7 +30,7 @@ export function IntelDashboardWidgets() {
           <ul className="space-y-2">
             {reminders.data.items.slice(0, 5).map((r) => (
               <li key={r.id} className="flex items-center justify-between gap-2 text-sm">
-                <Link href={`/documents/${r.document_id}`} className="min-w-0 truncate hover:underline">{r.label}: {r.title ?? "Document"}</Link>
+                <Link href={r.link} className="min-w-0 truncate hover:underline">{r.title ? `${r.label}: ${r.title}` : r.label}</Link>
                 <span className="flex shrink-0 items-center gap-2">
                   <span className="tabular text-xs text-text-muted">{formatDate(r.due_on)}</span>
                   <Badge tone={r.days_left <= 7 ? "warn" : "muted"}>{daysLeft(r.days_left)}</Badge>

@@ -1,0 +1,31 @@
+{#- The yearly service-charge statement: every cost, its key with both numbers, the tenant's share,
+    the advances and the balance. Wording in custom/templates/statement.html. -#}
+{% extends "_letter.html" %}
+{% block head %}<style>
+  table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 3mm 0; }
+  th, td { padding: 1.3mm 1mm; border-bottom: 0.3pt solid #bbb; text-align: left; vertical-align: top; }
+  .num { text-align: right; white-space: nowrap; } .total td { font-weight: 700; border-top: 0.6pt solid #111; }
+  .small { font-size: 8.5pt; color: #444; }
+</style>{% endblock %}
+{% block body %}
+<p>Sehr geehrte/r {{ tenancy.tenant_name }},</p>
+<p>{% if replaces %}diese Abrechnung ersetzt die zuvor übersandte Abrechnung für dasselbe Jahr. {% endif %}für Ihre Wohnung {{ tenancy.unit }} rechne ich die Betriebskosten für den Zeitraum
+{{ result.period[0].strftime("%d.%m.%Y") }} bis {{ result.period[1].strftime("%d.%m.%Y") }} ({{ result.days }} Tage) ab:</p>
+<table>
+  <tr><th>Kostenart</th><th>Gesamtkosten</th><th>Verteilung</th><th class="num">Ihr Anteil</th></tr>
+  {% for line in result.lines %}
+  <tr><td>{{ labels.get(line.cost_type, line.cost_type) }}</td>
+      <td class="num">{{ "%.2f"|format(line.total) }} €</td>
+      <td>{{ line.basis }}{% if line.time is not none and line.time < 1 %}, × {{ result.days }}/{{ (result.span[1] - result.span[0]).days + 1 }} Tage{% endif %}</td>
+      <td class="num">{{ "%.2f"|format(line.amount) }} €</td></tr>
+  {% endfor %}
+  <tr class="total"><td colspan="3">Ihre Betriebskosten</td><td class="num">{{ "%.2f"|format(result.costs) }} €</td></tr>
+  <tr><td colspan="3">abzüglich Ihrer Vorauszahlungen</td><td class="num">− {{ "%.2f"|format(result.advances) }} €</td></tr>
+  <tr class="total"><td colspan="3">{% if result.balance > 0 %}Nachzahlung{% else %}Guthaben{% endif %}</td><td class="num">{{ "%.2f"|format(result.balance|abs) }} €</td></tr>
+</table>
+{% if result.balance > 0 %}<p>Bitte überweisen Sie die Nachzahlung innerhalb von 30 Tagen{% if iban %} auf das Konto {{ iban }}{% endif %}.</p>
+{% else %}<p>Das Guthaben überweise ich Ihnen in den nächsten Tagen oder verrechne es mit der nächsten Miete.</p>{% endif %}
+<p class="small">Die Vorauszahlungen sind wie vereinbart angesetzt. Die Belege können Sie nach Absprache einsehen. Die Kosten sind nach den im Mietvertrag vereinbarten Schlüsseln verteilt; Leerstand trägt der Vermieter.</p>
+<p>Mit freundlichen Grüßen</p>
+<p>{{ landlord.name }}</p>
+{% endblock %}

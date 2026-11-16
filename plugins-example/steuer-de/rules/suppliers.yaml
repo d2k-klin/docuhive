@@ -1,0 +1,15 @@
+# Usual accounts for well-known kinds of supplier, used before the AI is asked. `match` is a
+# part of the sender's name (case does not matter); the account is a kind, mapped per chart.
+# Your own confirmed bookings always come first. Extend in custom/rules/suppliers.yaml.
+suppliers:
+  - { id: telekom, match: telekom, kind: telecom }
+  - { id: vodafone, match: vodafone, kind: telecom }
+  - { id: o2, match: telefonica, kind: telecom }
+  - { id: stadtwerke, match: stadtwerke, kind: utilities }
+  - { id: deutsche-post, match: deutsche post, kind: office }
+  - { id: db, match: deutsche bahn, kind: travel }
+kinds:
+  telecom: { skr03: "4920", skr04: "6805" }
+  utilities: { skr03: "4240", skr04: "6325" }
+  office: { skr03: "4910", skr04: "6800" }
+  travel: { skr03: "4670", skr04: "6670" }

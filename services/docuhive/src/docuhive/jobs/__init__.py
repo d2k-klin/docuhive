@@ -123,10 +123,18 @@ def enqueue(
         )
         .returning(Job.id)
     )
+    from docuhive import events
+
     if in_session is not None:
-        return _insert(in_session, statement, dedupe_key)
+        job_id = _insert(in_session, statement, dedupe_key)
+        if kind in events.SUBSCRIBERS:
+            events.fan_out(kind, payload, f"job{job_id}", in_session)
+        return job_id
     with session() as db:
-        return _insert(db, statement, dedupe_key)
+        job_id = _insert(db, statement, dedupe_key)
+        if kind in events.SUBSCRIBERS:
+            events.fan_out(kind, payload, f"job{job_id}", db)
+        return job_id
 
 
 def _insert(db: Session, statement: Any, dedupe_key: str | None) -> int:

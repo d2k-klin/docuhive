@@ -1,0 +1,12 @@
+title: { en: Warranties, de: Garantien }
+nav: { label: { en: Warranties, de: Garantien }, icon: shield, order: 42 }
+blocks:
+  - type: table
+    title: Ending in the next 12 months
+    source: warranties
+    columns:
+      - { field: warranty_until, label: Ends, format: date }
+      - { field: name, label: Item, link: { page: item, params: { id: id } } }
+      - { field: warranty_source, label: From, format: badge }
+      - { field: location, label: Place }
+    empty: No warranty ends in the next 12 months.

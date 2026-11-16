@@ -37,3 +37,16 @@ ROUTERS.extend([documents_router, upload_router])
 from .vocabulary import router as vocabulary_router  # noqa: E402
 
 ROUTERS.append(vocabulary_router)
+
+from .plugin_pages import router as plugin_pages_router  # noqa: E402
+from .plugins import router as plugins_router  # noqa: E402
+
+ROUTERS.extend([plugins_router, plugin_pages_router])
+
+from .profiles import router as profiles_router  # noqa: E402
+
+ROUTERS.append(profiles_router)
+
+from .guest import router as guest_router  # noqa: E402
+
+ROUTERS.append(guest_router)

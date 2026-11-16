@@ -1,0 +1,52 @@
+{#- Invoices, credit notes and quotes. Every value comes from the issued record; the same data
+    is in the e-invoice. Change the layout in custom/templates/invoice.html. -#}
+{% extends "_letter.html" %}
+{% set L = labels %}
+{% block head %}<style>
+  table.lines { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 4mm 0; }
+  table.lines th, table.lines td { padding: 1.5mm 1mm; border-bottom: 0.3pt solid #bbb; vertical-align: top; }
+  table.lines th { text-align: left; font-weight: 600; }
+  .num { text-align: right; white-space: nowrap; }
+  table.sum { margin-left: auto; font-size: 10pt; }
+  table.sum td { padding: 0.8mm 2mm; }
+  table.sum tr.total td { font-weight: 700; border-top: 0.6pt solid #111; }
+  .notes { margin-top: 6mm; font-size: 9.5pt; }
+</style>{% endblock %}
+{% block sender %}{{ seller.name }} · {{ seller.street }} · {{ seller.postcode }} {{ seller.city }}{% endblock %}
+{% block address %}{{ buyer.name }}<br>{% if buyer.street %}{{ buyer.street }}<br>{% endif %}{{ buyer.postcode }} {{ buyer.city }}{% if buyer.country and buyer.country != "DE" %}<br>{{ buyer.country }}{% endif %}{% endblock %}
+{% block info %}
+{{ L.number }}: <b>{{ number }}</b><br>
+{{ L.date }}: {{ issue_date.strftime("%d.%m.%Y") }}<br>
+{% if service_from and service_to and service_from != service_to %}{{ L.service }}: {{ service_from.strftime("%d.%m.%Y") }} – {{ service_to.strftime("%d.%m.%Y") }}<br>
+{% elif service_to %}{{ L.service }}: {{ service_to.strftime("%d.%m.%Y") }}<br>{% endif %}
+{% if buyer.vat_id %}{{ L.vat_id }}: {{ buyer.vat_id }}<br>{% endif %}
+{% endblock %}
+{% block subject %}{{ L[kind] }} {{ number }}{% if refers_to %} – {{ L.refers }} {{ refers_to.number }}{% endif %}{% endblock %}
+{% block body %}
+<table class="lines">
+  <tr><th>{{ L.position }}</th><th>{{ L.description }}</th><th class="num">{{ L.quantity }}</th><th class="num">{{ L.unit_price }}</th><th class="num">{{ L.vat }}</th><th class="num">{{ L.net }}</th></tr>
+  {% for line in lines %}
+  <tr><td>{{ line.position }}</td><td>{{ line.description }}</td>
+      <td class="num">{{ "%g"|format(line.quantity) }} {{ units.get(line.unit, line.unit).split(" / ")[0] }}</td>
+      <td class="num">{{ "%.2f"|format(line.net_price) }} €{% if line.discount_percent %}<br><small>−{{ "%g"|format(line.discount_percent) }} %</small>{% endif %}</td>
+      <td class="num">{{ "%g"|format(line.rate) }} %</td>
+      <td class="num">{{ "%.2f"|format(line.net) }} €</td></tr>
+  {% endfor %}
+</table>
+<table class="sum">
+  <tr><td>{{ L.net }}</td><td class="num">{{ "%.2f"|format(net) }} €</td></tr>
+  {% for part in breakdown %}
+  <tr><td>{{ L.vat }} {{ "%g"|format(part.rate) }} % ({{ "%.2f"|format(part.base) }} €)</td><td class="num">{{ "%.2f"|format(part.tax) }} €</td></tr>
+  {% endfor %}
+  <tr class="total"><td>{{ L.gross }}</td><td class="num">{{ "%.2f"|format(gross) }} €</td></tr>
+</table>
+<div class="notes">
+  {% for note in notes %}<p>{{ note }}</p>{% endfor %}
+  {% if payment_text %}<p>{{ payment_text }}</p>{% endif %}
+</div>
+{% endblock %}
+{% block footer %}
+{{ seller.name }} · {{ seller.street }} · {{ seller.postcode }} {{ seller.city }}{% if seller.email %} · {{ seller.email }}{% endif %}{% if seller.phone %} · {{ seller.phone }}{% endif %}<br>
+{% if seller.tax_number %}{{ L.tax_number }} {{ seller.tax_number }}{% endif %}{% if seller.vat_id %} · {{ L.vat_id }} {{ seller.vat_id }}{% endif %}
+{% if seller.iban %} · IBAN {{ seller.iban }}{% if seller.bic %} · BIC {{ seller.bic }}{% endif %}{% if seller.bank %} · {{ seller.bank }}{% endif %}{% endif %}
+{% endblock %}

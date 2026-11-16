@@ -1,0 +1,9 @@
+# For a household book: receipts tagged with one of these are listed under its section of the
+# private tax return. The plugin lists and totals; it does not calculate the tax.
+sections:
+  - { id: work, tag: tax-work, label: "Work-related expenses (Werbungskosten)" }
+  - { id: household-services, tag: tax-household-services, label: "Household services and craftsmen (labour part)" }
+  - { id: donations, tag: tax-donations, label: "Donations" }
+  - { id: medical, tag: tax-medical, label: "Medical costs you paid yourself" }
+  - { id: insurance, tag: tax-insurance, label: "Insurance contributions" }
+  - { id: childcare, tag: tax-childcare, label: "Childcare" }

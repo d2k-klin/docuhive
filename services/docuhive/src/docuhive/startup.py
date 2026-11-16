@@ -6,6 +6,13 @@ from importlib import import_module
 log = logging.getLogger(__name__)
 
 
+def start_plugins(process: str) -> None:
+    """After the core and before the intelligence startup, so plugin taxonomy is in place."""
+    from docuhive.plugins import runtime
+
+    runtime.start(process)  # type: ignore[arg-type]
+
+
 def start_intelligence() -> None:
     try:
         module = import_module("docuhive.ai")

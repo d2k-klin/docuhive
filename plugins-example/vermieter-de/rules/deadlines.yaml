@@ -1,0 +1,5 @@
+# Deadlines around the statement. They only drive reminders and notes; check them before relying.
+statement_due_months: 12   # after the end of the accounting year (BGB § 556 (3) sentence 2)
+objection_months: 12       # tenant's objections after receipt (BGB § 556 (3) sentence 5)
+remind_days_before: [60, 14]
+source: "BGB § 556 (3); to be confirmed with a landlords' association"

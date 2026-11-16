@@ -1,0 +1,84 @@
+title: { en: Properties, de: Immobilien }
+description: Your buildings, their flats and tenancies. Set these up once.
+nav: { label: { en: Landlord, de: Vermietung }, icon: house, order: 50 }
+blocks:
+  - type: table
+    title: Properties
+    source: properties
+    columns:
+      - { field: name, label: Property }
+      - { field: street, label: Street }
+      - { field: city, label: City }
+    empty: No property yet. Add one below.
+  - type: form
+    title: Add or change a property
+    fields:
+      - { name: property, type: choice, label: Property, options: property_options, help: "Empty: a new property." }
+      - { name: name, type: text, label: Name }
+      - { name: street, type: text, label: Street and number }
+      - { name: postcode, type: text, label: Postcode }
+      - { name: city, type: text, label: City }
+      - { name: profile_id, type: choice, label: Landlord (your identity), options: profile_options }
+    action: save_property
+    submit: Save
+  - type: table
+    title: Flats
+    source: units
+    columns:
+      - { field: property, label: Property }
+      - { field: name, label: Flat }
+      - { field: area, label: m², format: number }
+    empty: No flats yet.
+  - type: form
+    title: Add a flat
+    fields:
+      - { name: property, type: choice, label: Property, options: property_options, required: true }
+      - { name: name, type: text, label: "Flat (for example “1st floor left”)", required: true }
+      - { name: area, type: number, label: Living space in m², required: true, min: 1 }
+    action: save_unit
+    submit: Add flat
+  - type: table
+    title: Tenancies
+    source: tenancies
+    columns:
+      - { field: tenant_name, label: Tenant }
+      - { field: property, label: Property }
+      - { field: unit, label: Flat }
+      - { field: start_date, label: From, format: date }
+      - { field: end_date, label: Until, format: date }
+      - { field: monthly, label: Rent and advances, format: money }
+      - { field: state, label: State, format: badge, tones: { Running: ok, Ended: muted } }
+    empty: No tenancies yet.
+  - type: form
+    title: Add a tenancy
+    fields:
+      - { name: unit, type: choice, label: Flat, options: unit_options, required: true }
+      - { name: tenant_name, type: text, label: Tenant, required: true }
+      - { name: tenant_email, type: text, label: Tenant's mail address }
+      - { name: start_date, type: date, label: From, required: true }
+      - { name: end_date, type: date, label: Until }
+      - { name: rent, type: money, label: Rent per month (without advances) }
+      - { name: advance, type: money, label: Advance for service charges and heating per month }
+      - { name: deposit, type: money, label: Deposit }
+      - { name: persons, type: number, label: Persons, min: 0 }
+    action: save_tenancy
+    submit: Add tenancy
+  - type: form
+    title: A tenant moves out, or the number of persons changes
+    fields:
+      - { name: tenancy, type: choice, label: Tenancy, options: tenancy_options, required: true }
+      - { name: end_date, type: date, label: Moved out on }
+      - { name: since, type: date, label: Persons changed on }
+      - { name: persons, type: number, label: Persons from then, min: 0 }
+    action: change_tenancy
+    submit: Save
+  - type: form
+    title: How a cost type is divided
+    help: These are defaults; your tenancy agreements and the law decide. Ask a landlords' association when unsure.
+    fields:
+      - { name: property, type: choice, label: Property, options: property_options, required: true }
+      - { name: cost_type, type: choice, label: Cost type, options: type_options, required: true }
+      - { name: key, type: choice, label: Divided by, options: key_options, required: true }
+      - { name: passable, type: boolean, label: Passed on to tenants }
+    action: save_key
+    submit: Save

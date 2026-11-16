@@ -26,6 +26,9 @@ PUBLIC = {
     ("post", "/api/auth/login"),
     ("get", "/api/system/health"),
     ("get", "/api/reminders.ics"),  # calendar apps cannot send headers: ?token= instead
+    # Guest links: the token in the path is the credential (hashed, expiring, throttled).
+    ("get", "/api/guest/{token}"),
+    ("get", "/api/guest/{token}/documents/{doc_id}/file"),
 }
 
 
@@ -33,6 +36,7 @@ PUBLIC = {
 def client(postgres, monkeypatch):
     monkeypatch.setattr("docuhive.api.app.start_intelligence", lambda: None)
     monkeypatch.setattr("docuhive.api.auth.limiter", LoginLimiter())
+    monkeypatch.setattr("docuhive.api.guest.limiter", LoginLimiter())
     owner = create_user("owner", PASSWORD)
     create_user("intruder", PASSWORD, admin=True)
     with session() as db:
@@ -80,6 +84,8 @@ def test_every_route_requires_a_session(client):
     ]
     assert open_routes == [], "\n".join(map(str, open_routes))
     assert client.get("/api/reminders.ics?token=dh_wrong").status_code == 401
+    assert client.get("/api/guest/wrong").status_code == 404
+    assert client.get(f"/api/guest/wrong/documents/{DOC}/file").status_code == 404
 
 
 @pytest.mark.req("AUTH-03")
@@ -94,7 +100,7 @@ def test_document_routes_refuse_everyone_but_the_owner(client):
     routes = [
         (method, path)
         for method, path in operations(client)
-        if "{doc_id}" in path or "{document_id}" in path
+        if ("{doc_id}" in path or "{document_id}" in path) and not path.startswith("/api/guest/")
     ]
     assert len(routes) >= 10
     sign_in("owner")

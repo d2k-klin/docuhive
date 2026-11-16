@@ -1,0 +1,21 @@
+id: inventar
+name: Inventory and warranties
+description: Durable goods from your receipts become a list of what you own, with location, price and warranty end; a contents list and a claim bundle for your insurer on demand.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+capabilities: [documents:read, documents:write-metadata, documents:create, ai]
+snapshot: true
+
+taxonomy:
+  document_types:
+    - id: type_plate
+      label: Type plate photo
+      description: A photo of the type plate or serial number label on an appliance or device.
+      facts:
+        - { name: serial_number, type: string }
+        - { name: model, type: string }
+        - { name: manufacturer, type: string }
+
+ai_tasks:
+  - { prompt: item, like: extract }
+  - { prompt: type-plate, like: extract }

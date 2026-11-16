@@ -1,0 +1,86 @@
+title: { en: Contract, de: Vertrag }
+params: [id]
+blocks:
+  - type: detail
+    source: contract
+    fields:
+      - { field: provider, label: Provider }
+      - { field: product, label: Product }
+      - { field: customer_number, label: Customer number }
+      - { field: contract_number, label: Contract number }
+      - { field: per_month, label: Per month, format: money }
+      - { field: term_end, label: Term ends, format: date }
+      - { field: notice_by, label: Last day for notice, format: date }
+      - { field: earliest_end, label: Earliest end if you give notice today, format: date }
+      - { field: state_label, label: State, format: badge }
+      - { field: cancel_sent_on, label: Cancellation sent, format: date }
+      - { field: cancel_effective, label: Ends on, format: date }
+  - type: form
+    title: Correct the details
+    help: What you enter here is yours; a later reading by the AI never changes it.
+    initial: contract
+    fields:
+      - { name: provider, type: text, label: Provider, required: true }
+      - { name: provider_address, type: textarea, label: "Provider's address (one line each)" }
+      - { name: kind, type: choice, label: Kind, options: kinds }
+      - { name: product, type: text, label: Product }
+      - { name: customer_number, type: text, label: Customer number }
+      - { name: contract_number, type: text, label: Contract number }
+      - { name: start_date, type: date, label: Start }
+      - { name: term_end, type: date, label: End of the current term }
+      - { name: renewal_months, type: number, label: Renews by (months), min: 0 }
+      - { name: notice_amount, type: number, label: Notice period, min: 0 }
+      - { name: notice_unit, type: choice, label: Notice period in, options: units }
+      - { name: notice_to, type: choice, label: Notice to, options: notice_tos }
+      - { name: price, type: money, label: Price }
+      - { name: price_period, type: choice, label: Price is, options: periods }
+      - { name: profile_id, type: choice, label: Contract is in the name of, options: profiles }
+      - { name: shared, type: boolean, label: The household can see this contract }
+      - { name: notes, type: textarea, label: Notes }
+    action: save_contract
+    submit: Save
+  - type: table
+    title: Documents
+    source: contract_documents
+    columns:
+      - { field: title, label: Document, link: { document: id } }
+      - { field: date, label: Date, format: date }
+      - { field: role, label: Role, format: badge }
+    empty: No documents linked.
+  - type: table
+    title: Prices
+    help: A new amount on a letter or invoice appears here as a note. Accept it to make it the contract's price.
+    source: prices
+    columns:
+      - { field: valid_from, label: From, format: date }
+      - { field: amount, label: Amount, format: money }
+      - { field: status, label: Status, format: badge, tones: { "New: check it": warn, Accepted: ok } }
+    row_actions:
+      - { label: Accept, action: accept_price, when: id }
+    empty: No price changes found.
+  - type: table
+    title: Payments in the last 12 months
+    help: From your bank statements, when the bank plugin is on.
+    source: payments
+    columns:
+      - { field: booking_date, label: Date, format: date }
+      - { field: amount, label: Amount, format: money, total: true }
+    empty: No payments found, or the bank plugin is off.
+  - type: form
+    title: Cancel
+    help: The letter is made from your identity and the details above. Nothing is sent until you choose.
+    fields:
+      - { name: reason, type: choice, label: Special reason, options: reasons }
+      - { name: on_date, type: date, label: "To a specific date (empty: the next possible date)" }
+    action: prepare_cancellation
+    submit: Prepare the letter
+  - type: actions
+    actions:
+      - { label: I posted the letter, action: mark_sent, confirm: "Mark this contract as cancelled?" }
+  - type: form
+    title: Or send it by mail
+    fields:
+      - { name: to, type: text, label: "Provider's mail address", required: true }
+    action: send_cancellation
+    submit: Send the letter
+    confirm: "Send the cancellation letter to this address now?"

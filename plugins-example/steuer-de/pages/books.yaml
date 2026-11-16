@@ -1,0 +1,34 @@
+title: { en: Tax books, de: Steuerbücher }
+description: A book holds the bookings of one business or household. New invoices and receipts are proposed for your default book.
+nav: { label: { en: Tax, de: Steuer }, icon: calculator, order: 10 }
+blocks:
+  - type: text
+    text: "This plugin calculates from your bookings with the settings you choose. It does not give tax advice: if you are unsure about a setting, your tax office's letters or your tax advisor have the answer."
+  - type: table
+    source: books
+    columns:
+      - { field: name, label: Book }
+      - { field: kind, label: Kind, format: badge }
+      - { field: chart, label: Chart }
+      - { field: vat_period, label: VAT returns }
+      - { field: role, label: Your role, format: badge }
+      - { field: default_for_uploads, label: Default, format: boolean }
+    empty: No book yet. Create one below.
+  - type: form
+    title: Create or change a book
+    fields:
+      - { name: book, type: choice, label: Book, options: book_options, help: "Leave on “A new book” to create one." }
+      - { name: name, type: text, label: Name }
+      - { name: kind, type: choice, label: Kind, options: kinds, required: true }
+      - { name: chart, type: choice, label: Chart of accounts, options: charts, help: "Not needed for a household book." }
+      - { name: vat_status, type: choice, label: VAT status, options: vat_statuses }
+      - { name: vat_period, type: choice, label: VAT advance returns, options: vat_periods }
+      - { name: vat_basis, type: choice, label: VAT is due, options: vat_bases }
+      - { name: standing_extension, type: boolean, label: I have a standing one-month extension (Dauerfristverlängerung) }
+      - { name: special_advance, type: money, label: Special advance payment paid this year, help: Only for monthly filers with an extension. }
+      - { name: profile_id, type: choice, label: "Whose book (your identity, printed on invoices)", options: profile_options }
+      - { name: tax_number, type: text, label: Tax number }
+      - { name: vat_id, type: text, label: VAT id, pattern: "^(DE[0-9]{9})?$" }
+      - { name: default_for_uploads, type: boolean, label: New invoices and receipts go into this book }
+    action: save_book
+    submit: Save book

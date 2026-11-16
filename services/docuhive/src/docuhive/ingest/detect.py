@@ -88,11 +88,35 @@ def detect(path: Path) -> Detected:
             while chunk := stream.read(65536):
                 if "\x00" in chunk:
                     raise Quarantine("unsupported_type:binary")
-    except UnicodeError as error:
-        raise Quarantine("unsupported_type:binary") from error
-    prefix = head.decode("utf-8-sig", errors="replace")
+    except UnicodeError:
+        # Older Windows software (many bank exports) writes Windows-1252 text.
+        if not _windows_text(path):
+            raise Quarantine("unsupported_type:binary") from None
+    prefix = read_text(path)[:8192]
     if re.search(r"(?im)^(?:from|received|mime-version):", prefix):
         return Detected("message/rfc822", "eml", "email")
     if re.search(r"(?i)<!doctype\s+html|<html\b", prefix[:1024]):
         return Detected("text/html", "html", "html")
     return Detected("text/plain", "txt", "text")
+
+
+def _windows_text(path: Path) -> bool:
+    data = path.read_bytes()
+    # UTF-16 and UTF-32 text (byte-order marks) is not supported; NUL bytes mean binary.
+    if b"\x00" in data or data.startswith((b"\xff\xfe", b"\xfe\xff")):
+        return False
+    try:
+        text = data.decode("cp1252")
+    except UnicodeDecodeError:
+        return False
+    controls = sum(1 for c in text if ord(c) < 32 and c not in "\t\r\n\f")
+    return controls <= len(text) // 1000
+
+
+def read_text(path: Path) -> str:
+    """A text file as UTF-8, or as Windows-1252 when it is not valid UTF-8."""
+    data = path.read_bytes()
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return data.decode("cp1252", errors="replace")

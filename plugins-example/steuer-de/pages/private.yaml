@@ -1,0 +1,16 @@
+title: { en: Receipts for your tax return, de: Belege für die Steuererklärung }
+description: Tag a receipt with one of the tax tags and it is listed here under its section. You type the totals into ELSTER or give the list to your advisor.
+nav: { label: { en: Household tax, de: Haushalt Steuer }, icon: house, order: 15 }
+params: [year]
+blocks:
+  - type: table
+    source: private_receipts
+    columns:
+      - { field: section, label: Section, format: badge }
+      - { field: title, label: Receipt, link: document }
+      - { field: document_date, label: Date, format: date }
+      - { field: amount, label: Amount, format: money, total: true }
+    filters:
+      - { field: document_date, type: year, label: Year }
+      - { field: section, type: text, label: Section }
+    empty: "No tagged receipts. Add a tag such as tax-donations or tax-medical to a receipt."

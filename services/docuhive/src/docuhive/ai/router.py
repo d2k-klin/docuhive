@@ -34,7 +34,7 @@ def parse_route(spec: str, cfg: routing.RoutingConfig | None = None) -> Route:
 def resolve(task: str, *, restricted: bool) -> list[Route]:
     """Primary then fallbacks. Restricted input or local_only keeps only local routes."""
     cfg = routing.load()
-    t = cfg.tasks.get(task)
+    t = cfg.tasks.get(task) or cfg.tasks.get(LIKE.get(task, ""))
     if t is None:
         return []
     out: list[Route] = []
@@ -51,6 +51,8 @@ def resolve(task: str, *, restricted: bool) -> list[Route]:
     return out
 
 
+# Plugin AI tasks without their own entry in routing.yaml use the route of a core task.
+LIKE: dict[str, str] = {}
 _MODELS: dict[Route, Any] = {}
 _warned_experimental: set[str] = set()
 

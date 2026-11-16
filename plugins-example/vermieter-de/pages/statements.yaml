@@ -1,0 +1,44 @@
+title: { en: Service-charge statements, de: Betriebskostenabrechnungen }
+description: Choose the tenancy and the year. The draft is calculated live from your confirmed bills.
+nav: { label: { en: Statements, de: Abrechnungen }, icon: scroll-text, order: 53 }
+params: [tenancy, year]
+blocks:
+  - type: form
+    title: Which statement
+    fields:
+      - { name: tenancy, type: choice, label: Tenancy, options: tenancy_options, required: true }
+      - { name: year, type: number, label: Year, required: true }
+    action: show_statement
+    submit: Show
+  - type: steps
+    title: Before you issue
+    source: missing
+  - type: table
+    title: Draft
+    source: statement
+    columns:
+      - { field: cost, label: Cost }
+      - { field: basis, label: Divided by }
+      - { field: total, label: Total, format: money }
+      - { field: share, label: Tenant's share, format: money }
+    empty: Choose a tenancy and a year above.
+  - type: actions
+    actions:
+      - { label: Issue the statement, action: issue_statement, primary: true, confirm: "Issue this statement? It and its bills are locked." }
+  - type: form
+    title: Send by mail
+    fields:
+      - { name: to, type: text, label: "To (empty: the tenant's mail address)" }
+    action: send_statement
+    submit: Send
+    confirm: "Send the statement to the tenant now?"
+  - type: table
+    title: Issued
+    source: statements
+    columns:
+      - { field: year, label: Year }
+      - { field: tenant_name, label: Tenant }
+      - { field: balance_money, label: Balance, format: money }
+      - { field: state, label: State, format: badge }
+      - { field: document_id, label: PDF, format: document }
+    empty: No statement issued yet.

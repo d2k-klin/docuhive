@@ -1,0 +1,19 @@
+title: { en: Rent, de: Mieteingang }
+nav: { label: { en: Rent, de: Miete }, icon: banknote, order: 52 }
+blocks:
+  - type: table
+    source: ledger
+    columns:
+      - { field: month, label: Month, format: date }
+      - { field: tenant_name, label: Tenant }
+      - { field: due_money, label: Due, format: money }
+      - { field: open, label: Open, format: money, total: true }
+      - { field: state, label: State, format: badge, tones: { Paid: ok, Open: warn } }
+    row_actions:
+      - { label: Paid, action: received, when: open }
+    filters:
+      - { field: state, type: choice, label: State, options: [Open, Paid] }
+    empty: Each month's rent appears here.
+  - type: actions
+    actions:
+      - { label: Find payments on my bank statements, action: fill_from_bank }

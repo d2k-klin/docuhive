@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Text, UniqueConstraint
+from sqlalchemy import BigInteger, Date, DateTime, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from docuhive.ai.types import BigId
@@ -13,7 +13,9 @@ class Reminder(IntelBase):
     __tablename__ = "reminders"
     __table_args__ = (UniqueConstraint("document_id", "fact", "remind_on"),)
     id: Mapped[int] = mapped_column(BigId, primary_key=True, autoincrement=True)
-    document_id: Mapped[str] = mapped_column(Text)
+    document_id: Mapped[str | None] = mapped_column(Text)
+    owner_id: Mapped[int | None] = mapped_column(BigInteger)  # a reminder without a document
+    link: Mapped[str | None] = mapped_column(Text)  # where it points, when not a document
     fact: Mapped[str] = mapped_column(Text)  # fact name, or "notice_deadline"
     label: Mapped[str] = mapped_column(Text)
     due_on: Mapped[date] = mapped_column(Date)

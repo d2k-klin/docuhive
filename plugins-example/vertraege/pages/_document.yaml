@@ -1,0 +1,10 @@
+title: Contract
+for: { document_types: [contract, contract_change, invoice, letter] }
+blocks:
+  - type: table
+    source: document_contract
+    columns:
+      - { field: provider, label: Contract, link: { page: contract, params: { id: id } } }
+      - { field: notice_by, label: Notice by, format: date }
+      - { field: state_label, label: State, format: badge }
+    empty: Not part of a contract.

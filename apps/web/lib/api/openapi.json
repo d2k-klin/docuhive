@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "DocuHive",
-    "version": "0.2.0"
+    "version": "0.9.0"
   },
   "paths": {
     "/api/system/health": {
@@ -836,6 +836,67 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/roles/bookkeeper": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Bookkeeper Access",
+        "description": "The categories a bookkeeper sees besides their own and shared documents.",
+        "operationId": "bookkeeper_access_api_users_roles_bookkeeper_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookkeeperAccess"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Set Bookkeeper Access",
+        "operationId": "set_bookkeeper_access_api_users_roles_bookkeeper_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookkeeperAccess"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookkeeperAccess"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5071,6 +5132,115 @@
         }
       }
     },
+    "/api/documents/{doc_id}/holds": {
+      "get": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "List Holds",
+        "description": "Every hold, lifted ones included.",
+        "operationId": "list_holds_api_documents__doc_id__holds_get",
+        "parameters": [
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Doc Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Hold"
+                  },
+                  "title": "Response List Holds Api Documents  Doc Id  Holds Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/{doc_id}/holds/{hold_id}/lift": {
+      "post": {
+        "tags": [
+          "documents"
+        ],
+        "summary": "Lift Hold",
+        "description": "An administrator lifts one hold, with a reason that stays in the history.",
+        "operationId": "lift_hold_api_documents__doc_id__holds__hold_id__lift_post",
+        "parameters": [
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Doc Id"
+            }
+          },
+          {
+            "name": "hold_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Hold Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiftHold"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Hold"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/documents/{doc_id}/trash": {
       "post": {
         "tags": [
@@ -5510,6 +5680,853 @@
           }
         }
       }
+    },
+    "/api/plugins": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "List Plugins",
+        "operationId": "list_plugins_api_plugins_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PluginOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Plugins Api Plugins Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugins/{plugin_id}/enable": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Enable",
+        "operationId": "enable_api_plugins__plugin_id__enable_post",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnableIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugins/{plugin_id}/disable": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Disable",
+        "operationId": "disable_api_plugins__plugin_id__disable_post",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugins/{plugin_id}/settings": {
+      "put": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Save Settings",
+        "operationId": "save_settings_api_plugins__plugin_id__settings_put",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Values"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugin-pages/nav": {
+      "get": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Nav",
+        "operationId": "nav_api_plugin_pages_nav_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NavEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Nav Api Plugin Pages Nav Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugin-pages/slots/dashboard": {
+      "get": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Dashboard",
+        "operationId": "dashboard_api_plugin_pages_slots_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SlotEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Dashboard Api Plugin Pages Slots Dashboard Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugin-pages/slots/document/{doc_id}": {
+      "get": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Document Slot",
+        "operationId": "document_slot_api_plugin_pages_slots_document__doc_id__get",
+        "parameters": [
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Doc Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotEntry"
+                  },
+                  "title": "Response Document Slot Api Plugin Pages Slots Document  Doc Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugin-pages/{plugin}/{name}": {
+      "get": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Page Description",
+        "operationId": "page_description_api_plugin_pages__plugin___name__get",
+        "parameters": [
+          {
+            "name": "plugin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Page Description Api Plugin Pages  Plugin   Name  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugin-pages/{plugin}/{name}/blocks/{index}": {
+      "get": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Block Data",
+        "operationId": "block_data_api_plugin_pages__plugin___name__blocks__index__get",
+        "parameters": [
+          {
+            "name": "plugin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Block Data Api Plugin Pages  Plugin   Name  Blocks  Index  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugin-pages/{plugin}/{name}/actions/{action}": {
+      "post": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Run Action",
+        "operationId": "run_action_api_plugin_pages__plugin___name__actions__action__post",
+        "parameters": [
+          {
+            "name": "plugin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Action"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profiles": {
+      "get": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "List Profiles",
+        "operationId": "list_profiles_api_profiles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProfileOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Profiles Api Profiles Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Create Profile",
+        "operationId": "create_profile_api_profiles_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profiles/{profile_id}": {
+      "put": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Update Profile",
+        "operationId": "update_profile_api_profiles__profile_id__put",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Delete Profile",
+        "operationId": "delete_profile_api_profiles__profile_id__delete",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/profiles/{profile_id}/test-mail": {
+      "post": {
+        "tags": [
+          "profiles"
+        ],
+        "summary": "Test Mail",
+        "description": "A short mail from the identity to its own address, to check the server settings.",
+        "operationId": "test_mail_api_profiles__profile_id__test_mail_post",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Test Mail Api Profiles  Profile Id  Test Mail Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest-links": {
+      "get": {
+        "tags": [
+          "guest links"
+        ],
+        "summary": "List Links",
+        "operationId": "list_links_api_guest_links_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LinkOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Links Api Guest Links Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "guest links"
+        ],
+        "summary": "Create Link",
+        "operationId": "create_link_api_guest_links_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewLink"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Created"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest-links/{link_id}/revoke": {
+      "post": {
+        "tags": [
+          "guest links"
+        ],
+        "summary": "Revoke Link",
+        "operationId": "revoke_link_api_guest_links__link_id__revoke_post",
+        "parameters": [
+          {
+            "name": "link_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Link Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/{token}": {
+      "get": {
+        "tags": [
+          "guest links"
+        ],
+        "summary": "Guest Page",
+        "operationId": "guest_page_api_guest__token__get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest/{token}/documents/{doc_id}/file": {
+      "get": {
+        "tags": [
+          "guest links"
+        ],
+        "summary": "Guest File",
+        "description": "The archive PDF only: originals can be HTML or mail, which must not open here.",
+        "operationId": "guest_file_api_guest__token__documents__doc_id__file_get",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Token"
+            }
+          },
+          {
+            "name": "doc_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Doc Id"
+            }
+          },
+          {
+            "name": "download",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Download"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5583,6 +6600,32 @@
         },
         "type": "object",
         "title": "AccountPatch"
+      },
+      "Address": {
+        "properties": {
+          "street": {
+            "type": "string",
+            "title": "Street",
+            "default": ""
+          },
+          "postcode": {
+            "type": "string",
+            "title": "Postcode",
+            "default": ""
+          },
+          "city": {
+            "type": "string",
+            "title": "City",
+            "default": ""
+          },
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "default": "DE"
+          }
+        },
+        "type": "object",
+        "title": "Address"
       },
       "AnalysisIn": {
         "properties": {
@@ -5718,6 +6761,47 @@
         "type": "object",
         "title": "BackupStatus"
       },
+      "Bank": {
+        "properties": {
+          "holder": {
+            "type": "string",
+            "title": "Holder",
+            "default": ""
+          },
+          "iban": {
+            "type": "string",
+            "title": "Iban",
+            "default": ""
+          },
+          "bic": {
+            "type": "string",
+            "title": "Bic",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "Bank"
+      },
+      "BookkeeperAccess": {
+        "properties": {
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Categories",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "BookkeeperAccess"
+      },
       "BulkEdit": {
         "properties": {
           "ids": {
@@ -5761,6 +6845,24 @@
         ],
         "title": "BulkResult"
       },
+      "Capability": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "title": "Capability"
+      },
       "Category": {
         "properties": {
           "id": {
@@ -5785,6 +6887,17 @@
             "type": "boolean",
             "title": "Enabled",
             "default": true
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
           }
         },
         "type": "object",
@@ -5906,6 +7019,66 @@
         ],
         "title": "ChooseStorage"
       },
+      "Created": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "documents": {
+            "type": "integer",
+            "title": "Documents"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "path": {
+            "type": "string",
+            "title": "Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "documents",
+          "expires_at",
+          "revoked_at",
+          "last_used_at",
+          "path"
+        ],
+        "title": "Created"
+      },
       "CurrentUser": {
         "properties": {
           "id": {
@@ -5920,7 +7093,8 @@
             "type": "string",
             "enum": [
               "admin",
-              "member"
+              "member",
+              "bookkeeper"
             ],
             "title": "Role"
           }
@@ -6322,6 +7496,22 @@
             },
             "type": "array",
             "title": "Files"
+          },
+          "holds": {
+            "items": {
+              "$ref": "#/components/schemas/Hold"
+            },
+            "type": "array",
+            "title": "Holds",
+            "default": []
+          },
+          "used_in": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Used In",
+            "default": []
           }
         },
         "type": "object",
@@ -6630,6 +7820,17 @@
             "type": "array",
             "title": "Facts",
             "default": []
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
           }
         },
         "type": "object",
@@ -6767,6 +7968,22 @@
           "result"
         ],
         "title": "EditResult"
+      },
+      "EnableIn": {
+        "properties": {
+          "capabilities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Capabilities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "capabilities"
+        ],
+        "title": "EnableIn"
       },
       "ExportRequest": {
         "properties": {
@@ -6922,6 +8139,83 @@
         ],
         "title": "Folder"
       },
+      "GuestDocument": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "document_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Date"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "document_date",
+          "pages"
+        ],
+        "title": "GuestDocument"
+      },
+      "GuestPage": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/components/schemas/GuestDocument"
+            },
+            "type": "array",
+            "title": "Documents"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "expires_at",
+          "documents"
+        ],
+        "title": "GuestPage"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -6984,6 +8278,93 @@
           "after"
         ],
         "title": "HistoryEntry"
+      },
+      "Hold": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Fields"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          },
+          "placed_by": {
+            "type": "string",
+            "title": "Placed By"
+          },
+          "placed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Placed At"
+          },
+          "lifted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifted At"
+          },
+          "lifted_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lifted By"
+          },
+          "lift_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lift Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reason",
+          "fields",
+          "until",
+          "placed_by",
+          "placed_at",
+          "lifted_at",
+          "lifted_by",
+          "lift_reason"
+        ],
+        "title": "Hold"
       },
       "ImapIn": {
         "properties": {
@@ -7301,6 +8682,73 @@
         ],
         "title": "KnowledgeBaseView"
       },
+      "LiftHold": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Reason",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "title": "LiftHold"
+      },
+      "LinkOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "documents": {
+            "type": "integer",
+            "title": "Documents"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "documents",
+          "expires_at",
+          "revoked_at",
+          "last_used_at"
+        ],
+        "title": "LinkOut"
+      },
       "Listing": {
         "properties": {
           "root": {
@@ -7399,6 +8847,43 @@
         ],
         "title": "MessageIn"
       },
+      "NavEntry": {
+        "properties": {
+          "plugin": {
+            "type": "string",
+            "title": "Plugin"
+          },
+          "plugin_name": {
+            "type": "string",
+            "title": "Plugin Name"
+          },
+          "page": {
+            "type": "string",
+            "title": "Page"
+          },
+          "label": {
+            "title": "Label"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon"
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plugin",
+          "plugin_name",
+          "page",
+          "label",
+          "icon",
+          "order"
+        ],
+        "title": "NavEntry"
+      },
       "NewFolder": {
         "properties": {
           "path": {
@@ -7416,6 +8901,43 @@
           "name"
         ],
         "title": "NewFolder"
+      },
+      "NewLink": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Label"
+          },
+          "document_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Document Ids"
+          },
+          "days": {
+            "type": "integer",
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Days",
+            "default": 7
+          },
+          "include_private": {
+            "type": "boolean",
+            "title": "Include Private",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "document_ids"
+        ],
+        "title": "NewLink"
       },
       "PasswordChange": {
         "properties": {
@@ -7485,6 +9007,405 @@
           "added_at"
         ],
         "title": "PendingDocument"
+      },
+      "PluginOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "running": {
+            "type": "boolean",
+            "title": "Running"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/Capability"
+            },
+            "type": "array",
+            "title": "Capabilities"
+          },
+          "settings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Settings"
+          },
+          "values": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Values"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "version",
+          "source",
+          "enabled",
+          "running",
+          "state",
+          "message",
+          "capabilities",
+          "settings",
+          "values"
+        ],
+        "title": "PluginOut"
+      },
+      "ProfileIn": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "person",
+              "business",
+              "household"
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "shared": {
+            "type": "boolean",
+            "title": "Shared",
+            "default": false
+          },
+          "legal_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legal Form"
+          },
+          "address": {
+            "$ref": "#/components/schemas/Address",
+            "default": {
+              "street": "",
+              "postcode": "",
+              "city": "",
+              "country": "DE"
+            }
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "tax_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Number"
+          },
+          "vat_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vat Id"
+          },
+          "tax_office": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Office"
+          },
+          "bank": {
+            "$ref": "#/components/schemas/Bank",
+            "default": {
+              "holder": "",
+              "iban": "",
+              "bic": "",
+              "name": ""
+            }
+          },
+          "logo_document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Document Id"
+          },
+          "smtp": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SmtpIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "name"
+        ],
+        "title": "ProfileIn"
+      },
+      "ProfileOut": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "person",
+              "business",
+              "household"
+            ],
+            "title": "Kind"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "shared": {
+            "type": "boolean",
+            "title": "Shared",
+            "default": false
+          },
+          "legal_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legal Form"
+          },
+          "address": {
+            "$ref": "#/components/schemas/Address",
+            "default": {
+              "street": "",
+              "postcode": "",
+              "city": "",
+              "country": "DE"
+            }
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          },
+          "tax_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Number"
+          },
+          "vat_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vat Id"
+          },
+          "tax_office": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tax Office"
+          },
+          "bank": {
+            "$ref": "#/components/schemas/Bank",
+            "default": {
+              "holder": "",
+              "iban": "",
+              "bic": "",
+              "name": ""
+            }
+          },
+          "logo_document_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Document Id"
+          },
+          "smtp": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Smtp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "owner_id": {
+            "type": "integer",
+            "title": "Owner Id"
+          },
+          "has_smtp_password": {
+            "type": "boolean",
+            "title": "Has Smtp Password",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "name",
+          "id",
+          "owner_id"
+        ],
+        "title": "ProfileOut"
       },
       "ProgressRequest": {
         "properties": {
@@ -7941,7 +9862,8 @@
               "capture",
               "notifications",
               "security",
-              "backup"
+              "backup",
+              "plugins"
             ],
             "title": "Area"
           },
@@ -8014,6 +9936,110 @@
         "title": "SetupCheck",
         "description": "One item of the setup wizard / dashboard checklist (guided-experience skill)."
       },
+      "SlotEntry": {
+        "properties": {
+          "plugin": {
+            "type": "string",
+            "title": "Plugin"
+          },
+          "plugin_name": {
+            "type": "string",
+            "title": "Plugin Name"
+          },
+          "page": {
+            "type": "string",
+            "title": "Page"
+          },
+          "description": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plugin",
+          "plugin_name",
+          "page",
+          "description"
+        ],
+        "title": "SlotEntry"
+      },
+      "Smtp": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Host"
+          },
+          "port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Port",
+            "default": 587
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "default": ""
+          },
+          "from_address": {
+            "type": "string",
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "title": "From Address"
+          }
+        },
+        "type": "object",
+        "required": [
+          "host",
+          "from_address"
+        ],
+        "title": "Smtp"
+      },
+      "SmtpIn": {
+        "properties": {
+          "host": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Host"
+          },
+          "port": {
+            "type": "integer",
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Port",
+            "default": 587
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "default": ""
+          },
+          "from_address": {
+            "type": "string",
+            "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+            "title": "From Address"
+          },
+          "password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "host",
+          "from_address"
+        ],
+        "title": "SmtpIn"
+      },
       "SourceInfo": {
         "properties": {
           "kind": {
@@ -8078,6 +10104,25 @@
               }
             ],
             "title": "Received At"
+          },
+          "generator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generator"
+          },
+          "derived_from": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Derived From",
+            "default": []
           }
         },
         "type": "object",
@@ -8094,7 +10139,8 @@
           "mobile",
           "email",
           "consume",
-          "api"
+          "api",
+          "plugin"
         ],
         "title": "SourceKind"
       },
@@ -8468,7 +10514,8 @@
             "type": "string",
             "enum": [
               "admin",
-              "member"
+              "member",
+              "bookkeeper"
             ],
             "title": "Role",
             "default": "member"
@@ -8489,7 +10536,8 @@
                 "type": "string",
                 "enum": [
                   "admin",
-                  "member"
+                  "member",
+                  "bookkeeper"
                 ]
               },
               {

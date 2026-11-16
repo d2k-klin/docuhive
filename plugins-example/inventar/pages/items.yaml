@@ -1,0 +1,37 @@
+title: { en: Inventory, de: Inventar }
+description: What you own, where it is and what it cost. The value is what you paid, not today's value.
+nav: { label: { en: Inventory, de: Inventar }, icon: sofa, order: 41 }
+blocks:
+  - type: table
+    source: items
+    columns:
+      - { field: name, label: Item, link: { page: item, params: { id: id } } }
+      - { field: category_label, label: Category }
+      - { field: location, label: Place }
+      - { field: purchase_date, label: Bought, format: date }
+      - { field: value, label: Price, format: money, total: true }
+      - { field: warranty_until, label: Warranty until, format: date }
+      - { field: warranty, label: Warranty, format: badge, tones: { Ends soon: warn, Ended: muted, Active: ok, Assumed: info } }
+    filters:
+      - { field: location, type: text, label: Place }
+      - { field: name, type: text, label: Search }
+    empty: No items yet. Add them from proposals or below.
+  - type: form
+    title: Add an item by hand
+    fields:
+      - { name: name, type: text, label: Name, required: true }
+      - { name: category, type: choice, label: Category, options: category_options }
+      - { name: location_id, type: text, label: Place }
+      - { name: manufacturer, type: text, label: Manufacturer }
+      - { name: model, type: text, label: Model }
+      - { name: serial_number, type: text, label: Serial number }
+      - { name: purchase_date, type: date, label: Bought on }
+      - { name: price, type: money, label: Price }
+      - { name: warranty_until, type: date, label: "Warranty until (empty: the usual for the category)" }
+    action: save_item
+    submit: Add
+  - type: actions
+    title: Lists
+    actions:
+      - { label: Contents list for the insurer (PDF), action: contents_list, primary: true }
+      - { label: Download as CSV, action: export_csv, download: true }

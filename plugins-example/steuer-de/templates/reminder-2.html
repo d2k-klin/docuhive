@@ -1,0 +1,10 @@
+{% extends "_letter.html" %}
+{% block body %}
+<p>Sehr geehrte Damen und Herren,</p>
+
+<p>auf unsere Zahlungserinnerung zur Rechnung {{ invoice.number }} vom {{ invoice.issue_date.strftime("%d.%m.%Y") }} haben wir noch keinen Zahlungseingang festgestellt. Offen sind {{ "%.2f"|format(open) }} €.</p><p>Bitte überweisen Sie den Betrag innerhalb von 7 Tagen.</p>
+
+<p>Mit freundlichen Grüßen</p>
+<p>{{ seller.name }}</p>
+{% endblock %}
+{% block footer %}{% if seller.iban %}IBAN {{ seller.iban }}{% endif %}{% endblock %}

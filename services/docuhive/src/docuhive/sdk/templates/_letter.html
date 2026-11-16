@@ -1,0 +1,37 @@
+{#- A DIN 5008 letter (form B): the address sits in the window of a DL or C5/6 envelope.
+    A plugin's letter extends it: {% extends "_letter.html" %} and fills the blocks. -#}
+<!doctype html>
+<html lang="{{ language | default('de') }}">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 0; }
+  body { margin: 0; font: 10.5pt/1.4 "Helvetica Neue", Arial, sans-serif; color: #111; }
+  .page { position: relative; width: 210mm; min-height: 297mm; }
+  .sender { position: absolute; top: 45mm; left: 25mm; width: 85mm; font-size: 7pt;
+            border-bottom: 0.3pt solid #555; white-space: nowrap; overflow: hidden; }
+  .address { position: absolute; top: 50.7mm; left: 25mm; width: 85mm; height: 27.3mm; }
+  .info { position: absolute; top: 50mm; left: 125mm; width: 75mm; font-size: 9pt; }
+  .body { padding: 103.46mm 20mm 25mm 25mm; }
+  .subject { font-weight: bold; margin-bottom: 8mm; }
+  .footer { position: absolute; bottom: 10mm; left: 25mm; right: 20mm; font-size: 7.5pt;
+            color: #444; border-top: 0.3pt solid #999; padding-top: 2mm; }
+  .fold { position: absolute; left: 5mm; width: 4mm; border-top: 0.3pt solid #999; }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<div class="page">
+  <div class="fold" style="top: 105mm"></div>
+  <div class="fold" style="top: 210mm"></div>
+  <div class="sender">{% block sender %}{{ sender_line }}{% endblock %}</div>
+  <div class="address">{% block address %}{% for line in recipient %}{{ line }}<br>{% endfor %}{% endblock %}</div>
+  <div class="info">{% block info %}{{ place }}{% if place %}, {% endif %}{{ date }}{% endblock %}</div>
+  <div class="body">
+    <div class="subject">{% block subject %}{{ subject }}{% endblock %}</div>
+    {% block body %}{% endblock %}
+  </div>
+  <div class="footer">{% block footer %}{% endblock %}</div>
+</div>
+</body>
+</html>
