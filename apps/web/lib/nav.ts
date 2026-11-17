@@ -1,4 +1,6 @@
 import {
+  Smartphone,
+  FolderSync,
   FileText,
   House,
   Search,
@@ -65,6 +67,19 @@ export const nav: NavItem[] = [
     href: "/settings/storage",
     label: "Storage health",
     icon: HardDrive,
+    section: "core",
+    adminOnly: true,
+  },
+  {
+    href: "/settings/phone",
+    label: "On your phone",
+    icon: Smartphone,
+    section: "core",
+  },
+  {
+    href: "/settings/folders",
+    label: "Linked folders",
+    icon: FolderSync,
     section: "core",
     adminOnly: true,
   },

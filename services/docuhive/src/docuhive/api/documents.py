@@ -399,7 +399,12 @@ def get_file(
         vault_path = session.scalar(select(Document.vault_path).where(Document.id == doc_id))
     root = vault.root().resolve()
     path = file_path(root / vault_path, kind) if vault_path else None
-    if path is None or not path.resolve().is_relative_to(root):
+    # A file in a linked folder stays there; vault.original only returns it from inside the
+    # storage folder, never through a symbolic link.
+    linked = (
+        vault_path is not None and kind == "original" and (root / vault_path / vault.LINK).is_file()
+    )
+    if path is None or not (linked or path.resolve().is_relative_to(root)):
         raise problem(404, "document_file_missing", "This file is not in the vault.")
     name = Path(view.source.original_filename or "document").stem or "document"
     filename = {

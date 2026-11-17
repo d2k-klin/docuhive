@@ -142,6 +142,9 @@ def sync(*, retry: bool = False) -> dict:
                         folder.rmdir()
                     except OSError:
                         pass  # Only empty directories are removed.
+        from docuhive.vault import write_readme
+
+        write_readme(vault)  # vaults made before the guide existed get it too
         return {"ok": True, "links": len(kept)}
 
 

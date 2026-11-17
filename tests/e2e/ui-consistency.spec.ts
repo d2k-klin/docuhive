@@ -14,6 +14,8 @@ const routes = [
   "/settings/plugins",
   "/settings/identities",
   "/settings/users",
+  "/settings/folders",
+  "/settings/phone",
   "/plugins/steuer-de/books",
   "/plugins/steuer-de/inbox",
   "/plugins/steuer-de/entries",

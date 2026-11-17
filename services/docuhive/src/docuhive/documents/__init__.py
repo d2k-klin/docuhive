@@ -110,6 +110,11 @@ def _view(session: Session, doc: Document) -> DocumentView:
             received_at=source.received_at if source else None,
             generator=source.generator if source else None,
             derived_from=list(source.derived_from or []) if source else [],
+            uploaded_by=source.uploaded_by if source else None,
+            device=source.device if source else None,
+            folder=source.folder if source else None,
+            path=source.path if source else None,
+            file_modified_at=source.file_modified_at if source else None,
         ),
         deleted_at=doc.deleted_at,
     )

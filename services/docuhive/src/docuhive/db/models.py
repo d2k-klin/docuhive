@@ -119,6 +119,45 @@ class DocSource(CoreBase):
     received_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     generator: Mapped[str | None] = mapped_column(Text)
     derived_from: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    uploaded_by: Mapped[str | None] = mapped_column(Text)
+    device: Mapped[str | None] = mapped_column(Text)
+    folder: Mapped[str | None] = mapped_column(Text)
+    path: Mapped[str | None] = mapped_column(Text)
+    file_modified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class LinkedFolder(CoreBase):
+    """A folder DocuHive reads and analyses without moving or changing its files."""
+
+    __tablename__ = "linked_folders"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    path: Mapped[str] = mapped_column(Text, unique=True)
+    label: Mapped[str] = mapped_column(Text)
+    shared: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_scan_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(Text)
+
+
+class LinkedFile(CoreBase):
+    __tablename__ = "linked_files"
+    __table_args__ = (
+        UniqueConstraint("folder_id", "path"),
+        CheckConstraint(
+            "state IN ('linked', 'duplicate', 'skipped', 'failed', 'missing')",
+            name="linked_files_state",
+        ),
+    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    folder_id: Mapped[int] = mapped_column(ForeignKey("linked_folders.id", ondelete="CASCADE"))
+    path: Mapped[str] = mapped_column(Text)
+    size: Mapped[int] = mapped_column(BigInteger)
+    mtime_ns: Mapped[int] = mapped_column(BigInteger)
+    document_id: Mapped[str | None] = mapped_column(ForeignKey("documents.id", ondelete="SET NULL"))
+    state: Mapped[str] = mapped_column(Text)
+    error: Mapped[str | None] = mapped_column(Text)
+    seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class AuthSession(CoreBase):

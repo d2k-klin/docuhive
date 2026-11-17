@@ -26,6 +26,8 @@ export default async function AppLayout({
     "/settings/tokens",
     "/settings/identities",
     "/settings/users",
+    "/settings/folders",
+    "/settings/phone",
     "/capture",
     "/documents",
     "/search",

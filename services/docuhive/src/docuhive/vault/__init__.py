@@ -107,6 +107,7 @@ def init() -> str:
 
     # Documents the format for anyone reading the vault without DocuHive.
     write_atomic(vault / "meta.schema.json", json_schema())
+    write_readme(vault)
     if bound != vault_id:
         with db.session() as session:
             session.merge(Setting(key=ID_KEY, value=vault_id))
@@ -145,9 +146,64 @@ def require() -> None:
         raise VaultUnavailable(status.reason)
 
 
+LINK = "linked.json"
+README = """Your DocuHive archive
+====================
+
+This folder is yours and readable without DocuHive. DocuHive only adds to it.
+
+library/        Every document as a PDF you can open, sorted by category and year:
+                library/<category>/<year>/<date> <title>.pdf
+                Private documents are under library/_private/<person>/.
+                These are links to the files below, so they take no extra space.
+
+<year>/<id>/    One folder per document, by the year it was added:
+  original.*    the file exactly as it arrived (photo, PDF, e-invoice, e-mail)
+  archive.pdf   a searchable PDF made from it
+  meta.json     everything DocuHive knows about it: title, date, category, tags,
+                amounts and dates found in it, notes, and where it came from
+                (uploaded by whom and from which device, which mailbox, sender and
+                subject, which scanner folder, when the file was made)
+  linked.json   instead of original.*, for a file in a folder you linked: where
+                that file is. DocuHive never moves or changes it.
+
+meta.schema.json  describes meta.json, for anyone writing their own tools.
+consume/          drop files here (in a folder named after a user) to add them.
+_system/          DocuHive's own markers. Do not change.
+"""
+
+
 def original(folder: Path) -> Path | None:
+    """The document's original file: in the vault, or, for a file in a linked folder, where it
+    is (`linked.json` names it). None when it is missing or moved."""
+    link = folder / LINK
+    if link.is_file():
+        return linked(link)
     found = sorted(p for p in folder.glob("original.*") if ORIGINAL.match(p.name))
     return found[0] if found else None
+
+
+def write_readme(folder: Path) -> None:
+    """The plain-text guide to the vault at its root, kept current."""
+    path = folder / "README.txt"
+    if not path.is_file() or path.read_text(encoding="utf-8") != README:
+        write_atomic(path, README.encode())
+
+
+def linked(link: Path) -> Path | None:
+    import json
+
+    from docuhive.config.settings import get_settings
+
+    try:
+        target = Path(json.loads(link.read_text(encoding="utf-8"))["file"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    root = get_settings().storage_root
+    # Only ever a file inside the storage folder, and never through a symbolic link.
+    if root is None or target.is_symlink() or not target.is_file():
+        return None
+    return target if target.resolve().is_relative_to(root.resolve()) else None
 
 
 def pages(folder: Path) -> list[Path]:

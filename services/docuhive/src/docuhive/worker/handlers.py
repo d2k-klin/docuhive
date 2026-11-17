@@ -20,4 +20,4 @@ HANDLER_MODULES += [
     "docuhive.chat.jobs",
 ]
 
-HANDLER_MODULES += ["docuhive.ingest.consume", "docuhive.vault.library"]
+HANDLER_MODULES += ["docuhive.ingest.consume", "docuhive.vault.library", "docuhive.folders"]

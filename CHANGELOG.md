@@ -6,6 +6,10 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- **Linked folders** (Settings, administrators): DocuHive reads and analyses the files in a folder on your NAS where they are, without moving, renaming or changing them. New files are picked up every ten minutes or on **Read now**, files already in the archive are recognised, and moved or deleted files are listed as missing while their searchable copy stays.
+- **On your phone**: a QR code with your home address that opens Capture; it warns when the address cannot work from a phone.
+- Where a document came from is recorded in more detail (who uploaded it and from which device, the scanner subfolder, a linked folder and path, the file's own date), shown on the document's page as **Where it came from** and written to its `meta.json`.
+- The vault has a `README.txt` explaining its folders for anyone reading it without DocuHive.
 - **Plugin marketplace** under Settings → Plugins: every plugin that comes with DocuHive, with labels to filter by (Household, Business, Germany…), what each may do, and **Install**, **Update** and **Remove**. Installing, switching on and off and updating take effect within seconds in the app and the workers, without a restart. The backend image ships the catalogue; installed plugins live in a `plugins` volume.
 - Four new example plugins:
   - **Official letters and ID documents** (`behoerden`): letters from authorities with the deadline to answer (read, or worked out from the letter date with the four-day post rule, weekends and holidays), reminders, and a draft objection (Einspruch or Widerspruch) in your name; passports and ID cards by holder and expiry.

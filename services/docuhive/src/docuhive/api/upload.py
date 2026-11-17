@@ -46,6 +46,43 @@ class UploadLimitMiddleware:
         await self.app(scope, bounded_receive if limited else receive, send)
 
 
+def device_of(agent: str) -> str | None:
+    """A short, readable name for the sender's device: never the full user agent."""
+    system = next(
+        (
+            name
+            for key, name in (
+                ("iPhone", "iPhone"),
+                ("iPad", "iPad"),
+                ("Android", "Android"),
+                ("Windows", "Windows"),
+                ("Macintosh", "Mac"),
+                ("CrOS", "Chromebook"),
+                ("Linux", "Linux"),
+            )
+            if key in agent
+        ),
+        None,
+    )
+    browser = next(
+        (
+            name
+            for key, name in (
+                ("Edg/", "Edge"),
+                ("Firefox/", "Firefox"),
+                ("Chrome/", "Chrome"),
+                ("CriOS/", "Chrome"),
+                ("Safari/", "Safari"),
+            )
+            if key in agent
+        ),
+        None,
+    )
+    if system is None and browser is None:
+        return "Script or app" if agent else None
+    return " · ".join(p for p in (system, browser) if p)
+
+
 @router.post(
     "/api/upload",
     response_model=IngestResult,
@@ -117,6 +154,8 @@ async def upload(
                     original_filename=(first.filename or "upload")
                     .replace("\\", "/")
                     .rsplit("/", 1)[-1],
+                    uploaded_by=user.username,
+                    device=device_of(request.headers.get("user-agent", "")),
                 ),
                 combine=combine,
                 shared=shared,

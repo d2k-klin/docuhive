@@ -22,10 +22,11 @@ Change it on the document page under **Details**. Health and identity documents 
 | Way in | Where | Good for |
 | --- | --- | --- |
 | Upload | **Upload** | Files on your computer: PDFs, photos, Office files, emails (`.eml`) and HTML |
-| Phone | **Capture**, installed on the home screen | Photographing paper, several pages as one document, also offline; see [capture](setup/mobile.md) |
+| Phone | **On your phone** shows a QR code: scan it, sign in, add **Capture** to the home screen | Photographing paper or uploading files from the phone, several pages as one document, also offline; see [capture](setup/mobile.md) |
 | Scanner folder | `consume/<your user name>/` on the NAS | A scanner that saves to a network folder; see [scanner folder](setup/mobile.md#scanner-folder) |
 | Email | **Sources** | Invoices and statements arriving by mail: enter your address and an app password, see [email accounts](setup/mail-accounts.md) |
 | Scripts and Shortcuts | **API tokens** | Uploads from other tools; see [token upload](setup/mobile.md#personal-token-upload) |
+| Folders you already have | **Linked folders** (administrators) | Years of documents on the NAS: DocuHive reads and analyses them **where they are** and never moves, renames or changes them; new files are picked up every few minutes |
 
 All of them do exactly the same thing with a file. On **Upload**, drop files on the page or choose them, and optionally set a category and tags. Your choices are locked against the AI. Each file then shows its progress, from **Waiting to be read…** and **Reading text…** to **Stored**. Scans can take several seconds per page.
 
@@ -35,7 +36,11 @@ Three outcomes need you:
 - **A file DocuHive can't take at all**, such as an empty file, an unsupported type or one over the size limit, is refused straight away with the reason. Nothing is stored; upload a corrected file.
 - **A file that fails while being read**, such as an encrypted or damaged PDF or a scan with no readable text, goes to **Quarantine** with the reason. Nothing is lost. **Retry** helps when the failure was temporary, such as a timeout. For an encrypted or damaged file, upload a corrected copy instead. If a retry fails again, ask your administrator to check the logs.
 
-Your original file is always kept unchanged. DocuHive stores a searchable PDF copy next to it.
+Your original file is always kept unchanged. DocuHive stores a searchable PDF copy next to it. For a file in a linked folder, the original simply stays in that folder; if it is moved or deleted there, **Linked folders** lists it as missing and the searchable copy stays.
+
+**Where it came from.** A document's page lists how it arrived (browser, phone, email, scanner folder, linked folder, script or plugin), who sent it and from which device, the mailbox, sender and subject of an email, the folder and path of a file, and when the file itself was last changed. The same is written into the document's `meta.json` on the NAS.
+
+**Without DocuHive.** Everything is in the vault on your NAS as ordinary files: every document as a PDF under `library/<category>/<year>/`, and per document its original, the searchable PDF and `meta.json` with all it knows. `README.txt` at the top of the vault explains the folders.
 
 ## Finding documents
 

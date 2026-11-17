@@ -50,3 +50,7 @@ ROUTERS.append(profiles_router)
 from .guest import router as guest_router  # noqa: E402
 
 ROUTERS.append(guest_router)
+
+from .folders import router as folders_router  # noqa: E402
+
+ROUTERS.append(folders_router)

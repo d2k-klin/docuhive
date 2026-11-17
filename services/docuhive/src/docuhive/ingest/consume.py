@@ -4,7 +4,7 @@ import json
 import os
 import shutil
 import tempfile
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from sqlalchemy import select
@@ -112,7 +112,12 @@ def poll(payload: dict, ctx: jobs.JobContext) -> None:
                         [copy],
                         IngestRequest(
                             owner_id=users[owner],
-                            source=SourceInfo(kind=SourceKind.consume, original_filename=path.name),
+                            source=SourceInfo(
+                                kind=SourceKind.consume,
+                                original_filename=path.name,
+                                folder=str(Path(key).parent) if "/" in key else None,
+                                file_modified_at=datetime.fromtimestamp(path.stat().st_mtime, UTC),
+                            ),
                         ),
                     )
                     seen[key] = {

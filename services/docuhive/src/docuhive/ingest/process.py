@@ -5,6 +5,7 @@ verified and committed; any failure keeps it and records a reason (quarantine). 
 change commits together with the event it implies, so a crash never separates them.
 """
 
+import json
 import shutil
 import threading
 import uuid
@@ -91,11 +92,20 @@ def build(work: Path, files: list[Path]) -> Built:
     )
 
 
-def store(doc_id: str, sha: str, year: int, files: list[Path], built: Built) -> str:
-    """Copy everything into the vault with verified atomic writes; returns the folder."""
+def store(
+    doc_id: str, sha: str, year: int, files: list[Path], built: Built, linked: str | None = None
+) -> str:
+    """Copy everything into the vault with verified atomic writes; returns the folder. A file
+    from a linked folder stays where it is: the vault gets `linked.json` pointing at it."""
     rel = vault.folder(doc_id, year)
     target = vault.root() / rel
-    if len(files) == 1:
+    if linked is not None:
+        if len(files) != 1 or vault.sha256(Path(linked)) != sha:
+            raise Quarantine("linked_file_changed")  # the next scan sees the new content
+        link = json.dumps({"file": linked, "sha256": sha}, indent=2).encode()
+        vault.write_atomic(target / vault.LINK, link)
+        written = sha
+    elif len(files) == 1:
         written = vault.write_atomic(target / f"original{files[0].suffix}", files[0])
     else:
         written = vault.combined_sha256(
@@ -193,7 +203,8 @@ def process(payload: dict, ctx: Any) -> None:
         with keepalive(ctx):
             built = build(work, files)
             vault.require()
-            rel = store(doc_id, sha, year, files, built)
+            linked = (saved_request(work).get("hints") or {}).get("linked_file")
+            rel = store(doc_id, sha, year, files, built, linked)
     except Quarantine as error:
         quarantine(doc_id, str(error))
         return

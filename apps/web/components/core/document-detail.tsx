@@ -552,6 +552,7 @@ export function DocumentDetailView({
               </dl>
             )}
           </Card>
+          <Origin doc={d} />
           <DocumentAIPanel
             documentId={id}
             canEdit={owner}
@@ -621,6 +622,51 @@ export function DocumentDetailView({
 }
 
 /** Links to documents this one was made from, or that were made from it. */
+const HOW: Record<string, string> = {
+  upload: "Uploaded in the browser",
+  mobile: "Sent from a phone",
+  email: "Arrived by email",
+  consume: "Scanner folder",
+  api: "Sent by a script or app",
+  plugin: "Made by a plugin",
+  folder: "Linked folder (the file stays there)",
+};
+
+/** Where the document came from: kept with it in the vault's meta.json as well. */
+function Origin({ doc: d }: { doc: Detail }) {
+  const s = d.source;
+  const rows: [string, string | null | undefined][] = [
+    ["How", HOW[s.kind] ?? s.kind],
+    ["File name", s.original_filename],
+    ["By", s.uploaded_by],
+    ["Device", s.device],
+    ["From", s.email_from],
+    ["Subject", s.subject],
+    ["Received", s.received_at ? formatDate(s.received_at) : null],
+    ["Folder", s.folder],
+    ["In the folder", s.path],
+    [
+      "File last changed",
+      s.file_modified_at ? formatDate(s.file_modified_at) : null,
+    ],
+    ["Added to DocuHive", formatDate(d.added_at)],
+  ];
+  return (
+    <Card title="Where it came from">
+      <dl className="space-y-3">
+        {rows
+          .filter(([, value]) => value)
+          .map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-sm text-text-muted">{label}</dt>
+              <dd className="break-words">{value}</dd>
+            </div>
+          ))}
+      </dl>
+    </Card>
+  );
+}
+
 function Related({
   label,
   ids,

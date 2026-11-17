@@ -324,3 +324,38 @@ def setup_status(user: Annotated[CurrentUser, Depends(current_user)]) -> list[Se
         ),
         *runtime.setup_checks(user),
     ]
+
+
+class PhoneLink(BaseModel):
+    url: str  # what the phone opens: the capture page
+    svg: str  # the same address as a QR code
+    problem: str | None  # why a phone cannot use it, when that is clear from the address
+
+
+@router.get("/phone", response_model=PhoneLink)
+def phone_link(user: Annotated[CurrentUser, Depends(current_user)]) -> PhoneLink:
+    """The address to open DocuHive on a phone, as a QR code to scan."""
+    import io
+    import ipaddress
+    from urllib.parse import urlsplit
+
+    import segno
+
+    base = get_settings().public_url.rstrip("/")
+    url = f"{base}/capture"
+    host = urlsplit(base).hostname or ""
+    problem = None
+    try:
+        loopback = ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        loopback = host == "localhost"
+    if loopback:
+        problem = (
+            "This address only works on this computer. Set up the home network address "
+            "(local network guide) so the phone can reach DocuHive."
+        )
+    elif urlsplit(base).scheme != "https":
+        problem = "Phones need HTTPS to take photos and install the app (local network guide)."
+    out = io.BytesIO()
+    segno.make(url, error="m").save(out, kind="svg", scale=6, border=2, dark="#000", light="#fff")
+    return PhoneLink(url=url, svg=out.getvalue().decode(), problem=problem)
