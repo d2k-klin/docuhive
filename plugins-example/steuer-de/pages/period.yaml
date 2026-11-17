@@ -44,7 +44,7 @@ blocks:
     help: Type the form fields above into Mein ELSTER, send, and save the transfer confirmation (Übertragungsprotokoll) as a PDF. Upload it to DocuHive, then choose it here.
     fields:
       - { name: filed_on, type: date, label: Filed on }
-      - { name: confirmation, type: choice, label: The confirmation, options: recent_documents, required: true }
+      - { name: confirmation, type: document, label: The confirmation, required: true }
     action: mark_filed
     submit: Mark as filed
   - type: actions

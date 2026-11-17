@@ -22,6 +22,7 @@ import {
   Skeleton,
   formatDate,
   formatMoney,
+  useApi,
 } from "@/components/intel/common";
 
 export type Text = string | Record<string, string>;
@@ -980,6 +981,12 @@ function Form({
                   </option>
                 ))}
               </select>
+            ) : f.type === "document" ? (
+              <DocumentPicker
+                value={String(value ?? "")}
+                invalid={Boolean(problem)}
+                onChange={(id) => set(f.name, id)}
+              />
             ) : f.type === "textarea" ? (
               <textarea
                 className={`${control} h-auto min-h-24 py-2`}
@@ -1031,6 +1038,88 @@ function Form({
         )}
       </div>
     </form>
+  );
+}
+
+type Found = { document_id: string; title: string | null };
+
+/** Pick one of your documents by searching its words; the value is the document id. Only
+ * documents the person may see come back from search. */
+function DocumentPicker({
+  value,
+  invalid,
+  onChange,
+}: {
+  value: string;
+  invalid: boolean;
+  onChange: (id: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [typed, setTyped] = useState("");
+  const [chosen, setChosen] = useState<Found | null>(null);
+  useEffect(() => {
+    const timer = setTimeout(() => setQuery(typed.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [typed]);
+  const found = useApi<Found[]>(
+    query.length > 1
+      ? `/api/search?${new URLSearchParams({ q: query, limit: "8" })}`
+      : null,
+  );
+  if (value && chosen?.document_id === value)
+    return (
+      <span className="flex flex-wrap items-center gap-2">
+        <span className="text-sm">{chosen.title || "Untitled document"}</span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setChosen(null);
+            onChange("");
+          }}
+        >
+          Change
+        </Button>
+      </span>
+    );
+  return (
+    <span className="block space-y-2">
+      <Input
+        type="search"
+        aria-invalid={invalid}
+        placeholder="Search your documents"
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+      />
+      {query.length > 1 && found.data && (
+        <span className="block">
+          {found.data.length ? (
+            <span className="flex flex-col gap-1">
+              {found.data.map((d) => (
+                <Button
+                  key={d.document_id}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => {
+                    setChosen(d);
+                    onChange(d.document_id);
+                  }}
+                >
+                  {d.title || "Untitled document"}
+                </Button>
+              ))}
+            </span>
+          ) : (
+            <span className="text-sm text-text-muted">
+              No document matches these words.
+            </span>
+          )}
+        </span>
+      )}
+    </span>
   );
 }
 

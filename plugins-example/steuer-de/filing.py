@@ -46,16 +46,6 @@ def register(
             raise ActionError("Choose the book's identity first (Tax → Books).")
         return profiles.get(user, book["profile_id"])
 
-    @registry.data("recent_documents")
-    def recent_documents(user: User, params: dict) -> list[dict]:
-        return [
-            {
-                "value": d.id,
-                "label": f"{d.title or 'Untitled'} ({d.document_date or d.added_at.date()})",
-            }
-            for d in documents.find(user, limit=200)
-        ]
-
     # Level 1: filed by hand ----------------------------------------------------------------------
 
     @registry.action("mark_filed")

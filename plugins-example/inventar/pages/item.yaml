@@ -48,7 +48,7 @@ blocks:
     title: Add a document
     help: A manual, a repair bill, or a photo of the type plate (its serial number is read).
     fields:
-      - { name: document, type: choice, label: Document, options: recent_documents, required: true }
+      - { name: document, type: document, label: Document, required: true }
       - { name: role, type: choice, label: It is, options: roles }
     action: attach_document
     submit: Add

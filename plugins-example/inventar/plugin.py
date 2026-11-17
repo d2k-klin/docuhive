@@ -605,15 +605,6 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             if i["state"] == "proposed" and i["owner_id"] == user.id
         ]
     )
-    registry.data("recent_documents")(
-        lambda user, params: [
-            {
-                "value": d.id,
-                "label": f"{d.title or 'Untitled'} ({d.document_date or d.added_at.date()})",
-            }
-            for d in documents.find(user, limit=200)
-        ]
-    )
     registry.data("category_options")(
         lambda user, params: [{"value": k, "label": v["label"]} for k, v in categories().items()]
     )

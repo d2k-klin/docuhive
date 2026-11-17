@@ -17,6 +17,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Tax invoices: **Correct this invoice** issues the cancelling credit note and opens a corrected copy in one step; saved items to add to a draft; a reminder when a recurring invoice has made a new draft.
 - Tax books can be shared by user name with a bookkeeper (keeps the books; only the owner issues invoices) or someone who only looks. Plugins can look up people by user name with the new `users:find` capability; nothing else about a person is shared.
 - **Settings → AI** lists each running plugin's AI tasks with the route they use (their own from `routing.yaml`, or the core task's route they borrow).
+- Plugin forms: a document field is a search box over your documents instead of a list of the latest 200 (inventory "Add a document", the tax plugin's filing confirmation).
 - Inventory: places inside places ("House › Kitchen"); Ask's place filter includes what is inside.
 - Inventory: **Merge with another item** for the same thing listed twice; its documents and missing details move over.
 - **Use in Ask** per plugin on Settings → Plugins: switch it off and Ask no longer looks up that plugin's records.
