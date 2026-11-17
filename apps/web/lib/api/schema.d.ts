@@ -1829,6 +1829,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plugins/{plugin_id}/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Use In Ask
+         * @description Whether Ask may use this plugin's tools (its records, such as contracts or bookings).
+         */
+        put: operations["use_in_ask_api_plugins__plugin_id__ask_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plugins/{plugin_id}/settings": {
         parameters: {
             query?: never;
@@ -2188,6 +2208,11 @@ export interface components {
             applied: string[];
             /** Skipped Manual */
             skipped_manual: string[];
+        };
+        /** AskIn */
+        AskIn: {
+            /** Use */
+            use: boolean;
         };
         /** BackfillIn */
         BackfillIn: {
@@ -3096,6 +3121,8 @@ export interface components {
             values: {
                 [key: string]: unknown;
             };
+            /** In Ask */
+            in_ask?: boolean | null;
         };
         /** ProfileIn */
         ProfileIn: {
@@ -7563,6 +7590,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PluginOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    use_in_ask_api_plugins__plugin_id__ask_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

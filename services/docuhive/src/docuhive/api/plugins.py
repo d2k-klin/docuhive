@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from docuhive.auth import require_admin
+from docuhive.config import get_setting, set_setting
 from docuhive.contracts import CurrentUser
 from docuhive.plugins import discovery, runtime, state
 from docuhive.plugins.manifest import CAPABILITIES
@@ -32,6 +33,15 @@ class PluginOut(BaseModel):
     capabilities: list[Capability]
     settings: list[dict]
     values: dict[str, Any]
+    # None: the plugin offers Ask nothing (or is not running); otherwise the switch's state.
+    in_ask: bool | None = None
+
+
+class AskIn(BaseModel):
+    use: bool
+
+
+NOT_IN_ASK = "plugins.not_in_ask"
 
 
 class EnableIn(BaseModel):
@@ -56,10 +66,10 @@ def _out(found: discovery.Found, rows: dict) -> PluginOut:
         status, message = "problem", "; ".join(found.problems)
     elif enabled and set(caps) - granted:
         status, message = "needs_approval", "This version asks to do more than you approved."
+    elif enabled and last_error:  # it was started and failed: a restart alone will not help
+        status, message = "problem", last_error
     elif enabled != running:
         status, message = "needs_restart", "Restart DocuHive to apply."
-    elif enabled and last_error:
-        status, message = "problem", last_error
     else:
         status, message = ("on" if enabled else "off"), None
     return PluginOut(
@@ -75,6 +85,9 @@ def _out(found: discovery.Found, rows: dict) -> PluginOut:
         capabilities=[Capability(id=c, label=_label(c)) for c in caps],
         settings=[f.model_dump() for f in manifest.settings] if manifest else [],
         values=state.public_values(manifest) if manifest else {},
+        in_ask=(found.id not in (get_setting(NOT_IN_ASK) or []))
+        if running and runtime.LOADED[found.id].registry.tools
+        else None,
     )
 
 
@@ -117,6 +130,15 @@ def enable(plugin_id: str, body: EnableIn, user: Admin) -> PluginOut:
 def disable(plugin_id: str, user: Admin) -> PluginOut:
     found = _found(plugin_id)
     state.disable(plugin_id, actor=f"user:{user.id}")
+    return _out(found, state.states())
+
+
+@router.put("/{plugin_id}/ask", response_model=PluginOut)
+def use_in_ask(plugin_id: str, body: AskIn, user: Admin) -> PluginOut:
+    """Whether Ask may use this plugin's tools (its records, such as contracts or bookings)."""
+    found = _found(plugin_id)
+    off = set(get_setting(NOT_IN_ASK) or []) - {plugin_id}
+    set_setting(NOT_IN_ASK, sorted(off if body.use else off | {plugin_id}))
     return _out(found, state.states())
 
 

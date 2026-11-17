@@ -194,8 +194,12 @@ def build_tools(user: CurrentUser, scope: SearchFilters, route: Route) -> list:
         }
 
     tools: list[Any] = [search_documents, read_document, query_facts, list_vocabulary]
+    from docuhive.config import get_setting
+
+    off = set(get_setting("plugins.not_in_ask") or [])  # Settings → Plugins → Use in Ask
     for factory in EXTRA:
-        tools += factory(user, scope, route, masked)
+        if getattr(factory, "plugin", None) not in off:
+            tools += factory(user, scope, route, masked)
     return tools
 
 

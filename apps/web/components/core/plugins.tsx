@@ -41,6 +41,7 @@ type Plugin = {
   capabilities: { id: string; label: string }[];
   settings: Setting[];
   values: Record<string, unknown>;
+  in_ask?: boolean | null;
 };
 
 const STATE: Record<
@@ -110,6 +111,22 @@ function PluginCard({
         }),
       );
       setConfirming(false);
+    } catch (e) {
+      setError(e as ApiError);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function setInAsk(use: boolean) {
+    setBusy(true);
+    setError(null);
+    try {
+      onChange(
+        await api<Plugin>(`/api/plugins/${p.id}/ask`, {
+          method: "PUT",
+          json: { use },
+        }),
+      );
     } catch (e) {
       setError(e as ApiError);
     } finally {
@@ -206,6 +223,24 @@ function PluginCard({
               Switching off removes its screens and jobs. Its documents and data
               stay, and come back when you switch it on again.
             </p>
+          )}
+          {p.in_ask != null && (
+            <label className="flex min-h-5 items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className={checkbox}
+                checked={p.in_ask}
+                disabled={busy}
+                onChange={(e) => void setInAsk(e.target.checked)}
+              />
+              <span>
+                <span className="font-medium">Use in Ask</span>
+                <span className="block text-xs text-text-muted">
+                  Ask may look up this plugin&apos;s records to answer
+                  questions, within the same privacy rules as documents.
+                </span>
+              </span>
+            </label>
           )}
           {p.settings.length > 0 && (
             <SettingsForm plugin={p} onChange={onChange} />

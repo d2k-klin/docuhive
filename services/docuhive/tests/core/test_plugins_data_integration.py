@@ -319,3 +319,24 @@ def test_school_example_tags_school_letters(postgres, monkeypatch):
     finally:
         runtime.reset()
     assert json.loads(json.dumps(check(found.path))) == []
+
+
+def test_use_in_ask_switch_removes_the_plugins_tools(ledger):
+    from docuhive.agents.tools import build_tools
+    from docuhive.ai.router import Route
+    from docuhive.api.plugins import AskIn, list_plugins, use_in_ask
+    from docuhive.contracts import SearchFilters
+
+    _, owner, _ = ledger
+    admin = CurrentUser(id=owner, username="owner", role="admin")
+    user = CurrentUser(id=owner, username="owner", role="member")
+
+    def names() -> set[str]:
+        return {t.tool_name for t in build_tools(user, SearchFilters(), Route("l", "m", True))}
+
+    assert {p.id: p.in_ask for p in list_plugins(admin)} == {"ledger": True}
+    assert any(n.startswith("ledger__") for n in names())
+    assert use_in_ask("ledger", AskIn(use=False), admin).in_ask is False
+    assert not any(n.startswith("ledger__") for n in names())
+    assert use_in_ask("ledger", AskIn(use=True), admin).in_ask is True
+    assert any(n.startswith("ledger__") for n in names())

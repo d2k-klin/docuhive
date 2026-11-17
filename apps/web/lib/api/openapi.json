@@ -5800,6 +5800,59 @@
         }
       }
     },
+    "/api/plugins/{plugin_id}/ask": {
+      "put": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Use In Ask",
+        "description": "Whether Ask may use this plugin's tools (its records, such as contracts or bookings).",
+        "operationId": "use_in_ask_api_plugins__plugin_id__ask_put",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/plugins/{plugin_id}/settings": {
       "put": {
         "tags": [
@@ -6829,6 +6882,19 @@
           "skipped_manual"
         ],
         "title": "ApplyResult"
+      },
+      "AskIn": {
+        "properties": {
+          "use": {
+            "type": "boolean",
+            "title": "Use"
+          }
+        },
+        "type": "object",
+        "required": [
+          "use"
+        ],
+        "title": "AskIn"
       },
       "BackfillIn": {
         "properties": {
@@ -9221,6 +9287,17 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Values"
+          },
+          "in_ask": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Ask"
           }
         },
         "type": "object",

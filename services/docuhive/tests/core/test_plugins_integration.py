@@ -104,6 +104,9 @@ def test_api_is_for_administrators_and_requires_the_current_capabilities(client,
     assert client.post("/api/plugins/fuel/enable", json={"capabilities": wanted}).status_code == 403
     enabled = client.post("/api/plugins/fuel/enable", json={"capabilities": wanted}, headers=CSRF)
     assert enabled.json()["state"] == "needs_restart"
+    state.record("fuel", error="migrations/001.sql: table exists")  # a start that failed
+    assert client.get("/api/plugins").json()[0]["state"] == "problem"
+    state.enable("fuel", wanted, actor="test")  # switching on again clears it
     bad = client.put("/api/plugins/fuel/settings", json={"plate": ""}, headers=CSRF)
     assert bad.status_code == 422 and bad.json()["error"]["details"]["fields"] == {
         "plate": "Required"
