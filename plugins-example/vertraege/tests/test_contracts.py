@@ -154,3 +154,67 @@ def test_ask_tools_and_costs(archive):
     assert tool(alice)["contracts"][0]["per_month"] == "89.00"
     assert tool(alice, cancellable_within_days=30)["contracts"] == []
     assert archive.tool("vertraege", "monthly_cost")(alice)["per_month"] == {"energy": "89.00"}
+
+
+def test_regular_payments_without_a_contract(archive, monkeypatch):
+    from datetime import timedelta
+
+    from docuhive.plugins import install
+
+    alice = archive.user("alice")
+    start = date.today() - timedelta(days=150)
+    rows = [
+        {
+            "id": n,
+            "counterparty": "Streaming Beispiel",
+            "amount": D("-9.99"),
+            "booking_date": start + timedelta(days=30 * n),
+            "ignored_reason": None,
+        }
+        for n in range(5)
+    ]
+    rows += [
+        {
+            "id": 9 + n,
+            "counterparty": "Stromwerk Beispiel GmbH",
+            "amount": D("-89.00"),
+            "booking_date": start + timedelta(days=30 * n),
+            "ignored_reason": None,
+        }
+        for n in range(5)
+    ]
+    monkeypatch.setitem(install.SERVICES, "bank.transactions", lambda user, **kw: rows)
+    arrive(
+        archive, alice, document_type="contract", category="utilities/electricity", title="Strom"
+    )
+
+    found = call(archive, "data", "unknown_recurring", alice)
+    assert [f["payee"] for f in found] == ["Streaming Beispiel"]  # the power contract is known
+    made = call(archive, "action", "contract_from_payment", alice, key=found[0]["key"])
+    contract_id = made.goto.split("=")[1]
+    c = call(archive, "data", "contract", alice, id=contract_id)
+    assert (c["provider"], c["price"], c["price_period"]) == (
+        "Streaming Beispiel",
+        D("9.99"),
+        "month",
+    )
+    assert call(archive, "data", "unknown_recurring", alice) == []
+
+    rows.extend(
+        {
+            "id": 20 + n,
+            "counterparty": "Verein Beispiel",
+            "amount": D("-12.00"),
+            "booking_date": start + timedelta(days=30 * n),
+            "ignored_reason": None,
+        }
+        for n in range(4)
+    )
+    call(
+        archive,
+        "action",
+        "not_a_contract",
+        alice,
+        key=call(archive, "data", "unknown_recurring", alice)[0]["key"],
+    )
+    assert call(archive, "data", "unknown_recurring", alice) == []

@@ -14,3 +14,13 @@ blocks:
       - { field: document_date, type: year, label: Year }
       - { field: section, type: text, label: Section }
     empty: "No tagged receipts. Add a tag such as tax-donations or tax-medical to a receipt."
+  - type: table
+    title: Rental income (Anlage V)
+    help: From the landlord plugin. Depreciation and interest are not included.
+    source: rental_income
+    columns:
+      - { field: property, label: Property }
+      - { field: received, label: Rent received, format: money }
+      - { field: passed_on, label: Costs passed on, format: money }
+      - { field: borne, label: Costs you bore, format: money }
+    empty: Nothing listed. With the landlord plugin on, your properties appear here.

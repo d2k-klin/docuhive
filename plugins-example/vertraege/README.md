@@ -1,6 +1,6 @@
 # Contracts and cancellations (`vertraege`)
 
-> **Status: available.** Finding regular payments that have no contract (with the bank plugin) is planned.
+> **Status: available.**
 
 **Overview.** Finds the contracts in your archive (electricity, phone, insurance, gym, software, leases) and turns them into one list: what each costs, when it renews, and the last day you can give notice. When you want out, the cancellation letter is ready.
 
@@ -15,7 +15,7 @@ Households and businesses alike. Anyone who has ever paid another year for somet
 - **What you pay in total**, per month, by kind of contract.
 - **A cancellation letter** with your details, the contract's details and the right date, as a PDF you sign and post, or send by mail from DocuHive. The letter is stored with the contract, and so is the provider's confirmation when it arrives.
 - **Price changes:** a new invoice or letter with a different amount for a known contract shows up as a note on that contract.
-- **With the [bank plugin](../bank/README.md):** what you really paid to each provider in the last 12 months. *(planned: regular payments for which the archive has no contract)*
+- **With the [bank plugin](../bank/README.md):** what you really paid to each provider in the last 12 months, and, on the contracts page, regular payments (monthly, quarterly or yearly, similar amounts) for which the archive has no contract. Add one as a contract in a click, or say it is not one and it is not suggested again.
 - **Ask:** "Which contracts can I cancel in the next three months?"
 
 ## Set it up

@@ -634,6 +634,29 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         }
         return [row(i) for i in visible(user) if i["id"] in ids]
 
+    @registry.service
+    def equipment(user: User, year: int) -> list[dict]:
+        """For the tax plugin: business-flagged items bought in a year, with their receipts."""
+        out = []
+        for i in active(user):
+            if i["business_flag"] and i["purchase_date"] and i["purchase_date"].year == year:
+                docs = q(
+                    "SELECT document_id FROM item_documents WHERE item_id = :i AND role = "
+                    "'receipt'",
+                    i=i["id"],
+                )
+                out.append(
+                    {
+                        "name": i["name"],
+                        "bought": i["purchase_date"],
+                        "price": i["price"],
+                        "currency": i["currency"],
+                        "flag": i["business_flag"],
+                        "documents": [d["document_id"] for d in docs],
+                    }
+                )
+        return out
+
     # Ask ---------------------------------------------------------------------------------------
 
     @registry.tool

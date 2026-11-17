@@ -20,3 +20,16 @@ blocks:
       - { field: provider, type: text, label: Search }
     sort: notice_by
     empty: No contracts yet. Upload a contract and it appears here once it is read.
+  - type: table
+    title: Regular payments without a contract
+    help: Found on your bank statements by the bank plugin. Add the ones that are contracts.
+    source: unknown_recurring
+    columns:
+      - { field: payee, label: Paid to }
+      - { field: money, label: Amount, format: money }
+      - { field: rhythm, label: How often }
+      - { field: last, label: Last paid, format: date }
+    row_actions:
+      - { label: Add as a contract, action: contract_from_payment }
+      - { label: Not a contract, action: not_a_contract }
+    empty: Nothing found. With the bank plugin on, regular payments without a contract appear here.

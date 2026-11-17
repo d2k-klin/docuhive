@@ -1,6 +1,6 @@
 # Rent and service charges for landlords in Germany (`vermieter-de`)
 
-> **Status: available.** The arrears letter and handing the figures to the tax plugin are planned.
+> **Status: available.**
 
 **Overview.** For a private landlord with one or a few flats: who has paid, and the yearly service-charge statement (Nebenkostenabrechnung) for each tenant, built from the bills that are already in your archive.
 
@@ -14,7 +14,8 @@ Private landlords in Germany. Not for property managers with many buildings or o
 
 - **Properties, flats and tenancies:** size, number of people, rent, monthly advance payment for service charges, start and end.
 - **Rent ledger:** what was due and what arrived each month. With the [bank plugin](../bank/README.md) the payments fill in by themselves; without it you tick them off.
-- **Arrears:** months still open, on the dashboard. *(planned: a reminder letter)*
+- **Arrears:** months still open, on the dashboard, and a reminder letter listing them, which you send yourself.
+- **Rent changes:** a new rent or advance from a date; the ledger and the statement use whatever was agreed for each month.
 - **Service-charge statement** per tenancy and year:
   - the year's cost bills from your archive (water, heating, waste, insurance, property tax, cleaning, caretaker), each assigned to a cost type;
   - divided by the key you chose for that cost type (living space, people, units, meter reading);
@@ -22,7 +23,7 @@ Private landlords in Germany. Not for property managers with many buildings or o
   - minus the advance payments received.
   The result is a PDF per tenant with every cost, the key, the tenant's share and the balance. It is stored and locked, together with the bills it rests on.
 - **The deadline** for delivering the statement appears in your reminders.
-- **For your tax return:** rent received and costs per property for the year, passed on and borne, as a table and a CSV file. *(planned: added to the [tax plugin](../steuer-de/README.md)'s household list)*
+- **For your tax return:** rent received and costs per property for the year, passed on and borne, as a table and a CSV file. With the [tax plugin](../steuer-de/README.md), the figures also appear on its **Household tax** page.
 
 ## Set it up
 

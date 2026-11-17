@@ -12,3 +12,14 @@ blocks:
     filters:
       - { field: year, type: year, label: Year }
     empty: No paid, confirmed bookings in this year.
+  - type: table
+    title: Equipment bought this year
+    help: From the inventory plugin, items you flagged as business equipment. Your advisor decides how they are depreciated.
+    source: equipment
+    columns:
+      - { field: name, label: Item }
+      - { field: bought, label: Bought, format: date }
+      - { field: amount, label: Price, format: money, total: true }
+      - { field: kind, label: Kind, format: badge }
+      - { field: document_id, label: Receipt, format: document }
+    empty: Nothing listed. With the inventory plugin on, business items bought this year appear here.

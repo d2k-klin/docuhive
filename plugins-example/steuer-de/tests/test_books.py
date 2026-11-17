@@ -327,3 +327,43 @@ def test_a_plugin_message_on_a_page_is_shown_not_a_server_error():
         assert client.get("/api/plugin-pages/steuer-de/invoice/blocks/0/shown").json() == {
             "shown": True
         }
+
+
+def test_yearly_return_and_the_bookings_behind_a_period():
+    with Archive(PLUGIN) as archive:
+        alice = archive.user("alice")
+        call(
+            archive,
+            "action",
+            "save_book",
+            alice,
+            name="Studio",
+            kind="euer",
+            chart="skr03",
+            vat_period="quarterly",
+        )
+        for day, gross in (("2026-02-10", "1190.00"), ("2026-05-10", "595.00")):
+            call(
+                archive,
+                "action",
+                "add_entry",
+                alice,
+                direction="income",
+                entry_date=day,
+                gross=gross,
+                vat_code="sale_19",
+                account="8400",
+                counterparty="Kunde",
+            )
+        keys = [r["key"] for r in call(archive, "data", "periods", alice)]
+        assert "2026" in keys and "2026-Q1" in keys and "2026-Q2" in keys
+        summary = {
+            r["label"]: r for r in call(archive, "data", "period_summary", alice, key="2026")
+        }
+        assert summary["Due"]["value"] == date(2027, 7, 31)  # the yearly return's deadline
+        assert summary["Advance returns of the year"]["value"]["value"] == D("285.00")
+        assert summary["Still to pay with the yearly return (negative: refund)"]["value"][
+            "value"
+        ] == D("0.00")
+        rows = call(archive, "data", "period_entries", alice, key="2026-Q1")
+        assert [(r["net"], r["fields"]) for r in rows] == [(D("1000.00"), "81")]

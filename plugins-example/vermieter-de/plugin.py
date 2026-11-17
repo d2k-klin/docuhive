@@ -914,6 +914,11 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             )
         return out
 
+    @registry.service
+    def rental_income_for(user: User, year: int) -> list[dict]:
+        """For the tax plugin's household list: per property, rent received and costs."""
+        return tax(user, {"year": year})
+
     @registry.action("tax_csv")
     def tax_csv(user: User, params: dict) -> Result:
         out = io.StringIO()

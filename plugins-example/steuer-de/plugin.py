@@ -555,7 +555,20 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         }
         if as_book(book).files_vat:
             keys.add(periods.key(book["vat_period"], date.today()))
+        if book["vat_period"] in ("monthly", "quarterly"):  # the yearly VAT return as well
+            keys |= {k[:4] for k in keys}
         return sorted(keys, reverse=True)
+
+    def is_year_return(book: dict, key: str) -> bool:
+        return len(key) == 4 and book["vat_period"] in ("monthly", "quarterly")
+
+    def due_for(book: dict, key: str) -> date:
+        """The advance return's deadline, or the yearly return's for a year of a monthly or
+        quarterly filer (without an advisor; the rules file names its source)."""
+        year = rules.year(int(key[:4]))
+        if is_year_return(book, key):
+            return date.fromisoformat(str(year["deadlines"]["annual_returns"]["without_advisor"]))
+        return periods.due_date(as_book(book), key, year["advance_return"])
 
     # Deadlines ---------------------------------------------------------------------------------
 
@@ -738,9 +751,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         for key in period_keys(book):
             try:
                 result = figures(book, key)
-                due = periods.due_date(
-                    as_book(book), key, rules.year(int(key[:4]))["advance_return"]
-                )
+                due = due_for(book, key)
             except RulesMissing:
                 continue
             out.append(
@@ -772,10 +783,35 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
     def period_summary(user: User, params: dict) -> list[dict]:
         book, key = period_params(user, params)
         result = figures(book, key)
-        due = periods.due_date(as_book(book), key, rules.year(int(key[:4]))["advance_return"])
+        due = due_for(book, key)
+        extra = []
+        if is_year_return(book, key):
+            advances = sum(
+                (
+                    Decimal(str(figures(book, k)["payable"]))
+                    for k in period_keys(book)
+                    if k.startswith(f"{key}-")
+                ),
+                Decimal(0),
+            )
+            extra = [
+                {
+                    "label": "Advance returns of the year",
+                    "format": "money",
+                    "value": {"value": advances, "currency": "EUR"},
+                },
+                {
+                    "label": "Still to pay with the yearly return (negative: refund)",
+                    "format": "money",
+                    "value": {
+                        "value": Decimal(str(result["payable"])) - advances,
+                        "currency": "EUR",
+                    },
+                },
+            ]
         return [
             {
-                "label": f"Period {key}",
+                "label": f"Yearly return {key}" if is_year_return(book, key) else f"Period {key}",
                 "value": {
                     "open": "Open",
                     "checked": "Checked",
@@ -790,6 +826,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             },
             {"label": "Due", "value": due, "format": "date"},
             {"label": "Rules", "value": result["rules_version"], "hint": NOT_ADVICE},
+            *extra,
         ]
 
     @registry.data("period_fields")
@@ -803,6 +840,24 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             }
             for f in figures(book, key)["fields"]
         ]
+
+    @registry.data("period_entries")
+    def period_entries_rows(user: User, params: dict) -> list[dict]:
+        """The bookings behind the figures, and the form fields each one feeds."""
+        book, key = period_params(user, params)
+        codes = rules.vat_codes()
+        rows = q(
+            "SELECT * FROM entries WHERE book_id = :b AND state IN ('confirmed', 'closed') AND "
+            "(period_vat = :k OR (length(:k) = 4 AND period_vat LIKE :k || '%')) "
+            "ORDER BY entry_date, id",
+            b=book["id"],
+            k=key,
+        )
+        for r in rows:
+            code = codes.get(r["vat_code"] or "", {})
+            r["fields"] = ", ".join(code[x] for x in ("base", "tax", "input") if code.get(x)) or "—"
+            r["vat_label"] = code.get("label", r["vat_code"])
+        return rows
 
     @registry.data("period_missing")
     def period_missing(user: User, params: dict) -> list[dict]:
@@ -871,6 +926,30 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
                     }
                 )
         return out
+
+    @registry.data("equipment")
+    def equipment(user: User, params: dict) -> list[dict]:
+        """With the inventory plugin: equipment bought in the year, for the advisor's asset list."""
+        if not services.available("inventar.equipment"):
+            return []
+        year = int(params.get("year") or date.today().year)
+        return [
+            e
+            | {
+                "amount": {"value": e["price"], "currency": e["currency"]},
+                "kind": "Asset" if e["flag"] == "asset" else "Low-value item",
+                "document_id": (e["documents"] or [None])[0],
+            }
+            for e in services.get("inventar.equipment")(user, year)
+        ]
+
+    @registry.data("rental_income")
+    def rental_income(user: User, params: dict) -> list[dict]:
+        """With the landlord plugin: rental income per property for the household's return."""
+        if not services.available("vermieter-de.rental_income_for"):
+            return []
+        year = int(params.get("year") or date.today().year)
+        return services.get("vermieter-de.rental_income_for")(user, year)
 
     @registry.data("rules_rows")
     def rules_rows(user: User, params: dict) -> list[dict]:

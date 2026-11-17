@@ -370,11 +370,12 @@ def write_cii(inv: dict, flavour: str = "zugferd") -> bytes:
     party(agreement, "ram:BuyerTradeParty", inv["buyer"])
     delivery = add(tx, "ram:ApplicableHeaderTradeDelivery")
     if any(part["category"] == "K" for part in inv["breakdown"]):  # BT-80 for EU supplies
-        add(
-            delivery,
-            "ram:ShipToTradeParty/ram:PostalTradeAddress/ram:CountryID",
-            inv["buyer"].get("country") or "DE",
-        )
+        # BG-15 with BT-80; the German rules then also want postcode and city (BR-DE-10, -11)
+        place = add(delivery, "ram:ShipToTradeParty/ram:PostalTradeAddress")
+        add(place, "ram:PostcodeCode", inv["buyer"].get("postcode") or "")
+        add(place, "ram:LineOne", inv["buyer"].get("street") or "")
+        add(place, "ram:CityName", inv["buyer"].get("city") or "")
+        add(place, "ram:CountryID", inv["buyer"].get("country") or "DE")
     when(
         delivery,
         "ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime",

@@ -33,7 +33,7 @@ from docuhive.sdk import (
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from . import dates
+from . import dates, recurring
 
 EDITABLE = (
     "provider",
@@ -658,6 +658,64 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         mail.send(user, c["profile_id"], m["to"], m["subject"], m["body"], [m["letter"]])
         sent(user, c)
         return f"Sent to {m['to'][0]}. The letter and the mail are kept with the contract."
+
+    # With the bank plugin: regular payments without a contract --------------------------------
+
+    @registry.data("unknown_recurring")
+    def unknown_recurring(user: User, params: dict) -> list[dict]:
+        if not services.available("bank.transactions"):
+            return []
+        known = [recurring.payee_key(c["provider"]) for c in mine(user) if c["owner_id"] == user.id]
+        dismissed = {
+            r["payee"]
+            for r in q("SELECT payee FROM dismissed_payees WHERE owner_id = :o", o=user.id)
+        }
+        since = date.today() - timedelta(days=400)
+        out = []
+        for f in recurring.find(services.get("bank.transactions")(user), since):
+            key = recurring.payee_key(f["payee"])
+            if key in dismissed or any(k and (k in key or key in k) for k in known):
+                continue
+            out.append(
+                f
+                | {
+                    "key": key,
+                    "money": {"value": f["amount"], "currency": "EUR"},
+                    "rhythm": {
+                        "month": "Every month",
+                        "quarter": "Every quarter",
+                        "year": "Every year",
+                    }[f["period"]],
+                }
+            )
+        return out
+
+    @registry.action("contract_from_payment")
+    def contract_from_payment(user: User, params: dict) -> Result:
+        match = next(
+            (f for f in unknown_recurring(user, {}) if f["key"] == params.get("key")), None
+        )
+        if match is None:
+            raise ActionError("This payment is no longer in the list.")
+        with registry.db.session() as s:
+            cid = s.execute(
+                text(
+                    "INSERT INTO contracts (owner_id, provider, price, price_period, "
+                    "locked_fields) VALUES (:o, :p, :a, :per, "
+                    "ARRAY['provider', 'price', 'price_period']) RETURNING id"
+                ),
+                {"o": user.id, "p": match["payee"], "a": match["amount"], "per": match["period"]},
+            ).scalar_one()
+        return Result(message="Added. Enter its term and notice period.", goto=f"contract?id={cid}")
+
+    @registry.action("not_a_contract")
+    def not_a_contract(user: User, params: dict) -> str:
+        run(
+            "INSERT INTO dismissed_payees (owner_id, payee) VALUES (:o, :p) ON CONFLICT DO NOTHING",
+            o=user.id,
+            p=str(params.get("key") or ""),
+        )
+        return "It will not be suggested again."
 
     # Ask ---------------------------------------------------------------------------------------
 

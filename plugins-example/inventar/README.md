@@ -1,6 +1,6 @@
 # Inventory, warranties and the insurer's list (`inventar`)
 
-> **Status: available.** Offering the business list to the tax plugin is planned.
+> **Status: available.**
 
 **Overview.** Turns purchase receipts into a list of what you own: where it is, what it cost, and until when it is under warranty. When something breaks, or after a burglary or a fire, the receipt, the warranty and the list for your insurer are one click away.
 
@@ -17,7 +17,7 @@
 - **Lists:** by room, by category, by person; the total value.
 - **For your insurer:** a household-contents list as a PDF, and, for a claim, one item with all its documents as a bundle.
 - **Serial numbers:** photograph the type plate; the number is read and added to the item.
-- **For businesses:** each item flagged as a low-value item or a larger asset by your threshold, shown on the item and in the CSV export. *(planned: offered to the [tax plugin](../steuer-de/README.md))*
+- **For businesses:** each item flagged as a low-value item or a larger asset by your threshold, shown on the item and in the CSV export. With the [tax plugin](../steuer-de/README.md), the year's business items are listed on its **Year (EÜR)** page for your advisor.
 - **Ask:** "Is the dishwasher still under warranty?"
 
 ## Set it up

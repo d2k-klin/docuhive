@@ -18,6 +18,20 @@ blocks:
       - { field: tax, label: Tax, format: money }
       - { field: entries, label: Bookings, format: number }
     empty: No confirmed bookings in this period yet.
+  - type: table
+    title: The bookings behind these figures
+    source: period_entries
+    columns:
+      - { field: entry_date, label: Date, format: date }
+      - { field: counterparty, label: With }
+      - { field: vat_label, label: VAT }
+      - { field: fields, label: Form fields }
+      - { field: net, label: Net, format: number, align: right, total: true }
+      - { field: vat, label: VAT amount, format: number, align: right, total: true }
+      - { field: document_id, label: Document, format: document }
+    filters:
+      - { field: fields, type: text, label: Field }
+    empty: No confirmed bookings in this period.
   - type: actions
     actions:
       - { label: Propose bookings for documents not booked yet, action: book_missing }
