@@ -121,12 +121,11 @@ def sync(process: Process) -> None:  # noqa: C901
     from . import install  # noqa: F401 - registers what plugins add when they start
 
     with _LOCK:
+        installed = {f.id: f for f in discovery.discover()}
+        if not installed and not LOADED:
+            return  # nothing to load: do not touch the database
         try:
             seen = state.generation()
-            installed = {f.id: f for f in discovery.discover()}
-            if not installed and not LOADED:
-                _SEEN[process] = seen
-                return  # nothing to load: do not touch the plugins table
             enabled = {k: v for k, v in state.states().items() if v.enabled}
         except SQLAlchemyError:
             log.warning("Plugins not started: the plugins table is not available (run db upgrade)")
@@ -202,6 +201,8 @@ def watch(process: Process, stopped: threading.Event, every: float = 5.0) -> thr
     def loop() -> None:
         while not stopped.wait(every):
             try:
+                if not LOADED and not discovery.discover():
+                    continue  # no plugins at all: nothing to follow, no database queries
                 if state.generation() != _SEEN.get(process):
                     sync(process)
             except Exception:  # noqa: BLE001 - a hiccup must not end the watcher

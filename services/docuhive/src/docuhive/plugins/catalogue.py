@@ -8,8 +8,6 @@ on, without a restart. A person's `custom/` files stay through updates. Nothing 
 import shutil
 from pathlib import Path
 
-from sqlalchemy.exc import SQLAlchemyError
-
 from docuhive.config.settings import get_settings
 
 from . import check as checks
@@ -53,8 +51,8 @@ def target_root() -> Path:
 def _changed() -> None:
     try:
         state.changed()
-    except SQLAlchemyError:
-        pass  # the command line works without a database; the processes sync when they start
+    except Exception:  # noqa: BLE001 - the command line works without a database
+        pass  # the processes sync when they start
 
 
 def copy(source: Path, target: Path, keep_custom: Path | None = None) -> None:
