@@ -57,6 +57,15 @@ blocks:
     actions:
       - { label: Claim bundle (one PDF with all documents), action: claim_bundle, primary: true }
   - type: form
+    title: Merge with another item
+    help: The same thing listed twice. This item stays; empty fields and documents come from the other, which is removed.
+    show_if: merge_options
+    fields:
+      - { name: other, type: choice, label: The other item, options: merge_options, required: true }
+    action: merge
+    submit: Merge
+    confirm: "Merge the other item into this one? The other entry is removed."
+  - type: form
     title: No longer here
     fields:
       - { name: state, type: choice, label: What happened, options: states, required: true }

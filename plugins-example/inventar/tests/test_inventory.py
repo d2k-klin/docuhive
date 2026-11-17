@@ -237,3 +237,43 @@ def test_manual_entry_assumes_the_usual_warranty(archive):
         "asset",
     )
     assert item["location"] == "Büro" and item["price"] == D("1299.00")
+
+
+def test_merging_two_entries_of_the_same_thing(archive):
+    alice, bob = archive.user("alice"), archive.user("bob")
+
+    def made(**fields):
+        return int(call(archive, "action", "save_item", alice, **fields).goto.split("=")[1])
+
+    keep = made(name="Laptop", location_id="Büro")
+    other = made(
+        name="Laptop X1",
+        serial_number="SN-1",
+        purchase_date="2026-01-31",
+        price="1299.00",
+        location_id="Keller",
+    )
+    receipt = archive.add(alice, title="Receipt", document_type="receipt")
+    call(archive, "action", "attach_document", alice, id=other, document=receipt, role="receipt")
+    assert [o["value"] for o in call(archive, "data", "merge_options", alice, id=keep)] == [
+        str(other)
+    ]
+    with pytest.raises(ActionError):
+        call(archive, "action", "merge", bob, id=keep, other=other)
+    with pytest.raises(ActionError):
+        call(archive, "action", "merge", alice, id=keep, other=keep)
+    call(archive, "action", "merge", alice, id=keep, other=other)
+    item = call(archive, "data", "item", alice, id=keep)
+    assert (item["name"], item["serial_number"], item["location"], item["price"]) == (
+        "Laptop",
+        "SN-1",
+        "Büro",
+        D("1299.00"),  # this item's own values win
+    )
+    assert [d["id"] for d in call(archive, "data", "item_documents", alice, id=keep)] == [receipt]
+    with pytest.raises(ActionError):
+        call(archive, "action", "save_item", alice, id=other, name="gone")
+    with session() as s:
+        keys = set(s.scalars(select(Reminder.fact)))
+    assert f"plugin:inventar:warranty:{keep}" in keys
+    assert f"plugin:inventar:warranty:{other}" not in keys

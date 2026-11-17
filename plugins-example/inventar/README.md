@@ -16,6 +16,7 @@
 - **Warranty end dates** as reminders, early enough to act.
 - **Lists:** by room, by category, by person; the total value.
 - **For your insurer:** a household-contents list as a PDF, and, for a claim, one item with all its documents as a bundle.
+- **Listed twice?** On an item, **Merge with another item** keeps it, fills its empty fields from the other entry and takes over its documents.
 - **Serial numbers:** photograph the type plate; the number is read and added to the item.
 - **For businesses:** each item flagged as a low-value item or a larger asset by your threshold, shown on the item and in the CSV export. With the [tax plugin](../steuer-de/README.md), the year's business items are listed on its **Year (EÜR)** page for your advisor.
 - **Ask:** "Is the dishwasher still under warranty?"

@@ -17,11 +17,13 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Tax invoices: **Correct this invoice** issues the cancelling credit note and opens a corrected copy in one step; saved items to add to a draft; a reminder when a recurring invoice has made a new draft.
 - Tax books can be shared by user name with a bookkeeper (keeps the books; only the owner issues invoices) or someone who only looks. Plugins can look up people by user name with the new `users:find` capability; nothing else about a person is shared.
 - **Settings → AI** lists each running plugin's AI tasks with the route they use (their own from `routing.yaml`, or the core task's route they borrow).
+- Inventory: **Merge with another item** for the same thing listed twice; its documents and missing details move over.
 - **Use in Ask** per plugin on Settings → Plugins: switch it off and Ask no longer looks up that plugin's records.
 
 ### Fixed
 
 - Tax books: a person's own receipts were booked into a book they only keep for someone else, and choosing a default book cleared that flag on other people's books.
+- An AI model that kept giving an answer the expected format rejects could hold a worker until the timeout, over and over; each attempt now stops after four model turns. This also made the QA smoke time out since plugins were added.
 - A plugin that failed to start showed "Restart to apply"; it now shows why it failed.
 - With plugins switched on, new documents waited behind every plugin's work; the worker now takes the document pipeline's jobs first.
 - XRechnung invoices now pass the official validator's rules that the first version missed: the business process, the buyer's electronic address, the delivery address for EU supplies, and the date type in a credit note's reference. Issuing an XRechnung invoice needs the customer's mail address.

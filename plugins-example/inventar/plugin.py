@@ -378,6 +378,60 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         remind(own(user, item["id"]))
         return "The item stays in the history but leaves your lists."
 
+    FILLED = (
+        "category",
+        "manufacturer",
+        "model",
+        "serial_number",
+        "location_id",
+        "assigned_to",
+        "purchase_date",
+        "price",
+        "seller",
+        "warranty_until",
+        "warranty_source",
+        "notes",
+        "business_flag",
+        "created_from_document_id",
+    )
+
+    @registry.action("merge", destructive=True)
+    def merge(user: User, params: dict) -> Result:
+        """The same thing twice (two receipts, or a proposal and a hand-made entry): keep this
+        one, fill its empty fields from the other, take over its documents, drop the other."""
+        keep, other = own(user, params.get("id")), own(user, params.get("other"))
+        if keep["id"] == other["id"]:
+            raise ActionError("Choose another item.")
+        fill = ", ".join(f"{c} = coalesce(k.{c}, o.{c})" for c in FILLED)
+        with registry.db.session() as s:
+            s.execute(
+                text(f"UPDATE items k SET {fill} FROM items o WHERE k.id = :k AND o.id = :o"),
+                {"k": keep["id"], "o": other["id"]},
+            )
+            s.execute(
+                text(
+                    "INSERT INTO item_documents (item_id, document_id, role, suggested) "
+                    "SELECT :k, document_id, role, suggested FROM item_documents WHERE item_id "
+                    "= :o ON CONFLICT (item_id, document_id) DO NOTHING"
+                ),
+                {"k": keep["id"], "o": other["id"]},
+            )
+            s.execute(text("DELETE FROM items WHERE id = :o"), {"o": other["id"]})
+        reminders.clear(user.id, f"warranty:{other['id']}")
+        remind(own(user, keep["id"]))
+        return Result(message=f"Merged “{other['name']}” into this item.")
+
+    @registry.data("merge_options")
+    def merge_options(user: User, params: dict) -> list[dict]:
+        here = str(params.get("id") or "")
+        return [
+            {"value": str(i["id"]), "label": f"{i['name']} ({i['purchase_date'] or 'no date'})"}
+            for i in visible(user)
+            if i["owner_id"] == user.id
+            and str(i["id"]) != here
+            and i["state"] in ("active", "proposed")
+        ]
+
     # 4. Lists and bundles ----------------------------------------------------------------------
 
     def active(user: User, minimum: Decimal = Decimal(0)) -> list[dict]:
