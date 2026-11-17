@@ -36,9 +36,8 @@ def plugin(postgres, monkeypatch, tmp_path):
     (folder / "plugin.yaml").write_text(MANIFEST)
     (folder / "README.md").write_text("# Fuel\n")
     monkeypatch.setenv("DOCUHIVE_PLUGINS_DIR", str(folder.parent))
-    monkeypatch.setenv(
-        "DOCUHIVE_SECRET_KEY", "synthetic-test-secret-with-at-least-32-bytes"
-    )  # gitleaks:allow
+    secret = "synthetic-test-secret-with-at-least-32-bytes"  # gitleaks:allow
+    monkeypatch.setenv("DOCUHIVE_SECRET_KEY", secret)
     config.reload()
     runtime.reset()
     yield folder
@@ -145,3 +144,27 @@ def test_setup_step_appears_while_running(client, plugin):
     state.save(manifest, {"plate": "B-DH 1"}, actor="user:1")
     checks = {c["id"]: c for c in client.get("/api/system/setup-status").json()}
     assert checks["plugin.fuel.plate"]["status"] == "ok"
+
+
+def test_a_sending_action_needs_a_preview(tmp_path):
+    """Anything that leaves the house is shown to the person first: no preview, no start."""
+    from docuhive.plugins import install
+    from docuhive.plugins.manifest import load
+    from docuhive.sdk.registry import Registry
+
+    folder = tmp_path / "sender"
+    (folder / "pages").mkdir(parents=True)
+    (folder / "plugin.yaml").write_text(
+        'id: sender\nname: Sender\nversion: 0.1.0\nrequires_sdk: ">=1,<2"\n'
+        "capabilities: [mail:send]\n"
+    )
+    (folder / "pages" / "send.yaml").write_text(
+        "title: Send\nblocks:\n  - type: actions\n    actions:\n"
+        "      - { label: Send, action: send }\n"
+    )
+    registry = Registry(load(folder), folder)
+    registry.action("send", outgoing=True)(lambda user, params: "sent")
+    with pytest.raises(install.Refused, match="give it a preview"):
+        install.prepare(registry, "api")
+    registry.action("send", outgoing=True, preview=lambda u, p: {"to": []})(lambda u, p: "sent")
+    install.prepare(registry, "api")

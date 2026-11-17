@@ -140,6 +140,10 @@ Two more places a plugin can appear, also as YAML: `pages/_dashboard.yaml` (one 
 
 Every table and list needs an `empty` text that says what to do next. `docuhive plugins check` refuses a page without one.
 
+**Showing a block only when it applies.** `show_if: is_draft` on any block shows it only when the data source `is_draft` returns something (a non-empty list, a true value) for the page's parameters. The invoice page uses this to offer "Issue" only for drafts and "Record a payment" only for open invoices; it is re-checked after every action.
+
+**Sending.** An action that sends something out of the house is registered with `outgoing=True` and a `preview` function that returns `{"to": [...], "subject": ..., "body": ..., "attachments": [...]}`. When the person presses its button, the page first shows exactly that, with **Send now** and **Cancel**; only **Send now** runs the action. Build the preview and the sending from one helper so they cannot differ. A sending action without a preview, or on a table row, stops the plugin at start.
+
 ## 5. Logic: `plugin.py`
 
 One function, `setup`, registers everything. Each registration is a decorator.
@@ -306,7 +310,7 @@ documents.hold(doc_id, "Sent to tenant", until=retention.until("letter", 2026))
 - **E-invoices** inside a PDF: `render.pdf(..., pdfa=True)` makes PDF/A-3b, and `render.attach(pdf, "factur-x.xml", xml)` embeds the XML.
 - **Locking** (`documents:hold`): `documents.hold(id, reason, fields=None, until=None)` makes the whole document, or only the listed fields (`"title"`, `"facts.amount_total"`, `"facts"`), unchangeable for everyone until the date or until an administrator lifts it. Use `retention.until("booking_document" | "books" | "letter" | "tax_filing", year)` for the legal keeping periods instead of counting years yourself.
 - **Identities**: `profiles.list(user)` and `profiles.get(user, id)` give the name, address, tax numbers and bank account the person entered under Settings → Identities. A setting of type `profile` lets the person pick one.
-- **Mail** (`mail:send`): `mail.send(user, profile_id, to, subject, body_text, attachments=[doc_ids])` sends as that identity. It works only inside a page action the person pressed (mark it `outgoing: true` so the page asks them to confirm), never from a job or a listener. The sent mail is stored as a document and it and its attachments are locked.
+- **Mail** (`mail:send`): `mail.send(user, profile_id, to, subject, body_text, attachments=[doc_ids])` sends as that identity. It works only inside a page action the person pressed (register it with `outgoing=True` and a `preview`, so the page shows what will be sent first), never from a job or a listener. The sent mail is stored as a document and it and its attachments are locked.
 - **Guest links**: `guest_links.create(user, label, document_ids, days)` gives a read-only link for someone without an account, such as a tax advisor, for at most 30 days. Also only from a page action; the installation must have guest links switched on.
 
 ## 10. Settings

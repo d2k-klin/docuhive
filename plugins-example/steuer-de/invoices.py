@@ -131,6 +131,10 @@ def checks(
         need(buyer.get("routing_id"), "XRechnung needs the customer's routing id (Leitweg-ID).")
         need(seller.get("iban"), "XRechnung needs your bank account (Settings → Identities).")
         need(
+            buyer.get("email"),
+            "XRechnung needs the customer's mail address (their electronic address).",
+        )
+        need(
             seller.get("phone") and seller.get("email"),
             "XRechnung needs your phone number and mail address (Settings → Identities).",
         )
@@ -653,8 +657,8 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
 
     # After issuing -------------------------------------------------------------------------------
 
-    @registry.action("send_invoice", outgoing=True)
-    def send_invoice(user: User, params: dict) -> str:
+    def invoice_mail(user: User, params: dict) -> dict:
+        """What sending this invoice would send: shown first, then sent exactly so."""
         inv, book = invoice(user, params.get("id"), write=True)
         if not inv["number"] or not inv["document_id"]:
             raise ActionError("Issue the invoice first.")
@@ -670,8 +674,25 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
             {"invoice": inv, "customer": buyer},
         )
         label = texts()["labels"]["de" if language != "en" else "en"][inv["kind"]]
+        return {
+            "to": [to],
+            "subject": f"{label} {inv['number']}",
+            "body": body,
+            "attachments": [f"{inv['number']}.pdf"],
+            "invoice": inv,
+            "book": book,
+        }
+
+    def invoice_preview(user: User, params: dict) -> dict:
+        m = invoice_mail(user, params)
+        return {k: m[k] for k in ("to", "subject", "body", "attachments")}
+
+    @registry.action("send_invoice", outgoing=True, preview=invoice_preview)
+    def send_invoice(user: User, params: dict) -> str:
+        m = invoice_mail(user, params)
+        inv, to = m["invoice"], m["to"][0]
         mail.send(
-            user, book["profile_id"], [to], f"{label} {inv['number']}", body, [inv["document_id"]]
+            user, m["book"]["profile_id"], m["to"], m["subject"], m["body"], [inv["document_id"]]
         )
         run(
             "UPDATE invoices SET state = CASE WHEN state = 'issued' THEN 'sent' ELSE state END, "
@@ -1079,6 +1100,40 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
             ],
             "is_draft": "yes" if not inv["number"] else None,
         }
+
+    def state_of(user: User, params: dict) -> dict | None:
+        try:
+            return invoice(user, params.get("id"))[0] if params.get("id") else None
+        except ActionError:
+            return None
+
+    # For show_if: which parts of the invoice page apply to this invoice.
+    registry.data("is_draft")(
+        lambda user, params: [1] if (inv := state_of(user, params)) and not inv["number"] else []
+    )
+    registry.data("is_issued_invoice")(
+        lambda user, params: (
+            [1]
+            if (inv := state_of(user, params)) and inv["number"] and inv["kind"] != "quote"
+            else []
+        )
+    )
+    registry.data("is_open_invoice")(
+        lambda user, params: (
+            [1]
+            if (inv := state_of(user, params))
+            and inv["state"] in ("issued", "sent", "partly_paid")
+            and inv["kind"] == "invoice"
+            else []
+        )
+    )
+    registry.data("is_issued_quote")(
+        lambda user, params: (
+            [1]
+            if (inv := state_of(user, params)) and inv["number"] and inv["kind"] == "quote"
+            else []
+        )
+    )
 
     @registry.data("invoice_payments")
     def invoice_payments(user: User, params: dict) -> list[dict]:

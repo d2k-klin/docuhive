@@ -624,8 +624,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         sent(user, c)
         return "Marked as sent. You are reminded in two weeks if no confirmation has arrived."
 
-    @registry.action("send_cancellation", outgoing=True)
-    def send_cancellation(user: User, params: dict) -> str:
+    def cancellation_mail(user: User, params: dict) -> dict:
         c = own(user, params.get("id"))
         letters = [
             r["document_id"]
@@ -639,16 +638,26 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             raise ActionError("Prepare the letter first.")
         if not params.get("to"):
             raise ActionError("Enter the provider's mail address.")
-        mail.send(
-            user,
-            c["profile_id"],
-            [params["to"]],
-            f"Kündigung / Cancellation {c['contract_number'] or ''}".strip(),
-            render.text("cancellation-mail.txt", {"contract": c}),
-            [letters[-1]],
-        )
+        return {
+            "to": [params["to"]],
+            "subject": f"Kündigung / Cancellation {c['contract_number'] or ''}".strip(),
+            "body": render.text("cancellation-mail.txt", {"contract": c}),
+            "attachments": [documents.get(letters[-1]).title or "Cancellation letter"],
+            "contract": c,
+            "letter": letters[-1],
+        }
+
+    def cancellation_preview(user: User, params: dict) -> dict:
+        m = cancellation_mail(user, params)
+        return {k: m[k] for k in ("to", "subject", "body", "attachments")}
+
+    @registry.action("send_cancellation", outgoing=True, preview=cancellation_preview)
+    def send_cancellation(user: User, params: dict) -> str:
+        m = cancellation_mail(user, params)
+        c = m["contract"]
+        mail.send(user, c["profile_id"], m["to"], m["subject"], m["body"], [m["letter"]])
         sent(user, c)
-        return f"Sent to {params['to']}. The letter and the mail are kept with the contract."
+        return f"Sent to {m['to'][0]}. The letter and the mail are kept with the contract."
 
     # Ask ---------------------------------------------------------------------------------------
 

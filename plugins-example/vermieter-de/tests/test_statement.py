@@ -65,3 +65,16 @@ def test_basis_is_shown_in_numbers():
     assert (
         basis["property_tax"] == "50 m² of 300 m²" and basis["water"] == "365 of 3133 person-days"
     )
+
+
+def test_advances_follow_changes_during_the_year():
+    t = st.Tenancy(
+        9,
+        1,
+        date(2026, 1, 1),
+        None,
+        [(date(2026, 1, 1), 1)],
+        D("100"),
+        [(date(2026, 7, 1), D("130"))],
+    )
+    assert st.advances(t, date(2026, 1, 1), date(2026, 12, 31)) == D("100") * 6 + D("130") * 6

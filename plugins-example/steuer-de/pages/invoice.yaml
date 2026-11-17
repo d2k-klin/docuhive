@@ -15,12 +15,14 @@ blocks:
       - { field: document_id, label: PDF, format: document }
   - type: actions
     title: Draft
+    show_if: is_draft
     help: Issuing checks everything the law requires on an invoice and then fixes it for good.
     actions:
       - { label: Issue, action: issue, primary: true, confirm: "Issue this invoice? It gets its number and can no longer be changed." }
       - { label: Delete draft, action: delete_draft, confirm: "Delete this draft?" }
   - type: form
     title: Change the draft
+    show_if: is_draft
     initial: invoice
     fields:
       - { name: customer_id, type: choice, label: Customer, options: customer_options, required: true }
@@ -42,6 +44,7 @@ blocks:
     submit: Save draft
   - type: form
     title: Send
+    show_if: is_issued_invoice
     fields:
       - { name: to, type: text, label: "To (empty: the customer's mail address)" }
     action: send_invoice
@@ -49,13 +52,19 @@ blocks:
     confirm: "Send this invoice by mail now?"
   - type: actions
     title: After sending
+    show_if: is_open_invoice
     actions:
       - { label: Mark as sent (post or portal), action: mark_sent }
       - { label: Payment reminder, action: payment_reminder }
       - { label: Cancel with a credit note, action: credit_note, confirm: "Prepare a credit note that cancels this invoice?" }
-      - { label: Turn quote into invoice, action: to_invoice }
+  - type: actions
+    title: Quote
+    show_if: is_issued_quote
+    actions:
+      - { label: Turn into an invoice, action: to_invoice, primary: true }
   - type: form
     title: Record a payment
+    show_if: is_open_invoice
     help: With the bank plugin, payments are found on your statements by themselves.
     fields:
       - { name: amount, type: money, label: Amount, required: true }

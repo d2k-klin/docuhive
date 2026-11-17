@@ -273,6 +273,8 @@ def find(original: bytes) -> EInvoice | None:
 RSM = "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
 RAM = "urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
 UDT = "urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100"
+QDT = "urn:un:unece:uncefact:data:standard:QualifiedDataType:100"
+BUSINESS_PROCESS = "urn:fdc:peppol.eu:2017:poacc:billing:01:1.0"  # BT-23, required by XRechnung
 GUIDELINES = {
     "zugferd": "urn:cen.eu:en16931:2017",
     "xrechnung": "urn:cen.eu:en16931:2017#compliant#urn:xeinkauf.de:kosit:xrechnung_3.0",
@@ -284,22 +286,23 @@ def write_cii(inv: dict, flavour: str = "zugferd") -> bytes:
     service_from/to, due_date, payment_text, lines, breakdown, net, tax, gross, refers_to."""
     from xml.etree.ElementTree import Element, SubElement, register_namespace, tostring
 
-    for prefix, uri in (("rsm", RSM), ("ram", RAM), ("udt", UDT)):
+    namespaces = {"rsm": RSM, "ram": RAM, "udt": UDT, "qdt": QDT}
+    for prefix, uri in namespaces.items():
         register_namespace(prefix, uri)
 
     def add(parent, path: str, value=None, **attrs):  # type: ignore[no-untyped-def]
         node = parent
         for step in path.split("/"):
             ns, name = step.split(":")
-            node = SubElement(node, f"{{{ {'rsm': RSM, 'ram': RAM, 'udt': UDT}[ns] }}}{name}")
+            node = SubElement(node, f"{{{namespaces[ns]}}}{name}")
         for key, val in attrs.items():
             node.set(key, val)
         if value is not None:
             node.text = str(value)
         return node
 
-    def when(parent, path: str, day: date) -> None:
-        add(parent, f"{path}/udt:DateTimeString", day.strftime("%Y%m%d"), format="102")
+    def when(parent, path: str, day: date, kind: str = "udt") -> None:
+        add(parent, f"{path}/{kind}:DateTimeString", day.strftime("%Y%m%d"), format="102")
 
     def money(value: Decimal) -> str:
         return f"{value:.2f}"
@@ -325,11 +328,9 @@ def write_cii(inv: dict, flavour: str = "zugferd") -> bytes:
             add(node, "ram:SpecifiedTaxRegistration/ram:ID", p["tax_number"], schemeID="FC")
 
     root = Element(f"{{{RSM}}}CrossIndustryInvoice")
-    add(
-        root,
-        "rsm:ExchangedDocumentContext/ram:GuidelineSpecifiedDocumentContextParameter/ram:ID",
-        GUIDELINES[flavour],
-    )
+    context = add(root, "rsm:ExchangedDocumentContext")
+    add(context, "ram:BusinessProcessSpecifiedDocumentContextParameter/ram:ID", BUSINESS_PROCESS)
+    add(context, "ram:GuidelineSpecifiedDocumentContextParameter/ram:ID", GUIDELINES[flavour])
     doc = add(root, "rsm:ExchangedDocument")
     add(doc, "ram:ID", inv["number"])
     add(doc, "ram:TypeCode", inv["type_code"])
@@ -368,6 +369,12 @@ def write_cii(inv: dict, flavour: str = "zugferd") -> bytes:
     party(agreement, "ram:SellerTradeParty", inv["seller"], contact=flavour == "xrechnung")
     party(agreement, "ram:BuyerTradeParty", inv["buyer"])
     delivery = add(tx, "ram:ApplicableHeaderTradeDelivery")
+    if any(part["category"] == "K" for part in inv["breakdown"]):  # BT-80 for EU supplies
+        add(
+            delivery,
+            "ram:ShipToTradeParty/ram:PostalTradeAddress/ram:CountryID",
+            inv["buyer"].get("country") or "DE",
+        )
     when(
         delivery,
         "ram:ActualDeliverySupplyChainEvent/ram:OccurrenceDateTime",
@@ -406,5 +413,5 @@ def write_cii(inv: dict, flavour: str = "zugferd") -> bytes:
     if inv.get("refers_to"):
         ref = add(settle, "ram:InvoiceReferencedDocument")
         add(ref, "ram:IssuerAssignedID", inv["refers_to"]["number"])
-        when(ref, "ram:FormattedIssueDateTime", inv["refers_to"]["issue_date"])
+        when(ref, "ram:FormattedIssueDateTime", inv["refers_to"]["issue_date"], "qdt")
     return b'<?xml version="1.0" encoding="UTF-8"?>\n' + tostring(root, encoding="utf-8")

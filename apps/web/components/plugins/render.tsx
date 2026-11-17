@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { CheckCircle2, CircleDashed, Inbox, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +77,7 @@ export type Block = {
   id?: string;
   title?: Text;
   help?: Text;
+  show_if?: string;
   text?: Text;
   columns?: Column[];
   filters?: Filter[];
@@ -90,6 +97,7 @@ export type Block = {
 export type PageDescription = {
   plugin: string;
   plugin_name: string;
+  previews?: string[];
   title: Text;
   description?: Text;
   blocks: Block[];
@@ -296,6 +304,13 @@ export function PluginBlock({
   params: Record<string, string>;
   bare?: boolean;
 }) {
+  // A block with show_if appears only when the plugin says so (and again after any action).
+  const shown = useBlock<{ shown: boolean }>(
+    block.show_if
+      ? `${base(plugin, page)}/blocks/${index}/shown?${new URLSearchParams(params)}`
+      : null,
+  );
+  if (block.show_if && !shown.data?.shown) return null;
   const body = (() => {
     switch (block.type) {
       case "text":
@@ -862,9 +877,32 @@ function Form({
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const current = values ?? data?.initial ?? {};
+  const previews = useContext(Previews);
+  const [pending, setPending] = useState<Preview | null>(null);
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (block.confirm && !window.confirm(t(block.confirm))) return;
+    if (previews.includes(block.action ?? "")) {
+      setBusy(true);
+      setFailure(null);
+      try {
+        setPending(
+          await fetchPreview(plugin, page, block.action ?? "", {
+            ...params,
+            ...current,
+          }),
+        );
+      } catch (e) {
+        setFailure(e as ApiError);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    await send(false);
+  }
+  async function send(checked: boolean) {
+    if (!checked && block.confirm && !window.confirm(t(block.confirm))) return;
+    setPending(null);
     setBusy(true);
     setFailure(null);
     setMessage("");
@@ -974,6 +1012,14 @@ function Form({
       {failure && !Object.keys(fieldErrors).length && (
         <ErrorBox error={failure} />
       )}
+      {pending && (
+        <PreviewPanel
+          preview={pending}
+          busy={busy}
+          onSend={() => void send(true)}
+          onCancel={() => setPending(null)}
+        />
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={busy}>
           {busy ? "Saving…" : t(block.submit) || "Save"}
@@ -1078,6 +1124,90 @@ function Lines({
   );
 }
 
+/** Actions that send something out of the house: they show a preview before they run. */
+export const Previews = createContext<string[]>([]);
+
+type Preview = {
+  to: string[];
+  subject: string;
+  body: string;
+  attachments: string[];
+};
+
+async function fetchPreview(
+  plugin: string,
+  page: string,
+  action: string,
+  params: Row,
+): Promise<Preview> {
+  const res = await fetch(
+    `${base(plugin, page)}/actions/${encodeURIComponent(action)}/preview`,
+    {
+      method: "POST",
+      headers: { "X-DocuHive-CSRF": "1", "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    },
+  );
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok)
+    throw new ApiError(
+      body.error?.code ?? "error",
+      body.error?.message ?? "The preview could not be made. Try again.",
+      res.status,
+    );
+  return body as Preview;
+}
+
+/** Exactly what will go out, with Send now and Cancel. */
+function PreviewPanel({
+  preview,
+  busy,
+  onSend,
+  onCancel,
+}: {
+  preview: Preview;
+  busy: boolean;
+  onSend: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <section
+      aria-label="What will be sent"
+      className="space-y-2 rounded-card border border-border bg-surface-2 p-3 text-sm"
+    >
+      <p className="font-semibold">Check before sending</p>
+      <dl className="grid gap-x-3 gap-y-1 sm:grid-cols-[max-content_1fr]">
+        <dt className="text-text-muted">To</dt>
+        <dd className="break-words">{preview.to.join(", ")}</dd>
+        <dt className="text-text-muted">Subject</dt>
+        <dd className="break-words">{preview.subject}</dd>
+        <dt className="text-text-muted">Attached</dt>
+        <dd className="break-words">
+          {preview.attachments.length
+            ? preview.attachments.join(", ")
+            : "Nothing"}
+        </dd>
+      </dl>
+      <pre className="max-h-48 overflow-auto whitespace-pre-wrap break-words font-sans text-text-muted">
+        {preview.body}
+      </pre>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" disabled={busy} onClick={onSend}>
+          {busy ? "Sending…" : "Send now"}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={busy}
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
+      </div>
+    </section>
+  );
+}
+
 function Actions({
   plugin,
   page,
@@ -1092,8 +1222,52 @@ function Actions({
   const [message, setMessage] = useState("");
   const [failure, setFailure] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
+  const previews = useContext(Previews);
+  const [pending, setPending] = useState<{
+    action: Action;
+    preview: Preview;
+  } | null>(null);
+  async function run(a: Action, checked = false) {
+    setBusy(true);
+    setFailure(null);
+    try {
+      if (!checked && previews.includes(a.action)) {
+        setPending({
+          action: a,
+          preview: await fetchPreview(plugin, page, a.action, params),
+        });
+        return;
+      }
+      setPending(null);
+      const out = await runAction(
+        plugin,
+        page,
+        checked ? { ...a, confirm: undefined } : a,
+        params,
+      );
+      setMessage(out.message);
+      if (out.goto)
+        window.location.assign(
+          out.goto.startsWith("/")
+            ? out.goto
+            : `/plugins/${plugin}/${out.goto}`,
+        );
+    } catch (e) {
+      setFailure(e as ApiError);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div className="space-y-2">
+      {pending && (
+        <PreviewPanel
+          preview={pending.preview}
+          busy={busy}
+          onSend={() => void run(pending.action, true)}
+          onCancel={() => setPending(null)}
+        />
+      )}
       <div className="flex flex-wrap gap-2">
         {actions.map((a) => (
           <Button
@@ -1101,6 +1275,7 @@ function Actions({
             variant={a.primary ? "primary" : "secondary"}
             disabled={busy}
             onClick={async () => {
+              if (previews.includes(a.action)) return run(a);
               setBusy(true);
               setFailure(null);
               try {

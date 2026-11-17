@@ -221,9 +221,11 @@ def _options(loaded: Any, user: CurrentUser, items: list[Any], params: dict) -> 
 
 
 def _description(loaded: Any, page: schema.Page) -> dict:
+    previews = sorted(n for n, (_, f) in loaded.registry.actions.items() if f.get("preview"))
     return {
         "plugin": loaded.registry.id,
         "plugin_name": loaded.manifest.name,
+        "previews": previews,  # these actions show what goes out before it is sent
         **page.model_dump(mode="json", by_alias=True, exclude_none=True),
     }
 
@@ -338,6 +340,42 @@ def _block_data(plugin: str, name: str, index: int, request: Request, user: Curr
     if isinstance(block, schema.DetailBlock):
         return {"record": jsonable(_call(loaded, sources[block.source], user, params) or {})}
     return {}
+
+
+@router.get("/{plugin}/{name}/blocks/{index}/shown")
+def block_shown(plugin: str, name: str, index: int, request: Request, user: UserDep) -> dict:
+    """Whether a block with `show_if` is shown for these parameters (an invoice still a draft)."""
+    loaded, page = _page(plugin, name, user)
+    if not 0 <= index < len(page.blocks):
+        raise _fail(404, "not_found", "No such part of the page")
+    block = page.blocks[index]
+    if not block.show_if:
+        return {"shown": True}
+    try:
+        value = _call(
+            loaded, loaded.registry.data_sources[block.show_if], user, dict(request.query_params)
+        )
+    except ActionError:
+        return {"shown": False}
+    return {"shown": bool(value)}
+
+
+@router.post("/{plugin}/{name}/actions/{action}/preview")
+def preview_action(plugin: str, name: str, action: str, body: dict, user: UserDep) -> Response:
+    """Exactly what an outgoing action would send, for the person to check first."""
+    loaded, page = _page(plugin, name, user)
+    if action not in schema.names(page)[1]:
+        raise _fail(404, "not_found", "This action is not on this page")
+    preview = loaded.registry.actions[action][1].get("preview")
+    if preview is None:
+        raise _fail(404, "not_found", "This action has no preview")
+    try:
+        shown = _call(loaded, preview, user, body)
+    except ActionError as error:
+        return JSONResponse(
+            {"error": {"code": "action_refused", "message": str(error), "details": {}}}, 422
+        )
+    return JSONResponse(jsonable(shown))
 
 
 @router.post("/{plugin}/{name}/actions/{action}")

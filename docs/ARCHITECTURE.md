@@ -523,7 +523,8 @@ It costs more and has more moving parts. It is not needed for personal use.
 
 | Layer | What runs | Where |
 | --- | --- | --- |
-| Unit | `pytest` with fakes (no keys, no network; a socket guard fails any network call), coverage ≥ 85% | CI `python` |
+| Unit | `pytest` with fakes (no keys, no network; a socket guard fails any network call) | CI `python` |
+| Unit and integration | All tests with a disposable PostgreSQL; coverage ≥ 85% over them | CI `integration`, `make test-integration` |
 | Types and lint | ruff, mypy, ESLint, `tsc` | CI `python`, `web` |
 | Contracts | the documented interfaces in `shared/contracts.md` are compared with the code | CI `python` |
 | Integration | real PostgreSQL and Gotenberg (`compose.test.yml`): search, pgvector, privacy constraint, jobs, hostile files, the route permission matrix | CI `integration` |

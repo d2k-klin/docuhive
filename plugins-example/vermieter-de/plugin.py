@@ -184,6 +184,16 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
                 s=date.fromisoformat(params["since"]),
                 p=int(params["persons"]),
             )
+        if params.get("rent_from") and (params.get("new_rent") or params.get("new_advance")):
+            run(
+                "INSERT INTO rent_changes (tenancy_id, valid_from, rent, advance) VALUES "
+                "(:t, :f, :r, :a) ON CONFLICT (tenancy_id, valid_from) DO UPDATE SET rent = :r, "
+                "advance = :a",
+                t=t["id"],
+                f=date.fromisoformat(params["rent_from"]).replace(day=1),
+                r=Decimal(str(params.get("new_rent") or t["rent"])),
+                a=Decimal(str(params.get("new_advance") or t["advance"])),
+            )
         return "Saved."
 
     @registry.action("save_key")
@@ -313,8 +323,11 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         """Each running tenancy owes rent and advances for the current month."""
         month = date.today().replace(day=1)
         run(
-            "INSERT INTO rent_ledger (tenancy_id, month, due) SELECT id, :m, rent + advance FROM "
-            "tenancies WHERE start_date <= :end AND (end_date IS NULL OR end_date >= :m) "
+            "INSERT INTO rent_ledger (tenancy_id, month, due) SELECT t.id, :m, "
+            "coalesce(c.rent + c.advance, t.rent + t.advance) FROM tenancies t "
+            "LEFT JOIN LATERAL (SELECT rent, advance FROM rent_changes WHERE tenancy_id = t.id "
+            "AND valid_from <= :m ORDER BY valid_from DESC LIMIT 1) c ON true "
+            "WHERE t.start_date <= :end AND (t.end_date IS NULL OR t.end_date >= :m) "
             "ON CONFLICT DO NOTHING",
             m=month,
             end=(month + timedelta(days=32)).replace(day=1) - timedelta(days=1),
@@ -332,6 +345,50 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             m=month,
         )
         return "Marked as paid."
+
+    @registry.action("rent_reminder")
+    def rent_reminder(user: User, params: dict) -> Result:
+        """A reminder letter for the months still open, as a document to read and send."""
+        t = tenancy(user, params.get("tenancy"))
+        p = q("SELECT * FROM properties WHERE id = :p", p=t["property_id"])[0]
+        if not p["profile_id"]:
+            raise ActionError("Choose your identity for the property first.")
+        months = q(
+            "SELECT * FROM rent_ledger WHERE tenancy_id = :t AND received < due AND month < :now "
+            "ORDER BY month",
+            t=t["id"],
+            now=date.today().replace(day=1),
+        )
+        if not months:
+            raise ActionError("Nothing is outstanding for this tenancy.")
+        me = profiles.get(user, p["profile_id"])
+        a = me["address"] or {}
+        pdf = render.pdf(
+            "rent-reminder.html",
+            {
+                "sender_line": f"{me['name']} · {a.get('street', '')} · "
+                f"{a.get('postcode', '')} {a.get('city', '')}",
+                "recipient": [t["tenant_name"], p["street"], f"{p['postcode']} {p['city']}"],
+                "place": a.get("city") or "",
+                "date": date.today().strftime("%d.%m.%Y"),
+                "subject": f"Zahlungserinnerung Miete – {p['name']}, {t['unit']}",
+                "months": months,
+                "total": sum((m["due"] - m["received"] for m in months), Decimal(0)),
+                "name": me["name"],
+                "iban": (me["bank"] or {}).get("iban"),
+            },
+        )
+        doc_id = documents.create(
+            user,
+            pdf,
+            filename=f"rent-reminder-{norm(t['tenant_name'])}-{date.today()}.pdf",
+            title=f"Rent reminder: {t['tenant_name']}",
+            category="housing/rent",
+            document_type="letter",
+            document_date=date.today(),
+            correspondent=t["tenant_name"],
+        )
+        return Result(message="The letter is ready to read and send.", goto=f"/documents/{doc_id}")
 
     @registry.action("fill_from_bank")
     def fill_from_bank(user: User, params: dict) -> str:
@@ -391,6 +448,10 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
                     row["end_date"],
                     persons,
                     row["advance"],
+                    [
+                        (r["valid_from"], r["advance"])
+                        for r in q("SELECT * FROM rent_changes WHERE tenancy_id = :t", t=row["id"])
+                    ],
                 )
             )
         costs = [
@@ -598,8 +659,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             message="Issued. The statement and its bills are locked.", goto=f"/documents/{doc_id}"
         )
 
-    @registry.action("send_statement", outgoing=True)
-    def send_statement(user: User, params: dict) -> str:
+    def statement_mail(user: User, params: dict) -> dict:
         t = tenancy(user, params.get("tenancy"))
         row = q(
             "SELECT * FROM statements WHERE tenancy_id = :t ORDER BY id DESC LIMIT 1", t=t["id"]
@@ -608,21 +668,32 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         if not row or not to:
             raise ActionError("Issue the statement first, and enter the tenant's mail address.")
         p = q("SELECT * FROM properties WHERE id = :p", p=t["property_id"])[0]
-        mail.send(
-            user,
-            p["profile_id"],
-            [to],
-            f"Betriebskostenabrechnung {row[0]['year']}",
-            "Guten Tag,\n\nanbei die Betriebskostenabrechnung. Die Belege können Sie nach "
+        return {
+            "to": [to],
+            "subject": f"Betriebskostenabrechnung {row[0]['year']}",
+            "body": "Guten Tag,\n\nanbei die Betriebskostenabrechnung. Die Belege können Sie nach "
             "Absprache einsehen.\n\nMit freundlichen Grüßen",
-            [row[0]["document_id"]],
+            "attachments": [documents.get(row[0]["document_id"]).title or "Statement"],
+            "statement": row[0],
+            "profile_id": p["profile_id"],
+        }
+
+    def statement_preview(user: User, params: dict) -> dict:
+        m = statement_mail(user, params)
+        return {k: m[k] for k in ("to", "subject", "body", "attachments")}
+
+    @registry.action("send_statement", outgoing=True, preview=statement_preview)
+    def send_statement(user: User, params: dict) -> str:
+        m = statement_mail(user, params)
+        mail.send(
+            user, m["profile_id"], m["to"], m["subject"], m["body"], [m["statement"]["document_id"]]
         )
         run(
             "UPDATE statements SET state = 'sent', sent_on = :d WHERE id = :i",
             d=date.today(),
-            i=row[0]["id"],
+            i=m["statement"]["id"],
         )
-        return f"Sent to {to}."
+        return f"Sent to {m['to'][0]}."
 
     @registry.every(timedelta(days=1), "deadlines")
     def deadlines(payload, ctx) -> None:  # type: ignore[no-untyped-def]

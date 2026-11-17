@@ -68,9 +68,23 @@ def prepare(registry: Registry, process: str) -> None:
         if missing := actions - set(registry.actions):
             raise Refused(f"{where} uses the action '{min(missing)}', not in plugin.py")
         for block in page.blocks:
+            # Sending: the page shows a preview first, so only forms and action blocks may send.
+            if (form := getattr(block, "action", None)) and registry.actions[form][1]["outgoing"]:
+                if not registry.actions[form][1]["preview"]:
+                    raise Refused(f"{where}: '{form}' sends something out: give it a preview")
+            for button in getattr(block, "row_actions", []):
+                if registry.actions[button.action][1]["outgoing"]:
+                    raise Refused(
+                        f"{where}: '{button.action}' sends something out: put it in a form or "
+                        "an actions block, where its preview is shown, not on a table row"
+                    )
             for button in [*getattr(block, "actions", []), *getattr(block, "row_actions", [])]:
                 flags = registry.actions[button.action][1]
-                if (flags["outgoing"] or flags["destructive"]) and not button.confirm:
+                if flags["outgoing"] and not flags["preview"]:
+                    raise Refused(
+                        f"{where}: '{button.action}' sends something out: give it a preview"
+                    )
+                if flags["destructive"] and not button.confirm:
                     raise Refused(
                         f"{where}: '{button.action}' needs confirm: what the person agrees to"
                     )

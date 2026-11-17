@@ -68,7 +68,7 @@ class BlockBase(_Strict):
     id: str | None = None
     title: Text | None = None
     help: Text | None = None
-    show_if: str | None = None
+    show_if: str | None = None  # a data source: the block is shown only when it returns something
 
 
 class TextBlock(BlockBase):
@@ -227,6 +227,8 @@ def names(page: Page) -> tuple[set[str], set[str]]:
     sources: set[str] = set()
     actions: set[str] = set()
     for block in page.blocks:
+        if block.show_if:
+            sources.add(block.show_if)
         if isinstance(block, (SummaryBlock, DetailBlock, StepsBlock, ChartBlock)):
             sources.add(block.source)
         if isinstance(block, TableBlock):

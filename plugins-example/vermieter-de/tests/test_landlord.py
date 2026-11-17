@@ -206,3 +206,75 @@ def test_from_bills_to_a_locked_statement(archive):
         D("3400.00"),
         D("350.00"),
     )
+
+
+def test_rent_changes_and_the_arrears_letter(archive):
+    from datetime import timedelta
+
+    from sqlalchemy import text
+
+    alice = archive.user("alice")
+    me = save(
+        alice,
+        ProfileIn(
+            kind="person",
+            name="Alice Muster",
+            address={"street": "Beispielweg 1", "postcode": "12345", "city": "Musterstadt"},
+        ),
+    )
+    call(
+        archive,
+        "action",
+        "save_property",
+        alice,
+        name="Ring 1",
+        street="Ring 1",
+        postcode="1",
+        city="X",
+        profile_id=str(me.id),
+    )
+    prop = str(call(archive, "data", "properties", alice)[0]["id"])
+    call(archive, "action", "save_unit", alice, property=prop, name="EG", area="50")
+    unit = str(call(archive, "data", "units", alice)[0]["id"])
+    call(
+        archive,
+        "action",
+        "save_tenancy",
+        alice,
+        unit=unit,
+        tenant_name="Mieter Drei",
+        start_date="2024-01-01",
+        rent="500",
+        advance="100",
+        persons="1",
+    )
+    tenancy = call(archive, "data", "tenancies", alice)[0]["id"]
+    this_month = date.today().replace(day=1)
+    call(
+        archive,
+        "action",
+        "change_tenancy",
+        alice,
+        tenancy=tenancy,
+        rent_from=this_month.isoformat(),
+        new_rent="520",
+        new_advance="120",
+    )
+    archive.registry("vermieter-de").enqueue("ledger", {})
+    archive.run_jobs()
+    (row,) = call(archive, "data", "ledger", alice)
+    assert row["due"] == D("640.00")  # the new rent and advance apply from this month
+
+    with pytest.raises(ActionError, match="Nothing is outstanding"):
+        call(archive, "action", "rent_reminder", alice, tenancy=tenancy)
+    last_month = (this_month - timedelta(days=1)).replace(day=1)
+    with archive.registry("vermieter-de").db.session() as s:
+        s.execute(
+            text("INSERT INTO rent_ledger (tenancy_id, month, due) VALUES (:t, :m, 600)"),
+            {"t": tenancy, "m": last_month},
+        )
+    made = call(archive, "action", "rent_reminder", alice, tenancy=tenancy)
+    assert (
+        archive.document(made.goto.removeprefix("/documents/")).title
+        == "Rent reminder: Mieter Drei"
+    )

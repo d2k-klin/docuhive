@@ -141,7 +141,11 @@ def test_issue_lock_book_pay_and_send(setup):
         archive, alice, ("Beratung", "10", "95.00", "sale_19"), ("Fachbuch", "1", "40.00", "sale_7")
     )
 
+    assert call(archive, "data", "is_draft", alice, id=first) == [1]
+    assert call(archive, "data", "is_open_invoice", alice, id=first) == []
     issued = call(archive, "action", "issue", alice, id=first)
+    assert call(archive, "data", "is_draft", alice, id=first) == []
+    assert call(archive, "data", "is_open_invoice", alice, id=first) == [1]
     year = date.today().year
     assert issued.message == f"Issued as RE-{year}-0001."
     inv = call(archive, "data", "invoice", alice, id=first)
@@ -187,6 +191,13 @@ def test_issue_lock_book_pay_and_send(setup):
         with archive.registry("steuer-de").db.session() as s:
             s.execute(text("DELETE FROM invoice_lines WHERE invoice_id = :i"), {"i": first})
 
+    # The preview shows exactly what goes out.
+    preview = archive.registry("steuer-de").actions["send_invoice"][1]["preview"](
+        alice, {"id": first}
+    )
+    assert preview["to"] == ["buchhaltung@example.org"]
+    assert preview["subject"] == f"Rechnung RE-{year}-0001" and preview["attachments"]
+
     # Sending: from a button only; the PDF arrives with the XML inside, unchanged.
     token = INTERACTIVE.set(True)
     try:
@@ -194,6 +205,7 @@ def test_issue_lock_book_pay_and_send(setup):
     finally:
         INTERACTIVE.reset(token)
     message = message_from_bytes(Smtp.received[-1], policy=policy.default)
+    assert message["Subject"] == preview["subject"]
     (attachment,) = list(message.iter_attachments())
     assert einvoice.find(attachment.get_content()).gross == D("1173.30")
     assert call(archive, "data", "invoice", alice, id=first)["state"] == "sent"

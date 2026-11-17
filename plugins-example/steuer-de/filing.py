@@ -263,7 +263,18 @@ def register(
             )
         return Result(download=(f"handover-{key}.zip", out.getvalue(), "application/zip"))
 
-    @registry.action("advisor_link", outgoing=True)
+    def advisor_preview(user: User, params: dict) -> dict:
+        book, key = period_params(user, params)
+        ids = documents_of(book, key)
+        return {
+            "to": ["anyone holding the link, for 14 days"],
+            "subject": f"Read-only access: tax {key}, {book['name']}",
+            "body": "The link shows these documents and lets them be downloaded as PDFs. "
+            "Every view is recorded; the link stops working by itself after 14 days.",
+            "attachments": [documents.get_for_user(i, user).title or i for i in ids],
+        }
+
+    @registry.action("advisor_link", outgoing=True, preview=advisor_preview)
     def advisor_link(user: User, params: dict) -> str:
         book, key = period_params(user, params)
         ids = documents_of(book, key)

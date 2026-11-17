@@ -321,3 +321,9 @@ def test_a_plugin_message_on_a_page_is_shown_not_a_server_error():
         response = client.get("/api/plugin-pages/steuer-de/period/blocks/0?key=2026-Q1")
         assert response.status_code == 422
         assert response.json()["error"]["message"] == "Create a book first."
+        # A block with show_if: the draft actions of an invoice that does not exist are hidden.
+        shown = client.get("/api/plugin-pages/steuer-de/invoice/blocks/1/shown?id=999")
+        assert shown.json() == {"shown": False}
+        assert client.get("/api/plugin-pages/steuer-de/invoice/blocks/0/shown").json() == {
+            "shown": True
+        }

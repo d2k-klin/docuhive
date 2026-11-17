@@ -30,6 +30,15 @@ class Tenancy:
     end: date | None
     persons: list[tuple[date, int]]  # (from, number of persons), sorted
     monthly_advance: Decimal = Decimal(0)
+    advance_changes: list[tuple[date, Decimal]] = field(default_factory=list)  # (from, amount)
+
+    def advance_on(self, day: date) -> Decimal:
+        """The monthly advance agreed for the month of `day`."""
+        amount = self.monthly_advance
+        for since, value in sorted(self.advance_changes):
+            if since <= day:
+                amount = value
+        return amount
 
 
 @dataclass
@@ -78,11 +87,12 @@ def advances(t: Tenancy, start: date, end: date) -> Decimal:
     span = overlap(start, end, t.start, t.end)
     if span is None:
         return Decimal(0)
-    months, day = 0, date(span[0].year, span[0].month, 1)
+    total, day = Decimal(0), date(span[0].year, span[0].month, 1)
     while day <= span[1]:
-        months += day >= span[0]
+        if day >= span[0]:
+            total += t.advance_on(day)
         day = date(day.year + (day.month == 12), day.month % 12 + 1, 1)
-    return t.monthly_advance * months
+    return total
 
 
 def compute(

@@ -155,14 +155,23 @@ class Registry:
         return register
 
     def action(
-        self, name: str, *, outgoing: bool = False, destructive: bool = False
+        self,
+        name: str,
+        *,
+        outgoing: bool = False,
+        destructive: bool = False,
+        preview: Callable | None = None,
     ) -> Callable[[Callable], Callable]:
         """`fn(user, params) -> str | Result` runs when a person presses a button or sends a form.
-        `outgoing` (it sends something out of the house) and `destructive` actions always ask
-        the person to confirm on the page first."""
+        `destructive` actions ask the person to confirm first. `outgoing` actions (they send
+        something out of the house) need `preview(user, params) -> dict` with `to`, `subject`,
+        `body` and `attachments`: the page shows exactly that before anything is sent."""
 
         def register(fn: Callable) -> Callable:
-            self.actions[name] = (fn, {"outgoing": outgoing, "destructive": destructive})
+            self.actions[name] = (
+                fn,
+                {"outgoing": outgoing, "destructive": destructive, "preview": preview},
+            )
             return fn
 
         return register

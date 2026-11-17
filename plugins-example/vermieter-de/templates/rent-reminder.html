@@ -1,0 +1,11 @@
+{% extends "_letter.html" %}
+{% block body %}
+<p>Guten Tag {{ recipient[0] }},</p>
+<p>nach meinen Unterlagen sind folgende Zahlungen noch offen:</p>
+<ul>
+{% for m in months %}<li>{{ m.month.strftime("%m/%Y") }}: {{ "%.2f"|format(m.due - m.received) }} €</li>{% endfor %}
+</ul>
+<p>Zusammen: <b>{{ "%.2f"|format(total) }} €</b>. Bitte überweisen Sie den Betrag innerhalb von 14 Tagen{% if iban %} auf das Konto {{ iban }}{% endif %}. Sollten Sie bereits gezahlt haben, melden Sie sich bitte kurz bei mir.</p>
+<p>Mit freundlichen Grüßen</p>
+<p style="margin-top: 14mm">{{ name }}</p>
+{% endblock %}

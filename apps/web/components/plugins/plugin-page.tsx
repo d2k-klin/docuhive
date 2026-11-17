@@ -11,7 +11,7 @@ import {
   PageHeader,
   Skeleton,
 } from "@/components/intel/common";
-import { PluginBlock, t, type PageDescription } from "./render";
+import { PluginBlock, Previews, t, type PageDescription } from "./render";
 
 type Slot = {
   plugin: string;
@@ -86,18 +86,20 @@ export function PluginPage({
         title={t(data.title)}
         description={t(data.description) || undefined}
       />
-      <div className="space-y-4">
-        {data.blocks.map((block, i) => (
-          <PluginBlock
-            key={i}
-            plugin={plugin}
-            page={page}
-            index={i}
-            block={block}
-            params={params}
-          />
-        ))}
-      </div>
+      <Previews.Provider value={data.previews ?? []}>
+        <div className="space-y-4">
+          {data.blocks.map((block, i) => (
+            <PluginBlock
+              key={i}
+              plugin={plugin}
+              page={page}
+              index={i}
+              block={block}
+              params={params}
+            />
+          ))}
+        </div>
+      </Previews.Provider>
     </Page>
   );
 }

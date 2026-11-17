@@ -34,6 +34,7 @@ BUYER = {
     "country": "DE",
     "vat_id": "ATU12345678",
     "routing_id": "04011000-12345-67",
+    "email": "rechnung@example.org",
 }
 
 

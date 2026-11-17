@@ -17,3 +17,10 @@ blocks:
   - type: actions
     actions:
       - { label: Find payments on my bank statements, action: fill_from_bank }
+  - type: form
+    title: Reminder letter for outstanding rent
+    help: Lists the open months. You read, sign and send it.
+    fields:
+      - { name: tenancy, type: choice, label: Tenancy, options: tenancy_options, required: true }
+    action: rent_reminder
+    submit: Prepare the letter

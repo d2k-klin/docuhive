@@ -64,12 +64,15 @@ blocks:
     action: save_tenancy
     submit: Add tenancy
   - type: form
-    title: A tenant moves out, or the number of persons changes
+    title: A tenant moves out, the number of persons or the rent changes
     fields:
       - { name: tenancy, type: choice, label: Tenancy, options: tenancy_options, required: true }
       - { name: end_date, type: date, label: Moved out on }
       - { name: since, type: date, label: Persons changed on }
       - { name: persons, type: number, label: Persons from then, min: 0 }
+      - { name: rent_from, type: date, label: New rent or advance from }
+      - { name: new_rent, type: money, label: New rent per month }
+      - { name: new_advance, type: money, label: New advance per month }
     action: change_tenancy
     submit: Save
   - type: form

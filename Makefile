@@ -18,7 +18,7 @@ dev:
 	$(UV) run python deploy/scripts/dev.py
 
 test:
-	$(UV) run pytest -m "not integration" --cov=docuhive --cov-report=term-missing --cov-fail-under=85
+	$(UV) run pytest -m "not integration"
 	$(NPM) test
 
 test-ui:
@@ -26,9 +26,10 @@ test-ui:
 	$(NPM) exec --workspace apps/web -- playwright test
 	$(NPM) exec --workspace apps/web -- playwright test --config playwright.capture.config.ts
 
+# All tests with the disposable database; the coverage gate (85 %) is measured over all of them.
 test-integration:
 	docker compose -f deploy/compose.test.yml up -d --wait
-	DOCUHIVE_TEST_DATABASE_URL=postgresql+psycopg://docuhive_test:docuhive_test@127.0.0.1:55432/docuhive_test $(UV) run pytest -m 'integration and not system'
+	DOCUHIVE_TEST_DATABASE_URL=postgresql+psycopg://docuhive_test:docuhive_test@127.0.0.1:55432/docuhive_test $(UV) run pytest -m 'integration and not system or not integration' --cov=docuhive --cov-report=term-missing --cov-fail-under=85
 
 lint:
 	$(UV) run ruff check .
@@ -170,7 +171,7 @@ qa-release:
 
 .PHONY: qa-audit qa-bundle
 qa-audit:
-	$(QA_RUN) pytest -m 'not integration' --cov=docuhive --cov-report=json:tmp/qa/coverage.json --cov-report=term --cov-fail-under=85
+	DOCUHIVE_TEST_DATABASE_URL=postgresql+psycopg://docuhive_test:docuhive_test@127.0.0.1:55432/docuhive_test $(QA_RUN) pytest -m 'integration and not system or not integration' --cov=docuhive --cov-report=json:tmp/qa/coverage.json --cov-report=term --cov-fail-under=85
 	$(QA_RUN) python tests/system/tools/audit.py
 
 qa-bundle:
