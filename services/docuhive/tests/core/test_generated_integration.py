@@ -1,6 +1,8 @@
 """Documents a plugin generates: stored like an upload, never classified, private by default,
 linked to what they were made from, and the same bytes never twice."""
 
+import functools
+
 import pytest
 from docuhive import documents
 from docuhive.agents import pipeline  # noqa: F401 - registers the AI track's handlers
@@ -34,6 +36,7 @@ def setup(registry: Registry) -> None:
 """
 
 
+@functools.cache  # the same bytes every time: FPDF stamps the time in seconds
 def pdf(text: str) -> bytes:
     page = FPDF()
     page.add_page()
