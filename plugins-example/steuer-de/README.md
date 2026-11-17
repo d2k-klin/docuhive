@@ -38,9 +38,9 @@ Set up once: under **Tax → Books**, choose the identity the book belongs to (n
 
 ### Month, quarter, year
 
-- **VAT advance return (Umsatzsteuer-Voranmeldung)** for each month or quarter, laid out in the order of the official form, with how many bookings feed each field. **Bookings** lists them, filtered by year or name.
+- **VAT advance return (Umsatzsteuer-Voranmeldung)** for each month or quarter, laid out in the order of the official form, with how many bookings feed each field. **Bookings** lists them, filtered by year or name. Each value has a copy button for typing it into Mein ELSTER, **Copy all** copies the whole form as text, and **Working paper (PDF)** prints it.
 - The **yearly VAT return** (the year appears under VAT returns, with the advance returns already paid and what is left) and the **EÜR**, from the same books. Each period page also lists the bookings behind its figures and the form field each one feeds.
-- **A period is closed when you say so.** Closing freezes its bookings and locks its receipts and invoices for the eight years they must be kept; later corrections go into a later period, not into history.
+- **A period is closed when you say so.** Closing freezes its bookings and locks its receipts and invoices for the eight years they must be kept; a mistake found later is never edited away: the booking is reversed and booked again correctly, and the period shows a **corrected return** (filed figures, corrected figures, difference) to file in Mein ELSTER.
 - **"What is missing" list** before you close: invoices and receipts without a booking, bookings still to confirm, bookings unpaid for 60 days, and a link to the bank plugin's payments without a document.
 - **Small-business rule**: your turnover against both limits on the dashboard, with a warning at 80 % of this year's limit. It explains; your advisor decides.
 - **Deadlines** for each return appear in your reminders and your calendar.

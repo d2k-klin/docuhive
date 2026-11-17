@@ -4,6 +4,7 @@ import io
 import os
 import zipfile
 from datetime import date
+from decimal import Decimal as D
 from pathlib import Path
 
 import pikepdf
@@ -155,3 +156,91 @@ def test_filed_letters_and_handover(archive):
     assert archive.document(made.goto.removeprefix("/documents/")).title.startswith(
         "Verfahrensdokumentation"
     )
+
+
+def test_a_corrected_return_and_the_working_paper(archive):
+    alice = archive.user("alice")
+    call(
+        archive,
+        "action",
+        "save_book",
+        alice,
+        name="Studio",
+        kind="euer",
+        chart="skr03",
+        vat_status="regular",
+        vat_period="quarterly",
+        vat_basis="invoice",
+    )
+    call(
+        archive,
+        "action",
+        "add_entry",
+        alice,
+        direction="income",
+        entry_date="2026-02-10",
+        counterparty="Kunde",
+        gross="1190.00",
+        vat_code="sale_19",
+        account="8400",
+    )
+    with pytest.raises(ActionError, match="still open"):
+        call(archive, "action", "correct_booking", alice, entry=1, gross="1", reason="x", **Q1)
+    paper = call(archive, "action", "working_paper", alice, **Q1)
+    name, pdf, mime = paper.download
+    assert name == "ustva-2026-Q1.pdf" and pdf.startswith(b"%PDF") and mime == "application/pdf"
+
+    call(archive, "action", "close_period", alice, **Q1)
+    [entry] = call(archive, "data", "closed_entries", alice, **Q1)
+    assert call(archive, "data", "corrected_return", alice, **Q1) == []
+    refused = call(
+        archive,
+        "action",
+        "correct_booking",
+        alice,
+        entry=entry["value"],
+        gross="2380.00",
+        reason="",
+        **Q1,
+    )
+    assert "reason" in refused.errors
+    call(
+        archive,
+        "action",
+        "correct_booking",
+        alice,
+        entry=entry["value"],
+        gross="2380.00",
+        reason="Two days, not one",
+        **Q1,
+    )
+    rows = {r["field"]: r for r in call(archive, "data", "corrected_return", alice, **Q1)}
+    assert (rows["81"]["filed"]["value"], rows["81"]["corrected"]["value"]) == (
+        D("1000"),
+        D("2000"),
+    )
+    assert rows["83"]["difference"]["value"] == D("190.00")
+    assert call(archive, "action", "working_paper", alice, **Q1).download[1].startswith(b"%PDF")
+    # The filed figures stay until the corrected return is marked as filed.
+    fields = {f["field"]: f for f in call(archive, "data", "period_fields", alice, **Q1)}
+    assert D(str(fields["81"]["value"]["value"])) == D("1000")
+    assert len(call(archive, "data", "closed_entries", alice, **Q1)) == 1  # not the corrections
+
+    confirmation = archive.add(alice, title="Übertragungsprotokoll")
+    with_pdf(confirmation)
+    done = call(
+        archive,
+        "action",
+        "file_correction",
+        alice,
+        confirmation=confirmation,
+        filed_on="2026-05-02",
+        **Q1,
+    )
+    assert "corrected return" in done.message
+    fields = {f["field"]: f for f in call(archive, "data", "period_fields", alice, **Q1)}
+    assert D(str(fields["81"]["value"]["value"])) == D("2000")
+    assert call(archive, "data", "corrected_return", alice, **Q1) == []
+    assert len(call(archive, "data", "closed_entries", alice, **Q1)) == 3
+    with pytest.raises(ActionError):
+        call(archive, "action", "file_correction", alice, confirmation=confirmation, **Q1)

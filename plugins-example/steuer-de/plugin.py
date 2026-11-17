@@ -17,6 +17,7 @@ from docuhive.sdk import (
     ai,
     documents,
     reminders,
+    render,
     retention,
     services,
     users,
@@ -458,6 +459,13 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         )
         return [as_entry(r) for r in rows]
 
+    def live_figures(book: dict, key: str) -> dict:
+        """Computed from the bookings now, including corrections to a closed period."""
+        year = rules.year(int(key[:4]))
+        return periods.vat_figures(
+            as_book(book), period_entries(book, key), rules.vat_codes(), year["forms"]["ustva"], key
+        )
+
     def figures(book: dict, key: str) -> dict:
         saved = q("SELECT * FROM periods WHERE book_id = :b AND key = :k", b=book["id"], k=key)
         if saved and saved[0]["state"] in ("closed", "filed"):
@@ -465,10 +473,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
                 "state": saved[0]["state"],
                 "rules_version": saved[0]["rules_version"],
             }
-        year = rules.year(int(key[:4]))
-        result = periods.vat_figures(
-            as_book(book), period_entries(book, key), rules.vat_codes(), year["forms"]["ustva"], key
-        )
+        result = live_figures(book, key)
         result["state"] = saved[0]["state"] if saved else "open"
         result["rules_version"] = rules.version(int(key[:4]))
         return result
@@ -1291,9 +1296,251 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             if not any(h["reason"].startswith("Booked in") for h in documents.holds(doc_id)):
                 documents.hold(doc_id, f"Booked in the closed VAT period {key}", until=until)
         return (
-            f"Period {key} is closed. Its bookings can no longer change; corrections go into a "
-            f"later period."
+            f"Period {key} is closed. Its bookings can no longer change; a mistake found later "
+            f"is corrected here with a reversing booking and a corrected return."
         )
+
+    def german(value: object) -> str:
+        """1234.5 -> 1.234,50, as on the form."""
+        if value is None:
+            return ""
+        return f"{Decimal(str(value)):,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+
+    @registry.action("working_paper")
+    def working_paper(user: User, params: dict) -> Result:
+        """The period's form fields as a printable page: to type from, or to keep with the
+        books. Downloaded, not stored: the filed figures live in the period itself."""
+        book, key = period_params(user, params)
+        result = figures(book, key)
+        if result["state"] in ("closed", "filed") and pending_corrections(book, key):
+            result = live_figures(book, key) | {"state": "corrected"}  # the sheet to type from
+        if not result["fields"]:
+            raise ActionError("There are no figures for this period yet.")
+        saved = q(
+            "SELECT filed_on FROM periods WHERE book_id = :b AND key = :k", b=book["id"], k=key
+        )
+        states = {
+            "open": "offen",
+            "checked": "geprüft",
+            "closed": "abgeschlossen",
+            "filed": "übermittelt",
+            "corrected": "berichtigt, noch nicht übermittelt",
+        }
+        pdf = render.pdf(
+            "working-paper.html",
+            {
+                "period": key,
+                "book": book["name"],
+                "tax_number": book.get("tax_number") or "",
+                "today": date.today().strftime("%d.%m.%Y"),
+                "state": states.get(result["state"], result["state"]),
+                "filed_on": saved[0]["filed_on"].strftime("%d.%m.%Y")
+                if saved and saved[0]["filed_on"]
+                else "",
+                "fields": [
+                    {
+                        "field": f["field"],
+                        "label": f["label"],
+                        "value": german(f["value"]),
+                        "tax": german(f["tax"]),
+                    }
+                    for f in result["fields"]
+                ],
+                "note": NOT_ADVICE,
+            },
+        )
+        return Result(download=(f"ustva-{key}.pdf", pdf, "application/pdf"))
+
+    # Corrected returns ----------------------------------------------------------------------
+    # A closed booking never changes. A mistake found later is corrected by two bookings in the
+    # same period, both pointing at the original: one reverses it, one books it right. The
+    # period then shows the corrected return (berichtigte Voranmeldung) next to what was filed.
+
+    def closed_period(user: User, params: dict, *, write: bool = False) -> tuple[dict, str]:
+        book, key = period_params(user, params)
+        if write:
+            book = book_of(user, {"book": book["id"]}, write=True) or book
+        if figures(book, key)["state"] not in ("closed", "filed"):
+            raise ActionError("This period is still open: change the booking itself.")
+        return book, key
+
+    def pending_corrections(book: dict, key: str) -> list[dict]:
+        return q(
+            "SELECT * FROM entries WHERE book_id = :b AND period_vat = :k AND state = "
+            "'confirmed' AND corrects_entry_id IS NOT NULL ORDER BY id",
+            b=book["id"],
+            k=key,
+        )
+
+    @registry.data("closed_entries")
+    def closed_entries(user: User, params: dict) -> list[dict]:
+        try:
+            book, key = closed_period(user, params)
+        except ActionError:
+            return []
+        return [
+            {
+                "value": str(r["id"]),
+                "label": f"{r['entry_date']} · {r['counterparty'] or 'no name'} · {r['gross']} €",
+            }
+            for r in q(
+                "SELECT * FROM entries WHERE book_id = :b AND period_vat = :k AND state = "
+                "'closed' ORDER BY entry_date, id",
+                b=book["id"],
+                k=key,
+            )
+        ]
+
+    @registry.action("correct_booking")
+    def correct_booking(user: User, params: dict) -> Result:
+        book, key = closed_period(user, params, write=True)
+        found = q(
+            "SELECT * FROM entries WHERE id = :i AND book_id = :b AND period_vat = :k AND state "
+            "= 'closed'",
+            i=int(params.get("entry") or 0),
+            b=book["id"],
+            k=key,
+        )
+        if not found:
+            return Result(errors={"entry": "Choose a booking of this period"})
+        old = found[0]
+        new_code = str(params.get("vat_code") or old["vat_code"])
+        code = rules.vat_codes().get(new_code)
+        wanted = "purchases" if old["direction"] == "expense" else "sales"
+        if code is None or code["direction"] != wanted:
+            return Result(errors={"vat_code": "Choose a VAT treatment for this direction"})
+        try:
+            gross = Decimal(str(params.get("gross"))).quantize(CENT)
+        except ArithmeticError:
+            return Result(errors={"gross": "Enter the correct gross amount"})
+        reason = str(params.get("reason") or "").strip()
+        if not reason:
+            return Result(errors={"reason": "Say what was wrong, for the records"})
+        rate = Decimal(str(code["rate"]))
+        if code.get("reverse_charge"):
+            net, vat = gross, Decimal(0)
+        else:
+            net = (gross * 100 / (100 + rate)).quantize(CENT)
+            vat = gross - net
+        line = q(
+            "SELECT coalesce(max(line), 0) AS n FROM entries WHERE book_id = :b AND "
+            "document_id IS NOT DISTINCT FROM :d",
+            b=book["id"],
+            d=old["document_id"],
+        )[0]["n"]
+        now, by = datetime.now(UTC), f"user:{user.id}"
+        with registry.db.session() as s:
+            for n, (net_, vat_, gross_, vat_code, note) in enumerate(
+                (
+                    (-old["net"], -old["vat"], -old["gross"], old["vat_code"], "Reversed: "),
+                    (net, vat, gross, new_code, "Corrected: "),
+                ),
+                start=1,
+            ):
+                s.execute(
+                    text(
+                        "INSERT INTO entries (book_id, document_id, line, direction, entry_date, "
+                        "service_date, paid_on, account, vat_code, net, vat, gross, "
+                        "deductible_fraction, counterparty, state, origin, note, period_vat, "
+                        "period_year, corrects_entry_id, created_by, confirmed_by, confirmed_at) "
+                        "SELECT book_id, document_id, :line, direction, entry_date, service_date, "
+                        "paid_on, account, :code, :net, :vat, :gross, deductible_fraction, "
+                        "counterparty, 'confirmed', 'manual', :note, period_vat, period_year, id, "
+                        ":by, :by, :at FROM entries WHERE id = :old"
+                    ),
+                    {
+                        "line": line + n,
+                        "code": vat_code,
+                        "net": net_,
+                        "vat": vat_,
+                        "gross": gross_,
+                        "note": note + reason,
+                        "by": by,
+                        "at": now,
+                        "old": old["id"],
+                    },
+                )
+        return Result(
+            message="Corrected. The corrected return for this period is shown below; file it, "
+            "then mark it as filed."
+        )
+
+    @registry.data("corrected_return")
+    def corrected_return(user: User, params: dict) -> list[dict]:
+        """Filed figures, corrected figures and the difference, field by field."""
+        try:
+            book, key = closed_period(user, params)
+        except ActionError:
+            return []
+        if not pending_corrections(book, key):
+            return []
+        filed = {f["field"]: f for f in figures(book, key)["fields"]}
+        now = {f["field"]: f for f in live_figures(book, key)["fields"]}
+        order = [f for f in now] + [f for f in filed if f not in now]
+        money = lambda v: {"value": v, "currency": "EUR"}  # noqa: E731
+        rows = []
+        for field in order:
+            before = Decimal(str((filed.get(field) or {}).get("value") or 0))
+            after = Decimal(str((now.get(field) or {}).get("value") or 0))
+            if before == after and field != "83":
+                continue
+            rows.append(
+                {
+                    "field": field,
+                    "label": (now.get(field) or filed[field])["label"],
+                    "filed": money(before),
+                    "corrected": money(after),
+                    "difference": money(after - before),
+                }
+            )
+        return rows
+
+    @registry.action("file_correction")
+    def file_correction(user: User, params: dict) -> Result:
+        """The corrected return was sent: its figures replace the filed ones, the corrections
+        are closed, and the new confirmation is kept and locked."""
+        book, key = closed_period(user, params, write=True)
+        if not pending_corrections(book, key):
+            raise ActionError("There is no correction to file for this period.")
+        if not params.get("confirmation"):
+            return Result(
+                errors={"confirmation": "Choose the confirmation of the corrected return"}
+            )
+        doc = documents.get_for_user(params["confirmation"], user)
+        filed_on = (
+            date.fromisoformat(params["filed_on"]) if params.get("filed_on") else date.today()
+        )
+        result = live_figures(book, key)
+        with registry.db.session() as s:
+            s.execute(
+                text(
+                    "UPDATE entries SET state = 'closed' WHERE book_id = :b AND period_vat = :k "
+                    "AND state = 'confirmed' AND corrects_entry_id IS NOT NULL"
+                ),
+                {"b": book["id"], "k": key},
+            )
+            s.execute(
+                text(
+                    "UPDATE periods SET state = 'filed', figures = CAST(:f AS jsonb), filed_on = "
+                    ":d, filing_document_id = :doc, "
+                    "note = concat_ws(E'\\n', note, CAST(:note AS text)) "
+                    "WHERE book_id = :b AND key = :k"
+                ),
+                {
+                    "f": _json(result),
+                    "d": filed_on,
+                    "doc": doc.id,
+                    "note": f"Corrected return filed on {filed_on.isoformat()}",
+                    "b": book["id"],
+                    "k": key,
+                },
+            )
+        documents.hold(
+            doc.id,
+            f"Filed corrected VAT return {key}",
+            until=retention.until("tax_filing", int(key[:4])),
+        )
+        return Result(message=f"The corrected return for {key} is filed and kept.")
 
     @registry.action("book_missing")
     def book_missing(user: User, params: dict) -> str:

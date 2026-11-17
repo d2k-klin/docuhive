@@ -1,0 +1,23 @@
+{#- The figures of one VAT advance return, in the form's order, to type into Mein ELSTER
+    or to file with the books. Not a return itself. -#}
+<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
+  @page { size: A4; margin: 20mm; } body { font: 10.5pt/1.5 "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 15pt; margin: 0; } p { margin: 2mm 0; } .muted { color: #555; }
+  table { width: 100%; border-collapse: collapse; margin-top: 6mm; }
+  th, td { text-align: left; padding: 1.5mm 2mm; border-bottom: 0.3pt solid #999; vertical-align: top; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.total td { font-weight: bold; border-top: 0.8pt solid #000; }
+</style></head><body>
+<h1>Umsatzsteuer-Voranmeldung {{ period }}</h1>
+<p>{{ book }}{% if tax_number %} · Steuernummer {{ tax_number }}{% endif %}</p>
+<p class="muted">Arbeitsblatt, erstellt am {{ today }} · Stand: {{ state }}{% if filed_on %} · übermittelt am {{ filed_on }}{% endif %}</p>
+<table>
+  <thead><tr><th>Kz</th><th>Bezeichnung</th><th class="n">Bemessungsgrundlage / Betrag</th><th class="n">Steuer</th></tr></thead>
+  <tbody>
+  {% for f in fields %}
+    <tr{% if f.field == "83" %} class="total"{% endif %}><td>{{ f.field }}</td><td>{{ f.label }}</td><td class="n">{{ f.value }}</td><td class="n">{{ f.tax }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p class="muted" style="margin-top:8mm">{{ note }}</p>
+</body></html>

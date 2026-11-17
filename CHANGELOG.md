@@ -17,6 +17,9 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Tax invoices: **Correct this invoice** issues the cancelling credit note and opens a corrected copy in one step; saved items to add to a draft; a reminder when a recurring invoice has made a new draft.
 - Tax books can be shared by user name with a bookkeeper (keeps the books; only the owner issues invoices) or someone who only looks. Plugins can look up people by user name with the new `users:find` capability; nothing else about a person is shared.
 - **Settings → AI** lists each running plugin's AI tasks with the route they use (their own from `routing.yaml`, or the core task's route they borrow).
+- Tax: **corrected VAT returns**. A booking in a closed period is reversed and booked again with a reason; the period then shows the filed and corrected figures with the difference, and "I have filed the corrected return" keeps the new confirmation.
+- Tax: each form value has a copy button for Mein ELSTER (amounts as 1234,56), **Copy all** copies the whole form, and **Working paper (PDF)** prints it (the corrected figures while a correction is waiting).
+- Plugin tables: `copy_column` puts a copy button on a column's values and a **Copy all** above the table.
 - Plugin forms: a document field is a search box over your documents instead of a list of the latest 200 (inventory "Add a document", the tax plugin's filing confirmation).
 - Inventory: places inside places ("House › Kitchen"); Ask's place filter includes what is inside.
 - Inventory: **Merge with another item** for the same thing listed twice; its documents and missing details move over.

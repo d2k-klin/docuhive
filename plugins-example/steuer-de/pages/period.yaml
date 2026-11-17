@@ -17,6 +17,7 @@ blocks:
       - { field: value, label: Value for the form, format: money }
       - { field: tax, label: Tax, format: money }
       - { field: entries, label: Bookings, format: number }
+    copy_column: value
     empty: No confirmed bookings in this period yet.
   - type: table
     title: The bookings behind these figures
@@ -35,7 +36,8 @@ blocks:
   - type: actions
     actions:
       - { label: Propose bookings for documents not booked yet, action: book_missing }
-      - { label: Close this period, action: close_period, primary: true, confirm: "Closing freezes every booking in this period. Corrections then go into a later period. Close it?" }
+      - { label: Working paper (PDF), action: working_paper, download: true }
+      - { label: Close this period, action: close_period, primary: true, confirm: "Closing freezes every booking in this period. A mistake found later is corrected with a reversing booking and a corrected return. Close it?" }
   - type: summary
     title: Paying
     source: payment_reference
@@ -46,6 +48,38 @@ blocks:
       - { name: filed_on, type: date, label: Filed on }
       - { name: confirmation, type: document, label: The confirmation, required: true }
     action: mark_filed
+    submit: Mark as filed
+  - type: form
+    title: Correct a booking
+    help: A booking in a closed period stays as it was. It is reversed and booked again correctly, and this period then shows a corrected return (berichtigte Voranmeldung) to file.
+    show_if: closed_entries
+    fields:
+      - { name: entry, type: choice, label: Booking, options: closed_entries, required: true }
+      - { name: gross, type: money, label: Correct gross amount, required: true }
+      - { name: vat_code, type: choice, label: Correct VAT treatment, options: vat_code_options, help: "Leave empty to keep it." }
+      - { name: reason, type: text, label: What was wrong, required: true }
+    action: correct_booking
+    submit: Correct
+    confirm: "Book the reversal and the correction? Both stay in the records."
+  - type: table
+    title: Corrected return
+    source: corrected_return
+    show_if: corrected_return
+    columns:
+      - { field: field, label: Field }
+      - { field: label, label: What }
+      - { field: filed, label: Filed, format: money }
+      - { field: corrected, label: Corrected, format: money }
+      - { field: difference, label: Difference, format: money }
+    empty: No corrections since the return was filed.
+  - type: form
+    title: I have filed the corrected return
+    help: In Mein ELSTER, file the advance return for this period again and tick "Berichtigte Anmeldung". Upload its confirmation, then choose it here.
+    show_if: corrected_return
+    fields:
+      - { name: filed_on, type: date, label: Filed on }
+      - { name: confirmation, type: document, label: The confirmation, required: true }
+    action: file_correction
     submit: Mark as filed
   - type: actions
     title: For your tax advisor

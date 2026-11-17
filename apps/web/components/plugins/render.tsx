@@ -8,7 +8,13 @@ import {
   useEffect,
   useState,
 } from "react";
-import { CheckCircle2, CircleDashed, Inbox, TriangleAlert } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleDashed,
+  Copy,
+  Inbox,
+  TriangleAlert,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { checkbox, control } from "@/lib/ui/control";
@@ -84,6 +90,7 @@ export type Block = {
   filters?: Filter[];
   actions?: Action[];
   row_actions?: Action[];
+  copy_column?: string;
   empty?: Text;
   select?: boolean;
   fields?: (FormField & { field?: string; format?: Format })[];
@@ -565,6 +572,39 @@ function Table({
         <Empty icon={Inbox} text={t(block.empty)} />
       ) : (
         <>
+          {block.copy_column && (
+            <div>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  const at = columns.findIndex(
+                    (c) => c.field === block.copy_column,
+                  );
+                  const text = data.rows
+                    .map((row) =>
+                      [
+                        ...columns
+                          .slice(0, at)
+                          .map((c) =>
+                            String(
+                              show(get(row, c.field), c.format, row) ?? "",
+                            ),
+                          ),
+                        clip(get(row, block.copy_column!)),
+                      ].join("\t"),
+                    )
+                    .join("\n");
+                  void navigator.clipboard
+                    .writeText(text)
+                    .then(() => setNotice("Copied all values."));
+                }}
+              >
+                <Copy aria-hidden="true" /> Copy all
+              </Button>
+            </div>
+          )}
           {block.select &&
             (block.actions ?? []).length > 0 &&
             selected.size > 0 && (
@@ -609,6 +649,14 @@ function Table({
                         <dt className="text-text-muted">{t(c.label)}</dt>
                         <dd className="tabular min-w-0 break-words text-right">
                           <Cell plugin={plugin} column={c} row={row} />
+                          {block.copy_column === c.field && (
+                            <CopyButton
+                              text={clip(get(row, c.field))}
+                              label={String(
+                                show(get(row, first.field), first.format, row),
+                              )}
+                            />
+                          )}
                         </dd>
                       </div>
                     ))}
@@ -709,6 +757,18 @@ function Table({
                         className={`max-w-xs px-2 py-2 ${NOWRAP.includes(c.format) ? "whitespace-nowrap" : "break-words"} ${c.align === "right" || c.format === "money" ? "tabular text-right" : ""}`}
                       >
                         <Cell plugin={plugin} column={c} row={row} />
+                        {block.copy_column === c.field && (
+                          <CopyButton
+                            text={clip(get(row, c.field))}
+                            label={String(
+                              show(
+                                get(row, columns[0].field),
+                                columns[0].format,
+                                row,
+                              ),
+                            )}
+                          />
+                        )}
                       </td>
                     ))}
                     {(block.row_actions ?? []).length > 0 && (
@@ -789,6 +849,39 @@ function Table({
         </>
       )}
     </div>
+  );
+}
+
+/** What goes on the clipboard: an amount as it is typed into a German form (1234,56). */
+function clip(value: unknown): string {
+  const v =
+    value && typeof value === "object" && "value" in value
+      ? (value as { value: unknown }).value
+      : value;
+  return typeof v === "number" ||
+    (typeof v === "string" && /^-?\d+(\.\d+)?$/.test(v))
+    ? String(v).replace(".", ",")
+    : String(v ?? "");
+}
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      aria-label={done ? "Copied" : `Copy ${label}`}
+      title={done ? "Copied" : "Copy"}
+      onClick={() =>
+        void navigator.clipboard.writeText(text).then(() => {
+          setDone(true);
+          setTimeout(() => setDone(false), 1500);
+        })
+      }
+    >
+      {done ? <CheckCircle2 aria-hidden="true" /> : <Copy aria-hidden="true" />}
+    </Button>
   );
 }
 

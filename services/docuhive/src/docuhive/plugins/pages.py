@@ -7,7 +7,14 @@ plugin does not register is refused when the plugin starts, so it never fails in
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from . import files
 from .manifest import ManifestError, load_yaml
@@ -92,7 +99,16 @@ class TableBlock(BlockBase):
     select: bool = False
     actions: list[Action] = []  # on the selected rows
     row_actions: list[Action] = []  # on one row; the row is sent as params
+    copy_column: str | None = None  # a column: a copy button on each value, and "Copy all"
     empty: Text
+
+    @model_validator(mode="after")
+    def _copy_is_a_column(self) -> "TableBlock":
+        if self.copy_column and self.copy_column not in {c.field for c in self.columns}:
+            raise ValueError(
+                f"copy_column names '{self.copy_column}', which is not one of the columns"
+            )
+        return self
 
 
 class DetailField(_Strict):
