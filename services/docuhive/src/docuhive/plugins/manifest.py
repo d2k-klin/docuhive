@@ -19,6 +19,7 @@ CAPABILITIES = {
     "ai": "Ask an AI model, within your privacy settings and budgets",
     "mail:send": "Send mail when a person asks it to",
     "secrets": "Keep secrets such as passwords or certificates",
+    "users:find": "Look up people by user name, to share its records with them",
 }
 
 

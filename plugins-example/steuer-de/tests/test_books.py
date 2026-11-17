@@ -367,3 +367,85 @@ def test_yearly_return_and_the_bookings_behind_a_period():
         ] == D("0.00")
         rows = call(archive, "data", "period_entries", alice, key="2026-Q1")
         assert [(r["net"], r["fields"]) for r in rows] == [(D("1000.00"), "81")]
+
+
+def test_a_book_is_shared_by_user_name_and_stays_the_owners():
+    with Archive(PLUGIN) as archive:
+        alice, keeper, carol = archive.user("alice"), archive.user("keeper"), archive.user("carol")
+        for owner, name in ((alice, "Studio"), (keeper, "Keeper's own")):
+            call(
+                archive,
+                "action",
+                "save_book",
+                owner,
+                name=name,
+                kind="euer",
+                chart="skr03",
+                vat_status="regular",
+                vat_period="quarterly",
+                vat_basis="invoice",
+                default_for_uploads=True,
+            )
+        studio = call(archive, "data", "owned_books", alice)[0]["value"]
+        refused = call(archive, "action", "add_member", alice, book=studio, username="nobody")
+        assert refused.errors == {"username": "No one who can sign in has this user name"}
+        with pytest.raises(ActionError):  # only the owner shares
+            call(archive, "action", "add_member", keeper, book=studio, username="carol")
+        shared = call(
+            archive,
+            "action",
+            "add_member",
+            alice,
+            book=studio,
+            username="keeper",
+            role="bookkeeper",
+        )
+        assert "keeper can now keep" in shared.message
+        call(archive, "action", "add_member", alice, book=studio, username="carol", role="viewer")
+        assert [(m["person"], m["role"]) for m in call(archive, "data", "members", alice)] == [
+            ("keeper", "bookkeeper"),
+            ("carol", "viewer"),
+        ]
+        assert {b["name"]: b["role"] for b in call(archive, "data", "books", keeper)} == {
+            "Studio": "bookkeeper",
+            "Keeper's own": "owner",
+        }
+        # The keeper's own receipt goes into the keeper's own book, never the client's.
+        arrive(
+            archive,
+            keeper,
+            document_type="invoice",
+            date=date(2026, 3, 2),
+            original=("rechnung.xml", CII.encode()),
+        )
+        books = {b["name"]: b["id"] for b in call(archive, "data", "books", keeper)}
+        assert {e["book_id"] for e in entries(archive)} == {books["Keeper's own"]}
+        # The keeper making their own book the default leaves the client's flag alone.
+        call(
+            archive,
+            "action",
+            "save_book",
+            keeper,
+            book=str(books["Keeper's own"]),
+            kind="euer",
+            chart="skr03",
+            vat_status="regular",
+            vat_period="quarterly",
+            vat_basis="invoice",
+            default_for_uploads=True,
+        )
+        assert call(archive, "data", "books", alice)[0]["default_for_uploads"] is True
+        # A viewer looks only.
+        with pytest.raises(ActionError, match="not change"):
+            call(
+                archive, "action", "save_item", carol, book=studio, description="x", unit_price="1"
+            )
+        call(
+            archive,
+            "action",
+            "remove_member",
+            alice,
+            book_id=int(studio),
+            user_id=archive.user("carol").id,
+        )
+        assert [m["person"] for m in call(archive, "data", "members", alice)] == ["keeper"]

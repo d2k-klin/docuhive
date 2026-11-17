@@ -62,6 +62,7 @@ Under **Tax letters**, as documents you read, sign and send yourself: a request 
 - Every confirmed booking of a year as a CSV file (**Bookings → Download the year as CSV**).
 - Per period: one ZIP with the bookings and each booked document as a PDF named by date, sender and number, linked by an index (**VAT returns → the period → For your tax advisor**). The columns are plain; an export in the DATEV format is planned.
 - A read-only link to one period's documents for 14 days, when guest links are switched on for your installation.
+- If your bookkeeper or advisor has an account on your DocuHive, share the book with them by user name (**Tax books → Share a book**). A bookkeeper confirms bookings, prepares returns and drafts invoices; issuing stays with you, because invoices go out under your identity. "Look only" is for a partner. Their own receipts never land in your book. Which documents they can open is set by your administrator under Settings → Users.
 
 ## Set it up
 

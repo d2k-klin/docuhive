@@ -19,6 +19,7 @@ from docuhive.sdk import (
     reminders,
     retention,
     services,
+    users,
 )
 from pydantic import BaseModel, Field
 from sqlalchemy import text
@@ -299,7 +300,9 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             (
                 b
                 for b in books_of(doc.owner_id)
-                if b["role"] in ("owner", "bookkeeper") and b["kind"] != "private"
+                # The owner's book, never one where the uploader only keeps the books for
+                # someone else: a bookkeeper's own receipts are not the client's.
+                if b["role"] == "owner" and b["kind"] != "private"
             ),
             None,
         )
@@ -628,8 +631,76 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             if b["role"] == "owner"
         ]
 
+    # Members ------------------------------------------------------------------------------
+
+    def owned(user: User, book_id: object) -> dict:
+        book = next((b for b in books_of(user.id) if str(b["id"]) == str(book_id or "")), None)
+        if not book or book["role"] != "owner":
+            raise ActionError("Only the book's owner can share it.")
+        return book
+
+    @registry.data("owned_books")
+    def owned_books(user: User, params: dict) -> list[dict]:
+        return [
+            {"value": str(b["id"]), "label": b["name"]}
+            for b in books_of(user.id)
+            if b["role"] == "owner"
+        ]
+
+    @registry.data("members")
+    def members(user: User, params: dict) -> list[dict]:
+        """Who else works in the books you own."""
+        rows = q(
+            "SELECT m.book_id, m.user_id, m.role, b.name AS book FROM book_members m JOIN books b "
+            "ON b.id = m.book_id WHERE m.role <> 'owner' AND m.book_id IN (SELECT book_id FROM "
+            "book_members WHERE user_id = :u AND role = 'owner') ORDER BY b.name, m.user_id",
+            u=user.id,
+        )
+        names = users.names(sorted({r["user_id"] for r in rows}))
+        return [{**r, "person": names.get(r["user_id"], "A removed user")} for r in rows]
+
+    @registry.action("add_member")
+    def add_member(user: User, params: dict) -> Result:
+        book = owned(user, params.get("book"))
+        name = str(params.get("username") or "").strip()
+        person = users.find(name) if name else None
+        if person is None:
+            return Result(errors={"username": "No one who can sign in has this user name"})
+        if person == user.id:
+            return Result(errors={"username": "You own this book already"})
+        role = "bookkeeper" if params.get("role") == "bookkeeper" else "viewer"
+        run(
+            "INSERT INTO book_members (book_id, user_id, role) VALUES (:b, :u, :r) "
+            "ON CONFLICT (book_id, user_id) DO UPDATE SET role = excluded.role "
+            "WHERE book_members.role <> 'owner'",
+            b=book["id"],
+            u=person,
+            r=role,
+        )
+        what = "keep" if role == "bookkeeper" else "look at"
+        return Result(message=f"{name} can now {what} the bookings of “{book['name']}”.")
+
+    @registry.action("remove_member", destructive=True)
+    def remove_member(user: User, params: dict) -> Result:
+        book = owned(user, params.get("book_id"))
+        run(
+            "DELETE FROM book_members WHERE book_id = :b AND user_id = :u AND role <> 'owner'",
+            b=book["id"],
+            u=int(params.get("user_id") or 0),
+        )
+        return Result(message=f"Removed from “{book['name']}”.")
+
     def choices(*pairs: str) -> list[dict]:
         return [{"value": pairs[i], "label": pairs[i + 1]} for i in range(0, len(pairs), 2)]
+
+    @registry.data("member_roles")
+    def member_roles(user: User, params: dict) -> list[dict]:
+        return choices(
+            "bookkeeper",
+            "Keep the books: confirm bookings, prepare returns, draft invoices",
+            "viewer",
+            "Look only",
+        )
 
     @registry.data("kinds")
     def kinds(user: User, params: dict) -> list[dict]:
@@ -1100,7 +1171,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         if values["default"]:
             run(
                 "UPDATE books SET default_for_uploads = false WHERE id IN (SELECT book_id FROM "
-                "book_members WHERE user_id = :u)",
+                "book_members WHERE user_id = :u AND role = 'owner')",
                 u=user.id,
             )
         if existing:

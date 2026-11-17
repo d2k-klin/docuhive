@@ -32,3 +32,22 @@ blocks:
       - { name: default_for_uploads, type: boolean, label: New invoices and receipts go into this book }
     action: save_book
     submit: Save book
+  - type: table
+    title: People in your books
+    source: members
+    columns:
+      - { field: person, label: Person }
+      - { field: book, label: Book }
+      - { field: role, label: Role, format: badge }
+    row_actions:
+      - { label: Remove, action: remove_member, confirm: "Remove this person from the book? Their bookings stay." }
+    empty: Only you work in your books. Add your bookkeeper or partner below.
+  - type: form
+    title: Share a book
+    show_if: owned_books
+    fields:
+      - { name: book, type: choice, label: Book, options: owned_books, required: true }
+      - { name: username, type: text, label: Their user name, required: true, help: "They need an account on this DocuHive. An administrator adds people under Settings → Users." }
+      - { name: role, type: choice, label: They may, options: member_roles, required: true }
+    action: add_member
+    submit: Share

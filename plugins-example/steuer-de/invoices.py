@@ -577,6 +577,11 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
                 "e_invoice_format",
             )
         }
+        if book["role"] != "owner":
+            raise ActionError(
+                "Only the book's owner can issue: invoices go out under the owner's identity. "
+                "The draft is ready for them."
+            )
         seller = seller_of(user, book)
         refers = None
         if draft["refers_to_invoice_id"]:
