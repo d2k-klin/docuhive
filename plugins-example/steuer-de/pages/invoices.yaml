@@ -38,3 +38,23 @@ blocks:
       - { name: recurring_months, type: number, label: "Repeat every … months (empty: once)", min: 1 }
     action: save_draft
     submit: Save draft
+  - type: table
+    title: Saved items
+    source: saved_items
+    columns:
+      - { field: description, label: Item }
+      - { field: unit_label, label: Unit }
+      - { field: unit_price, label: Net price, format: money }
+      - { field: vat_label, label: VAT }
+    row_actions:
+      - { label: Remove, action: delete_item, confirm: "Remove this saved item? Invoices that used it keep their lines." }
+    empty: Lines you write often can be saved here and added to a draft with one click.
+  - type: form
+    title: Save an item
+    fields:
+      - { name: description, type: text, label: Description, required: true }
+      - { name: unit, type: choice, label: Unit, options: unit_options }
+      - { name: unit_price, type: money, label: Net price, required: true }
+      - { name: vat_code, type: choice, label: VAT, options: sales_codes }
+    action: save_item
+    submit: Save item

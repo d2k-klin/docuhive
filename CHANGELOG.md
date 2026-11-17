@@ -13,11 +13,13 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Tax: the yearly VAT return with the advance returns already paid and what is left; each period lists the bookings behind its figures. Business equipment from the inventory and rental income from the landlord plugin appear in the tax plugin when those are on.
 - **Settings → Users** for administrators: add people, change their role, disable or enable them, and choose which categories bookkeepers may see.
 - A document's "Related" list shows the related documents' titles.
+- Tax invoices: **Correct this invoice** issues the cancelling credit note and opens a corrected copy in one step; saved items to add to a draft; a reminder when a recurring invoice has made a new draft.
 
 ### Fixed
 
 - XRechnung invoices now pass the official validator's rules that the first version missed: the business process, the buyer's electronic address, the delivery address for EU supplies, and the date type in a credit note's reference. Issuing an XRechnung invoice needs the customer's mail address.
 - The last administrator who can sign in can no longer be demoted or disabled.
+- A draft made from a recurring invoice now has its service period, so it can be issued as made.
 
 ## [0.9.0] - 2026-11-16
 

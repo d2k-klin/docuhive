@@ -25,12 +25,12 @@
 
 ### Your invoices
 
-- Customers, quotes, invoices, credit notes and recurring invoices. Lines are typed in on the invoice; a list of saved items is planned.
+- Customers, quotes, invoices, credit notes and recurring invoices. Lines you write often are kept as saved items and added to a draft with one click. A recurring invoice makes its next draft by itself, with the service period filled in, and reminds you to issue it.
 - Numbers are given when you *issue* an invoice, in sequence with no gaps. A draft has no number.
 - Before issuing, the plugin checks that everything the VAT law requires on an invoice is there, including the wording for the small-business rule, reverse charge and sales to other EU countries.
 - Every invoice is produced as a PDF and as an e-invoice from the same data: a ZUGFeRD / Factur-X PDF (EN 16931) by default, the XRechnung format for public authorities, or a plain PDF for consumers, chosen per customer. Before an invoice is stored, the plugin reads its own e-invoice back and compares it with the invoice to the cent. Issuing e-invoices becomes mandatory for larger businesses from 2027 and for the rest from 2028.
 - Issued invoices are booked as income right away; when they are paid, they count in the year the money arrived.
-- An issued invoice cannot be changed. A mistake is corrected with a credit note and a new invoice.
+- An issued invoice cannot be changed. A mistake is corrected with a credit note and a new invoice: **Correct this invoice** does both in one step and opens the copy to change.
 - Send it by mail from DocuHive; the invoice's history shows when and to whom.
 - Open invoices, due dates, and reminder letters in three steps, which you send when you decide to. Payments are recorded by hand, or found on your statements by the bank plugin. Interest for late payment is not calculated.
 

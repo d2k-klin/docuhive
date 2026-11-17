@@ -12,7 +12,17 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
-from docuhive.sdk import ActionError, Result, User, documents, mail, profiles, render, retention
+from docuhive.sdk import (
+    ActionError,
+    Result,
+    User,
+    documents,
+    mail,
+    profiles,
+    reminders,
+    render,
+    retention,
+)
 from sqlalchemy import text
 
 from . import einvoice
@@ -343,16 +353,116 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
                 )
         return Result(message="Draft saved.", goto=f"invoice?id={invoice_id}")
 
+    # Saved items ---------------------------------------------------------------------------------
+
+    def default_code(book: dict) -> str:
+        return "sale_small_business" if book["vat_status"] == "small_business" else "sale_19"
+
+    @registry.action("save_item")
+    def save_item(user: User, params: dict) -> Result:
+        """Keep a line you write often; saving the same description again updates it."""
+        book = book_of(user, params, write=True)
+        if not book:
+            raise ActionError("Create a book first.")
+        description = str(params.get("description") or "").strip()
+        if not description:
+            return Result(errors={"description": "Describe the item"})
+        try:
+            price = Decimal(str(params.get("unit_price") or ""))
+        except ArithmeticError:
+            return Result(errors={"unit_price": "Enter the net price"})
+        run(
+            "INSERT INTO saved_items (book_id, description, unit, unit_price, vat_code) VALUES "
+            "(:b, :d, :u, :p, :v) ON CONFLICT (book_id, description) DO UPDATE SET unit = "
+            "excluded.unit, unit_price = excluded.unit_price, vat_code = excluded.vat_code",
+            b=book["id"],
+            d=description,
+            u=params.get("unit") or "C62",
+            p=price,
+            v=params.get("vat_code") or default_code(book),
+        )
+        return Result(message=f"“{description}” saved.")
+
+    @registry.action("delete_item", destructive=True)
+    def delete_item(user: User, params: dict) -> Result:
+        book = book_of(user, {"book": params.get("book_id")}, write=True)
+        if not book:
+            raise ActionError("That item is not in one of your books.")
+        run(
+            "DELETE FROM saved_items WHERE id = :i AND book_id = :b",
+            i=params.get("id"),
+            b=book["id"],
+        )
+        return Result(message="Item removed. Invoices that used it keep their lines.")
+
+    @registry.action("add_item")
+    def add_item(user: User, params: dict) -> Result:
+        """Add a saved item to a draft as its last line."""
+        current, book = invoice(user, params.get("id"), write=True)
+        if current["number"]:
+            raise ActionError("An issued invoice cannot be changed. Cancel it with a credit note.")
+        found = q(
+            "SELECT * FROM saved_items WHERE id = :i AND book_id = :b",
+            i=int(params.get("item") or 0),
+            b=book["id"],
+        )
+        if not found:
+            return Result(errors={"item": "Choose an item"})
+        try:
+            quantity = Decimal(str(params.get("quantity") or "1"))
+        except ArithmeticError:
+            return Result(errors={"quantity": "Enter a number"})
+        item = found[0]
+        run(
+            "INSERT INTO invoice_lines (invoice_id, position, description, quantity, unit, "
+            "unit_price, vat_code) SELECT :n, coalesce(max(position), 0) + 1, :d, :q, :u, :p, :v "
+            "FROM invoice_lines WHERE invoice_id = :n",
+            n=current["id"],
+            d=item["description"],
+            q=quantity,
+            u=item["unit"],
+            p=item["unit_price"],
+            v=item["vat_code"],
+        )
+        return Result(message=f"“{item['description']}” added.")
+
+    def saved_items(user: User, params: dict) -> list[dict]:
+        book = book_of(user, params)
+        if not book:
+            return []
+        return q("SELECT * FROM saved_items WHERE book_id = :b ORDER BY description", b=book["id"])
+
+    registry.data("saved_items")(
+        lambda user, params: [
+            r
+            | {
+                "unit_label": UNITS.get(r["unit"], r["unit"]),
+                "vat_label": rules.vat_codes().get(r["vat_code"], {}).get("label", r["vat_code"]),
+            }
+            for r in saved_items(user, params)
+        ]
+    )
+
+    @registry.data("item_options")
+    def item_options(user: User, params: dict) -> list[dict]:
+        if params.get("id"):  # on an invoice page: the items of that invoice's book
+            params = {"book": invoice(user, params["id"])[1]["id"]}
+        return [
+            {"value": str(r["id"]), "label": f"{r['description']} ({r['unit_price']} €)"}
+            for r in saved_items(user, params)
+        ]
+
     @registry.action("save_quote")
     def save_quote(user: User, params: dict) -> Result:
         return save_draft(user, params | {"kind": "quote"})
 
     @registry.action("delete_draft", destructive=True)
     def delete_draft(user: User, params: dict) -> Result:
-        current, _ = invoice(user, params.get("id"), write=True)
+        current, book = invoice(user, params.get("id"), write=True)
         if current["number"]:
             raise ActionError("Issued invoices are kept; cancel it with a credit note instead.")
         run("DELETE FROM invoices WHERE id = :i", i=current["id"])
+        reminders.clear(book["owner_id"], f"draft:{current['id']}")
         return Result(message="Draft deleted.", goto="invoices")
 
     # Issuing -------------------------------------------------------------------------------------
@@ -641,6 +751,7 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
                 f"Issued: {m['labels'][draft['kind']]} {inv['number']}",
                 until=retention.until("booking_document", today.year),
             )
+        reminders.clear(book["owner_id"], f"draft:{draft['id']}")
         return Result(message=f"Issued as {inv['number']}.", goto=f"invoice?id={draft['id']}")
 
     def default_account(book: dict, code: str) -> str | None:
@@ -845,29 +956,52 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
         )
         return Result(message=f"Reminder {level} is ready.", goto=f"/documents/{doc_id}")
 
+    copied_fields = ("description", "quantity", "unit", "unit_price", "discount_percent")
+    copied_fields += ("vat_code", "account")
+
+    def copied_lines(inv: dict) -> list[dict]:
+        """An invoice's lines as form values, to start another draft from."""
+        return [
+            {k: "" if line[k] is None else str(line[k]) for k in copied_fields}
+            for line in lines_of(inv["id"])
+        ]
+
+    @registry.action("correct")
+    def correct(user: User, params: dict) -> Result:
+        """Cancel an issued invoice and start its corrected copy: the credit note is issued at
+        once, the copy is a draft to change and issue. Nothing is left half done."""
+        inv, book = invoice(user, params.get("id"), write=True)
+        cancelling = credit_note(user, params)
+        credit_id = int(cancelling.goto.split("id=")[1])
+        try:
+            issued = issue(user, {"id": credit_id})
+        except ActionError:
+            delete_draft(user, {"id": credit_id})
+            raise
+        copy = save_draft(
+            user,
+            {
+                "book": book["id"],
+                "customer_id": inv["customer_id"],
+                "kind": "invoice",
+                "lines": copied_lines(inv),
+                "service_from": inv["service_from"] and inv["service_from"].isoformat(),
+                "service_to": inv["service_to"] and inv["service_to"].isoformat(),
+                "notes": inv["notes"],
+            },
+        )
+        return Result(
+            message=f"{issued.message} {inv['number']} is cancelled; correct the new draft.",
+            goto=copy.goto,
+        )
+
     @registry.action("credit_note")
     def credit_note(user: User, params: dict) -> Result:
         """Cancel an issued invoice: a credit note with the same lines, as a draft to issue."""
         inv, book = invoice(user, params.get("id"), write=True)
         if inv["kind"] != "invoice" or not inv["number"] or inv["state"] == "cancelled":
             raise ActionError("Only an issued, not yet cancelled invoice can be cancelled.")
-        lines = [
-            {
-                k: str(v) if v is not None else ""
-                for k, v in line.items()
-                if k
-                in (
-                    "description",
-                    "quantity",
-                    "unit",
-                    "unit_price",
-                    "discount_percent",
-                    "vat_code",
-                    "account",
-                )
-            }
-            for line in lines_of(inv["id"])
-        ]
+        lines = copied_lines(inv)
         return save_draft(
             user,
             {
@@ -888,23 +1022,7 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
         inv, book = invoice(user, params.get("id"), write=True)
         if inv["kind"] != "quote":
             raise ActionError("Only quotes are turned into invoices.")
-        lines = [
-            {
-                k: str(v) if v is not None else ""
-                for k, v in line.items()
-                if k
-                in (
-                    "description",
-                    "quantity",
-                    "unit",
-                    "unit_price",
-                    "discount_percent",
-                    "vat_code",
-                    "account",
-                )
-            }
-            for line in lines_of(inv["id"])
-        ]
+        lines = copied_lines(inv)
         return save_draft(
             user,
             {
@@ -935,13 +1053,15 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
             with registry.db.session() as s:
                 new_id = s.execute(
                     text(
-                        "INSERT INTO invoices (book_id, customer_id, kind, notes) VALUES (:b, :c, "
-                        "'invoice', :n) RETURNING id"
+                        "INSERT INTO invoices (book_id, customer_id, kind, notes, service_from, "
+                        "service_to) VALUES (:b, :c, 'invoice', :n, :f, :u) RETURNING id"
                     ),
-                    {
+                    {  # the draft covers the period it repeats for, so it can be issued as made
                         "b": inv["book_id"],
                         "c": inv["customer_id"],
                         "n": f"From the recurring invoice {inv['number']}",
+                        "f": first,
+                        "u": following - timedelta(days=1),
                     },
                 ).scalar_one()
                 s.execute(
@@ -960,6 +1080,15 @@ def register(registry: Any, rules: Any, q: Any, run: Any, book_of: Any, assign: 
                     text("UPDATE invoices SET next_run = :d WHERE id = :i"),
                     {"d": following, "i": inv["id"]},
                 )
+            owner = q("SELECT owner_id FROM books WHERE id = :b", b=inv["book_id"])[0]["owner_id"]
+            reminders.set(
+                owner,
+                f"draft:{new_id}",
+                f"A new draft from the recurring invoice {inv['number']} is ready to issue",
+                today,
+                days_before=[0],
+                link=f"/plugins/steuer-de/invoice?id={new_id}",
+            )
 
     # Screens -------------------------------------------------------------------------------------
 

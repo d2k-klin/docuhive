@@ -21,6 +21,14 @@ blocks:
       - { label: Issue, action: issue, primary: true, confirm: "Issue this invoice? It gets its number and can no longer be changed." }
       - { label: Delete draft, action: delete_draft, confirm: "Delete this draft?" }
   - type: form
+    title: Add a saved item
+    show_if: is_draft
+    fields:
+      - { name: item, type: choice, label: Item, options: item_options, required: true }
+      - { name: quantity, type: number, label: Quantity }
+    action: add_item
+    submit: Add line
+  - type: form
     title: Change the draft
     show_if: is_draft
     initial: invoice
@@ -56,6 +64,7 @@ blocks:
     actions:
       - { label: Mark as sent (post or portal), action: mark_sent }
       - { label: Payment reminder, action: payment_reminder }
+      - { label: Correct this invoice, action: correct, confirm: "Cancel this invoice with a credit note now and start a corrected copy?" }
       - { label: Cancel with a credit note, action: credit_note, confirm: "Prepare a credit note that cancels this invoice?" }
   - type: actions
     title: Quote

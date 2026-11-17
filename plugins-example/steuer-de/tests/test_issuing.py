@@ -312,3 +312,91 @@ def test_quotes_become_invoices(setup):
     assert call(archive, "data", "invoice", alice, id=new)["lines"][0]["description"] == "Website"
     with session() as s:
         assert s.execute(text("SELECT count(*) FROM document_holds")).scalar_one() == 0  # no lock
+
+
+def test_correct_cancels_and_starts_a_corrected_copy(setup):
+    archive, alice = setup
+    first = draft(archive, alice, ("Beratung", "2", "80.00", "sale_19"))
+    call(archive, "action", "issue", alice, id=first)
+    done = call(archive, "action", "correct", alice, id=first)
+    year = date.today().year
+    assert f"GS-{year}-0001" in done.message
+    assert call(archive, "data", "invoice", alice, id=first)["state"] == "cancelled"
+    copy = int(done.goto.split("=")[1])
+    corrected = call(archive, "data", "invoice", alice, id=copy)
+    assert corrected["state"] == "draft" and not corrected["number"]
+    assert [ln["description"] for ln in corrected["lines"]] == ["Beratung"]
+    with pytest.raises(ActionError):  # a cancelled invoice is not corrected twice
+        call(archive, "action", "correct", alice, id=first)
+
+
+def test_a_recurring_draft_is_announced_until_issued(setup):
+    from docuhive.reminders.models import Reminder
+    from sqlalchemy import select
+
+    archive, alice = setup
+    first = draft(archive, alice, ("Wartung", "1", "50.00", "sale_19"))
+    call(archive, "action", "issue", alice, id=first)
+    with archive.registry("steuer-de").db.session() as s:
+        s.execute(
+            text("UPDATE invoices SET recurring_months = 1, next_run = :t WHERE id = :i"),
+            {"t": date.today(), "i": first},
+        )
+    archive.registry("steuer-de").enqueue("recurring", {})
+    archive.run_jobs()
+
+    def announced() -> list[str]:
+        with session() as s:
+            return list(
+                s.scalars(
+                    select(Reminder.link).where(Reminder.fact.like("plugin:steuer-de:draft:%"))
+                )
+            )
+
+    (link,) = announced()
+    new = int(link.split("id=")[1])
+    assert call(archive, "data", "invoice", alice, id=new)["state"] == "draft"
+    call(archive, "action", "issue", alice, id=new)
+    assert announced() == []
+
+
+def test_saved_items_are_added_to_a_draft(setup):
+    archive, alice = setup
+    book = call(archive, "data", "books", alice)[0]["id"]
+    call(
+        archive,
+        "action",
+        "save_item",
+        alice,
+        book=book,
+        description="Stunde Beratung",
+        unit="HUR",
+        unit_price="95.00",
+        vat_code="sale_19",
+    )
+    call(
+        archive,
+        "action",
+        "save_item",
+        alice,
+        book=book,
+        description="Stunde Beratung",
+        unit="HUR",
+        unit_price="100.00",
+        vat_code="sale_19",
+    )  # the same description updates it
+    (item,) = call(archive, "data", "saved_items", alice, book=book)
+    assert item["unit_price"] == D("100.00")
+    first = draft(archive, alice, ("Anfahrt", "1", "30.00", "sale_19"))
+    (option,) = call(archive, "data", "item_options", alice, id=first)
+    call(archive, "action", "add_item", alice, id=first, item=option["value"], quantity="3")
+    lines = call(archive, "data", "invoice", alice, id=first)["lines"]
+    assert [(ln["description"], ln["quantity"]) for ln in lines] == [
+        ("Anfahrt", "1.000"),
+        ("Stunde Beratung", "3.000"),
+    ]
+    call(archive, "action", "issue", alice, id=first)
+    with pytest.raises(ActionError, match="issued"):
+        call(archive, "action", "add_item", alice, id=first, item=option["value"])
+    call(archive, "action", "delete_item", alice, id=item["id"], book_id=book)
+    assert call(archive, "data", "saved_items", alice, book=book) == []
