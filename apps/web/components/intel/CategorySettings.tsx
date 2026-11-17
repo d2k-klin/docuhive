@@ -22,8 +22,18 @@ type Category = {
   description: string;
   restricted: boolean;
   enabled: boolean;
+  source?: string | null;
 };
-type Taxonomy = { categories: Category[]; preset_ids: string[] };
+type DocumentType = { id: string; label: string; source?: string | null };
+type Taxonomy = {
+  categories: Category[];
+  preset_ids: string[];
+  document_types?: DocumentType[];
+};
+
+/** "plugin:steuer-de" → "steuer-de": who added an entry the archive did not ship with. */
+const fromPlugin = (source?: string | null) =>
+  source?.startsWith("plugin:") ? source.slice(7) : null;
 
 export function CategorySettings({ admin }: { admin: boolean }) {
   const taxonomy = useApi<Taxonomy>("/api/taxonomy");
@@ -176,8 +186,12 @@ export function CategorySettings({ admin }: { admin: boolean }) {
                           ? `${categories.find((p) => p.id === c.id.slice(0, c.id.lastIndexOf("/")))?.label || ""} › ${c.label}`
                           : c.label}
                       </span>
-                      {!taxonomy.data!.preset_ids.includes(c.id) && (
-                        <Badge>Custom</Badge>
+                      {fromPlugin(c.source) ? (
+                        <Badge>From {fromPlugin(c.source)}</Badge>
+                      ) : (
+                        !taxonomy.data!.preset_ids.includes(c.id) && (
+                          <Badge>Custom</Badge>
+                        )
                       )}
                       {c.restricted && (
                         <span className="inline-flex items-center gap-1 text-xs text-text-muted">
@@ -206,6 +220,22 @@ export function CategorySettings({ admin }: { admin: boolean }) {
               </div>
             )}
           </>
+        )}
+        {taxonomy.data?.document_types?.some((t) => fromPlugin(t.source)) && (
+          <div className="mt-6 border-t border-border pt-4">
+            <h3 className="mb-2 text-sm font-semibold">
+              Document types added by plugins
+            </h3>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2">
+              {taxonomy.data.document_types
+                .filter((t) => fromPlugin(t.source))
+                .map((t) => (
+                  <li key={t.id} className="flex items-center gap-2 text-sm">
+                    {t.label} <Badge>From {fromPlugin(t.source)}</Badge>
+                  </li>
+                ))}
+            </ul>
+          </div>
         )}
         {adding && admin && (
           <form

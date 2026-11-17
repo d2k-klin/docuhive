@@ -13,6 +13,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Tax: the yearly VAT return with the advance returns already paid and what is left; each period lists the bookings behind its figures. Business equipment from the inventory and rental income from the landlord plugin appear in the tax plugin when those are on.
 - **Settings → Users** for administrators: add people, change their role, disable or enable them, and choose which categories bookkeepers may see.
 - A document's "Related" list shows the related documents' titles.
+- Vocabulary marks categories and document types that a plugin added ("From steuer-de") instead of calling them custom.
 - Tax invoices: **Correct this invoice** issues the cancelling credit note and opens a corrected copy in one step; saved items to add to a draft; a reminder when a recurring invoice has made a new draft.
 
 ### Fixed
