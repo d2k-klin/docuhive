@@ -123,6 +123,16 @@ def test_second_invalid_raises(core, fake, prompt):
     assert [r["status"] for r in core.rows("ai_runs")] == ["invalid", "invalid"]
 
 
+def test_an_answer_that_never_fits_the_schema_stops_after_a_few_turns(core, fake, prompt):
+    # A weak model can repeat the same invalid tool call forever; each attempt is capped.
+    m = fake(outputs={"*": {"title": "no n"}})
+    with pytest.raises(base.AllRoutesFailed):
+        base.run_structured("classify", "p", {"name": "x"}, Out)
+    attempts = routing.load().limits.retries + 1
+    assert len(m.calls) <= attempts * base.MAX_TURNS
+    assert {r["status"] for r in core.rows("ai_runs")} <= {"invalid", "error"}
+
+
 def test_timeout_falls_back_to_next_route(core, fake, prompt, monkeypatch):
     use_routing(monkeypatch, tasks={"chat": {"route": "cloud/m", "fallback": ["local/m"]}})
     fake("cloud/m", outputs={"*": {"title": "c", "n": 1}}, fail=["timeout", "timeout"])

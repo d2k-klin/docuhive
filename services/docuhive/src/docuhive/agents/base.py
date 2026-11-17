@@ -80,11 +80,28 @@ def _usage(result: Any) -> tuple[int | None, int | None]:
     return u.get("inputTokens"), u.get("outputTokens")
 
 
+MAX_TURNS = 4  # model calls per structured attempt
+
+
 def _invoke[T: BaseModel](route: Route, prompt: str, output: type[T], timeout_s: float) -> Any:
     from strands import Agent
+    from strands.hooks import BeforeModelCallEvent
 
-    agent = Agent(model=router.model_for(route), system_prompt=SYSTEM, callback_handler=None)
     cancel = threading.Event()
+    turns = 0
+
+    def cap(event: BeforeModelCallEvent) -> None:
+        # A model that repeats an answer the schema rejects would loop until the timeout,
+        # holding a worker the whole time. One answer and a few corrections are enough.
+        nonlocal turns
+        turns += 1
+        if turns > MAX_TURNS:
+            cancel.set()
+            event.cancel = "Stopped: the answer did not fit the schema."
+
+    agent = Agent(
+        model=router.model_for(route), system_prompt=SYSTEM, callback_handler=None, hooks=[cap]
+    )
     future = _POOL.submit(agent, prompt, structured_output_model=output, cancel_signal=cancel)
     try:
         return future.result(timeout=timeout_s)
