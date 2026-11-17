@@ -28,3 +28,7 @@ playwright-report/
 
 # Internal planning documents: never published
 /internal/
+
+# Your own plugin files (wording, rules, templates) stay on your machine.
+plugins-example/*/custom/*
+!plugins-example/*/custom/.keep
