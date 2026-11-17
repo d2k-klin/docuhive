@@ -80,10 +80,18 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
     categories = lambda: {c["id"]: c for c in registry.rules("categories.yaml")["categories"]}  # noqa: E731
     limits = lambda: registry.rules("thresholds.yaml")  # noqa: E731
 
+    # A place inside another reads "House › Kitchen". Depth is capped so a loop in the
+    # data can never make the query run away (set_parent refuses loops anyway).
+    PLACES = (
+        "WITH RECURSIVE places AS (SELECT id, name::text AS path, 1 AS depth FROM locations "
+        "WHERE parent_id IS NULL UNION ALL SELECT l.id, p.path || ' › ' || l.name, p.depth + 1 "
+        "FROM locations l JOIN places p ON l.parent_id = p.id WHERE p.depth < 8) "
+    )
+
     def visible(user: User, item_id: object = None) -> list[dict]:
         sql = (
-            "SELECT i.*, l.name AS location FROM items i LEFT JOIN locations l ON "
-            "l.id = i.location_id WHERE (i.owner_id = :u OR i.shared)"
+            PLACES + "SELECT i.*, p.path AS location FROM items i LEFT JOIN places p ON "
+            "p.id = i.location_id WHERE (i.owner_id = :u OR i.shared)"
         )
         if item_id is not None:
             sql += " AND i.id = :i"
@@ -609,12 +617,41 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
     registry.data("category_options")(
         lambda user, params: [{"value": k, "label": v["label"]} for k, v in categories().items()]
     )
+
+    def places(user: User) -> list[dict]:
+        return q(
+            PLACES + "SELECT p.id, p.path FROM places p JOIN locations l ON l.id = p.id "
+            "WHERE l.owner_id = :o ORDER BY p.path",
+            o=user.id,
+        )
+
     registry.data("location_options")(
-        lambda user, params: [
-            {"value": str(r["id"]), "label": r["name"]}
-            for r in q("SELECT * FROM locations WHERE owner_id = :o ORDER BY name", o=user.id)
-        ]
+        lambda user, params: [{"value": str(r["id"]), "label": r["path"]} for r in places(user)]
     )
+    registry.data("parent_options")(
+        lambda user, params: (
+            [{"value": "", "label": "Nowhere else (a place of its own)"}]
+            + [{"value": str(r["id"]), "label": r["path"]} for r in places(user)]
+        )
+    )
+
+    @registry.action("set_parent")
+    def set_parent(user: User, params: dict) -> Result:
+        """Put a place inside another, such as the kitchen inside the house."""
+        mine = {str(r["id"]): r["path"] for r in places(user)}
+        place, parent = str(params.get("place") or ""), str(params.get("parent") or "")
+        if place not in mine or (parent and parent not in mine):
+            raise ActionError("Choose two of your places.")
+        if parent and (parent == place or mine[parent].startswith(mine[place] + " › ")):
+            return Result(errors={"parent": "A place cannot be inside itself"})
+        run(
+            "UPDATE locations SET parent_id = :p WHERE id = :i AND owner_id = :o",
+            p=int(parent) if parent else None,
+            i=int(place),
+            o=user.id,
+        )
+        return Result(message="Saved.")
+
     registry.data("roles")(
         lambda user, params: [
             {"value": r, "label": r.replace("_", " ").capitalize()}
@@ -713,6 +750,10 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
 
     # Ask ---------------------------------------------------------------------------------------
 
+    def in_place(item: dict, place: str) -> bool:
+        """ "Kitchen" finds "House › Kitchen"; "House" finds everything in the house."""
+        return not place or norm(place) in [norm(p) for p in (item["location"] or "").split("›")]
+
     @registry.tool
     def inventory_items(user: User, query: str = "", location: str = "") -> dict:
         """Things you own, with price, purchase date and whether the warranty still runs.
@@ -726,7 +767,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
             row(i)
             for i in active(user)
             if (not words or words in norm(f"{i['name']}{i['manufacturer']}{i['model']}"))
-            and (not location or norm(location) == norm(i["location"]))
+            and in_place(i, location)
         ]
         docs = (
             q(
@@ -761,7 +802,7 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         """
         totals: dict[str, Decimal] = {}
         for i in active(user):
-            if location and norm(location) != norm(i["location"]):
+            if not in_place(i, location):
                 continue
             totals[i["currency"]] = (
                 totals.get(i["currency"], Decimal(0)) + (i["price"] or 0) * i["quantity"]

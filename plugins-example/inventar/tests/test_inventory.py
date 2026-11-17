@@ -277,3 +277,23 @@ def test_merging_two_entries_of_the_same_thing(archive):
         keys = set(s.scalars(select(Reminder.fact)))
     assert f"plugin:inventar:warranty:{keep}" in keys
     assert f"plugin:inventar:warranty:{other}" not in keys
+
+
+def test_places_inside_places(archive):
+    alice = archive.user("alice")
+    call(archive, "action", "save_item", alice, name="Mixer", location_id="Küche", price="80")
+    call(archive, "action", "save_item", alice, name="Drill", location_id="Haus", price="120")
+    ids = {o["label"]: o["value"] for o in call(archive, "data", "location_options", alice)}
+    assert call(archive, "action", "set_parent", alice, place=ids["Küche"], parent=ids["Haus"])
+    labels = [o["label"] for o in call(archive, "data", "location_options", alice)]
+    assert labels == ["Haus", "Haus › Küche"]
+    loop = call(archive, "action", "set_parent", alice, place=ids["Haus"], parent=ids["Küche"])
+    assert loop.errors == {"parent": "A place cannot be inside itself"}
+    with pytest.raises(ActionError):  # someone else's place
+        call(archive, "action", "set_parent", archive.user("bob"), place=ids["Küche"], parent="")
+    items = archive.tool("inventar", "inventory_items")
+    in_house = items(alice, location="Haus")["items"]
+    assert sorted(i["name"] for i in in_house) == ["Drill", "Mixer"]
+    assert [i["location"] for i in items(alice, location="küche")["items"]] == ["Haus › Küche"]
+    value = archive.tool("inventar", "inventory_value")
+    assert value(alice, location="Küche")["totals"] == {"EUR": "80.00"}

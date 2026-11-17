@@ -30,6 +30,15 @@ blocks:
       - { name: warranty_until, type: date, label: "Warranty until (empty: the usual for the category)" }
     action: save_item
     submit: Add
+  - type: form
+    title: Put a place inside another
+    help: "The kitchen in the house, the garage at the holiday flat: lists then read “House › Kitchen”."
+    show_if: location_options
+    fields:
+      - { name: place, type: choice, label: Place, options: location_options, required: true }
+      - { name: parent, type: choice, label: Is inside, options: parent_options }
+    action: set_parent
+    submit: Save
   - type: actions
     title: Lists
     actions:
