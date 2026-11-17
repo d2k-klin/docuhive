@@ -4,9 +4,8 @@
 
 ## Set it up
 
-1. `docuhive plugins add plugins-example/schule`, restart DocuHive.
-2. Switch it on under **Settings → Plugins**.
-3. Upload a letter from school. It appears under **School** with its reply date.
+1. Install it from **Settings → Plugins → Marketplace** and switch it on.
+2. Upload a letter from school. It appears under **School** with its reply date.
 
 ## Make it yours
 

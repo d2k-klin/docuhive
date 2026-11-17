@@ -1,6 +1,7 @@
 id: schule
 name: School
 description: Letters from school that still need an answer, soonest first.
+labels: [Household, Family, Example]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata]

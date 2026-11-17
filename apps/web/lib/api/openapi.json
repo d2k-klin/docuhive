@@ -5681,6 +5681,153 @@
         }
       }
     },
+    "/api/plugins/catalogue": {
+      "get": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "List Catalogue",
+        "operationId": "list_catalogue_api_plugins_catalogue_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CatalogueOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Catalogue Api Plugins Catalogue Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugins/catalogue/{plugin_id}/install": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Install From Catalogue",
+        "description": "Copy it in; it stays off until switched on with its permissions in view.",
+        "operationId": "install_from_catalogue_api_plugins_catalogue__plugin_id__install_post",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugins/{plugin_id}/update": {
+      "post": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Update From Catalogue",
+        "description": "The catalogue's newer version, keeping custom/ files. Asking for more keeps it off.",
+        "operationId": "update_from_catalogue_api_plugins__plugin_id__update_post",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugins/{plugin_id}": {
+      "delete": {
+        "tags": [
+          "plugins"
+        ],
+        "summary": "Remove",
+        "description": "Remove an installed plugin that is off. Its data and settings stay for a reinstall.",
+        "operationId": "remove_api_plugins__plugin_id__delete",
+        "parameters": [
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/plugins": {
       "get": {
         "tags": [
@@ -7062,6 +7209,87 @@
           "label"
         ],
         "title": "Capability"
+      },
+      "CatalogueOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/Capability"
+            },
+            "type": "array",
+            "title": "Capabilities"
+          },
+          "installed_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Installed Version"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "labels",
+          "version",
+          "capabilities",
+          "installed_version",
+          "state",
+          "message"
+        ],
+        "title": "CatalogueOut",
+        "description": "One plugin shipped with DocuHive, as the marketplace shows it."
       },
       "Category": {
         "properties": {
@@ -9229,6 +9457,14 @@
           "description": {
             "type": "string",
             "title": "Description"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Labels",
+            "default": []
           },
           "version": {
             "anyOf": [

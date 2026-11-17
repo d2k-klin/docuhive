@@ -1,14 +1,13 @@
 """`docuhive plugins …`: add, update, copy, check, switch on and off."""
 
 import argparse
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+from . import catalogue, discovery, files, state
 from . import check as checks
-from . import discovery, files, state
-from .manifest import CAPABILITIES, ManifestError, load, satisfies
+from .manifest import CAPABILITIES
 
 SKELETON = """id: {id}
 name: {name}
@@ -30,7 +29,6 @@ README = """# {name}
 | File | What it controls |
 | --- | --- |
 """
-IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache")
 
 
 def register(subs: argparse._SubParsersAction) -> None:
@@ -117,7 +115,7 @@ def run(args: argparse.Namespace) -> None:
         _enable(found, args.yes)
     elif action == "disable":
         state.disable(found.id, actor="cli")
-        print(f"{found.id} is off. Restart DocuHive to apply. Its documents and data are kept.")
+        print(f"{found.id} is off. Its documents and data are kept.")
     elif action == "purge":
         _purge(found)
 
@@ -143,65 +141,24 @@ def _list() -> None:
 
 
 def _copy(source: Path, target: Path, keep_custom: Path | None = None) -> None:
-    shutil.copytree(source, target, ignore=IGNORE)
-    custom = target / "custom"
-    if keep_custom is not None:
-        shutil.rmtree(custom, ignore_errors=True)
-        shutil.copytree(keep_custom, custom)
-    elif custom.exists():
-        # The user's files belong to their installation, never to the copy being added.
-        shutil.rmtree(custom)
-    custom.mkdir(exist_ok=True)
+    catalogue.copy(source, target, keep_custom)
 
 
 def _add(source: Path) -> None:
     try:
-        manifest = load(source)
-    except ManifestError as error:
-        print(f"Not added: {source} is not a valid plugin")
-        _print_problems(error.problems)
-        raise SystemExit(1) from None
-    target = _root() / manifest.id
-    if target.exists():
-        raise SystemExit(
-            f"'{manifest.id}' is already installed. Use: docuhive plugins update {manifest.id} "
-            f"--from {source}"
-        )
-    _copy(source, target)
-    print(f"Added {manifest.name} {manifest.version} to {target}.")
-    print("Restart DocuHive, then switch it on under Settings → Plugins, or run:")
+        manifest = catalogue.install(source)
+    except catalogue.Refused as error:
+        raise SystemExit(f"Not added: {error}") from None
+    print(f"Added {manifest.name} {manifest.version} to {_root() / manifest.id}.")
+    print("Switch it on under Settings → Plugins, or run:")
     print(f"  docuhive plugins enable {manifest.id}")
 
 
 def _update(plugin_id: str, source: Path, force: bool) -> None:
-    target = _root() / plugin_id
-    if not target.is_dir():
-        raise SystemExit(f"'{plugin_id}' is not installed in {target.parent}; use add")
     try:
-        new, old = load(source), load(target)
-    except ManifestError as error:
-        _print_problems(error.problems)
-        raise SystemExit(1) from None
-    if new.id != plugin_id:
-        raise SystemExit(f"{source} is the plugin '{new.id}', not '{plugin_id}'")
-    if not new.sdk_compatible():
-        raise SystemExit(f"Not updated: {new.version} needs a newer DocuHive ({new.requires_sdk})")
-    if not force and not satisfies(new.version, f">={old.version}"):
-        raise SystemExit(f"Not updated: {new.version} is older than the installed {old.version}")
-    staging = target.with_name(f".{plugin_id}.updating")
-    shutil.rmtree(staging, ignore_errors=True)
-    _copy(source, staging, keep_custom=target / "custom")
-    problems = checks.scan_files(staging)
-    if problems:
-        shutil.rmtree(staging)
-        print("Not updated: your custom files do not fit the new version")
-        _print_problems(problems)
-        raise SystemExit(1)
-    backup = target.with_name(f".{plugin_id}.previous")
-    shutil.rmtree(backup, ignore_errors=True)
-    target.rename(backup)
-    staging.rename(target)
-    shutil.rmtree(backup)
+        old, new = catalogue.update(plugin_id, source, force=force)
+    except catalogue.Refused as error:
+        raise SystemExit(f"Not updated: {error}") from None
     added = set(new.capability_names()) - set(old.capability_names())
     print(f"Updated {plugin_id} {old.version} → {new.version}. Your custom/ files are unchanged.")
     if added:
@@ -260,7 +217,7 @@ def _enable(found: discovery.Found, yes: bool) -> None:
     if not yes and input("Switch it on? [y/N] ").strip().lower() not in {"y", "yes"}:
         raise SystemExit("Not switched on")
     state.enable(found.id, granted, actor="cli")
-    print(f"{found.id} is on. Restart DocuHive to apply.")
+    print(f"{found.id} is on. DocuHive loads it within seconds.")
 
 
 def _purge(found: discovery.Found) -> None:

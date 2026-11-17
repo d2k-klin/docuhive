@@ -1,6 +1,7 @@
 id: gesundheit
 name: Health claims
 description: Doctor, dentist and pharmacy bills and what your health insurer paid back; reminders for bills not submitted or not reimbursed, and your own share for the tax return.
+labels: [Household, Health, Germany]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata, ai]

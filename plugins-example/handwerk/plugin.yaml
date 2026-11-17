@@ -1,6 +1,7 @@
 id: handwerk
 name: Home and craftsmen
 description: Craftsman invoices with the labour share you can deduct from your income tax and how long the work is under warranty, and reminders for the regular upkeep of your home.
+labels: [Household, Home, Germany, Tax]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata, ai]

@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from docuhive.auth import require_admin
 from docuhive.config import get_setting, set_setting
 from docuhive.contracts import CurrentUser
-from docuhive.plugins import discovery, runtime, state
-from docuhive.plugins.manifest import CAPABILITIES, Manifest
+from docuhive.plugins import catalogue, discovery, runtime, state
+from docuhive.plugins.manifest import CAPABILITIES, Manifest, satisfies
 
 router = APIRouter(prefix="/api/plugins", tags=["plugins"])
 Admin = Annotated[CurrentUser, Depends(require_admin)]
@@ -24,6 +24,7 @@ class PluginOut(BaseModel):
     id: str
     name: str
     description: str
+    labels: list[str] = []
     version: str | None
     source: str
     enabled: bool
@@ -42,6 +43,21 @@ class AskIn(BaseModel):
 
 
 NOT_IN_ASK = "plugins.not_in_ask"
+
+
+class CatalogueOut(BaseModel):
+    """One plugin shipped with DocuHive, as the marketplace shows it."""
+
+    id: str
+    name: str
+    description: str
+    labels: list[str]
+    version: str | None
+    capabilities: list[Capability]
+    installed_version: str | None
+    # available, installed, update (a newer version is here), problem (cannot be installed)
+    state: str
+    message: str | None
 
 
 class EnableIn(BaseModel):
@@ -73,13 +89,14 @@ def _out(found: discovery.Found, rows: dict) -> PluginOut:
     elif enabled and last_error:  # it was started and failed: a restart alone will not help
         status, message = "problem", last_error
     elif enabled != running:
-        status, message = "needs_restart", "Restart DocuHive to apply."
+        status, message = "needs_restart", "Starting or stopping: reload in a few seconds."
     else:
         status, message = ("on" if enabled else "off"), None
     return PluginOut(
         id=found.id,
         name=manifest.name if manifest else found.id,
         description=manifest.description if manifest else "",
+        labels=manifest.labels if manifest else [],
         version=manifest.version if manifest else None,
         source=found.source,
         enabled=enabled,
@@ -100,6 +117,76 @@ def _found(plugin_id: str) -> discovery.Found:
     if found is None:
         raise HTTPException(404, {"code": "not_found", "message": "No such plugin", "details": {}})
     return found
+
+
+def _refused(error: Exception) -> HTTPException:
+    return HTTPException(409, {"code": "refused", "message": str(error), "details": {}})
+
+
+@router.get("/catalogue", response_model=list[CatalogueOut])
+def list_catalogue(user: Admin) -> list[CatalogueOut]:
+    installed = {f.id: f for f in discovery.discover()}
+    out = []
+    for entry in catalogue.entries():
+        manifest, have = entry.manifest, installed.get(entry.id)
+        mine = have.manifest.version if have and have.manifest else None
+        if entry.problems or manifest is None:
+            status, message = "problem", "; ".join(entry.problems)
+        elif mine is None:
+            status, message = "available", None
+        elif satisfies(manifest.version, f">{mine}") and have and have.source == "folder":
+            status, message = "update", f"Version {manifest.version} is here; you have {mine}."
+        else:
+            status, message = "installed", None
+        out.append(
+            CatalogueOut(
+                id=entry.id,
+                name=manifest.name if manifest else entry.id,
+                description=manifest.description if manifest else "",
+                labels=manifest.labels if manifest else [],
+                version=manifest.version if manifest else None,
+                capabilities=[
+                    Capability(id=c, label=_label(c, manifest))
+                    for c in (manifest.capability_names() if manifest else [])
+                ],
+                installed_version=mine,
+                state=status,
+                message=message,
+            )
+        )
+    return out
+
+
+@router.post("/catalogue/{plugin_id}/install", response_model=PluginOut)
+def install_from_catalogue(plugin_id: str, user: Admin) -> PluginOut:
+    """Copy it in; it stays off until switched on with its permissions in view."""
+    try:
+        catalogue.install(catalogue.entry(plugin_id).path)
+    except catalogue.Refused as error:
+        raise _refused(error) from None
+    return _out(_found(plugin_id), state.states())
+
+
+@router.post("/{plugin_id}/update", response_model=PluginOut)
+def update_from_catalogue(plugin_id: str, user: Admin) -> PluginOut:
+    """The catalogue's newer version, keeping custom/ files. Asking for more keeps it off."""
+    try:
+        catalogue.update(plugin_id, catalogue.entry(plugin_id).path)
+    except catalogue.Refused as error:
+        raise _refused(error) from None
+    runtime.sync("api")
+    return _out(_found(plugin_id), state.states())
+
+
+@router.delete("/{plugin_id}", status_code=204)
+def remove(plugin_id: str, user: Admin) -> None:
+    """Remove an installed plugin that is off. Its data and settings stay for a reinstall."""
+    _found(plugin_id)
+    try:
+        catalogue.remove(plugin_id)
+    except catalogue.Refused as error:
+        raise _refused(error) from None
+    runtime.sync("api")
 
 
 @router.get("", response_model=list[PluginOut])
@@ -127,6 +214,7 @@ def enable(plugin_id: str, body: EnableIn, user: Admin) -> PluginOut:
             },
         )
     state.enable(plugin_id, wanted, actor=f"user:{user.id}")
+    runtime.sync("api")  # the worker follows within seconds
     return _out(found, state.states())
 
 
@@ -134,6 +222,7 @@ def enable(plugin_id: str, body: EnableIn, user: Admin) -> PluginOut:
 def disable(plugin_id: str, user: Admin) -> PluginOut:
     found = _found(plugin_id)
     state.disable(plugin_id, actor=f"user:{user.id}")
+    runtime.sync("api")
     return _out(found, state.states())
 
 

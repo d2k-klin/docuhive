@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, text
 
 from docuhive import db
 from docuhive.config.settings import get_settings
@@ -17,6 +17,29 @@ from .manifest import Manifest, SettingField
 
 class SecretsUnavailable(RuntimeError):
     pass
+
+
+GENERATION = "plugins.generation"
+
+
+def generation() -> int:
+    """A counter that moves whenever plugins change; every process re-syncs when it moves."""
+    from docuhive.config import get_setting
+
+    return int(get_setting(GENERATION) or 0)
+
+
+def changed(s: Any = None) -> None:
+    """Tell every process that the plugins changed (switched, installed, updated, removed)."""
+    statement = text(
+        "INSERT INTO settings (key, value) VALUES (:k, '1'::jsonb) ON CONFLICT (key) DO "
+        "UPDATE SET value = to_jsonb(coalesce(settings.value::text::int, 0) + 1)"
+    )
+    if s is not None:
+        s.execute(statement, {"k": GENERATION})
+        return
+    with db.session() as session:
+        session.execute(statement, {"k": GENERATION})
 
 
 def states() -> dict[str, PluginState]:
@@ -35,6 +58,7 @@ def enable(plugin_id: str, granted: list[str], actor: str) -> None:
         s.add(row)
         after = {"id": plugin_id, "granted": granted}
         s.add(AuditLog(actor=actor, action="plugin.enable", after=after))
+        changed(s)
 
 
 def disable(plugin_id: str, actor: str) -> None:
@@ -43,6 +67,7 @@ def disable(plugin_id: str, actor: str) -> None:
         if row is not None:
             row.enabled = False
         s.add(AuditLog(actor=actor, action="plugin.disable", after={"id": plugin_id}))
+        changed(s)
 
 
 def record(plugin_id: str, *, version: str | None = None, error: str | None = None) -> None:
@@ -60,6 +85,7 @@ def forget(plugin_id: str, actor: str) -> None:
         s.execute(delete(Setting).where(Setting.key.like(f"plugin:{plugin_id}:%")))
         s.execute(delete(PluginState).where(PluginState.id == plugin_id))
         s.add(AuditLog(actor=actor, action="plugin.purge", after={"id": plugin_id}))
+        changed(s)
 
 
 # Settings ---------------------------------------------------------------------------------

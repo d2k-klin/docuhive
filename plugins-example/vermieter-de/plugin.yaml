@@ -1,6 +1,7 @@
 id: vermieter-de
 name: Rent and service charges (Germany)
 description: For private landlords — the rent ledger, and the yearly service-charge statement per tenant built from the bills in your archive. It divides costs by the keys you choose; it does not give legal advice.
+labels: [Landlord, Germany]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:create, documents:hold, mail:send, ai]

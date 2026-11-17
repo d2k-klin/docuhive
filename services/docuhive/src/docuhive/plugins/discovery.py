@@ -17,7 +17,7 @@ EXAMPLES = Path(__file__).resolve().parents[5] / "plugins-example"
 class Found:
     id: str
     path: Path
-    source: Literal["folder", "package", "dev"]
+    source: Literal["folder", "package", "dev", "catalogue"]
     manifest: Manifest | None = None
     problems: list[str] = field(default_factory=list)
 
@@ -34,7 +34,7 @@ def plugins_dir() -> Path | None:
     return (settings.overlay_dir / "plugins").resolve() if settings.overlay_dir else None
 
 
-def _folders(root: Path | None) -> list[Path]:
+def folders(root: Path | None) -> list[Path]:
     if root is None or not root.is_dir():
         return []
     return sorted(
@@ -63,7 +63,7 @@ def _packages() -> list[Path]:
     return out
 
 
-def _read(path: Path, source: Literal["folder", "package", "dev"]) -> Found:
+def read(path: Path, source: Literal["folder", "package", "dev", "catalogue"]) -> Found:
     found = Found(id=path.name, path=path, source=source)
     try:
         found.manifest = load(path)
@@ -81,10 +81,12 @@ def _read(path: Path, source: Literal["folder", "package", "dev"]) -> Found:
 def discover() -> list[Found]:
     """Every plugin, in dependency order; the first source wins for a repeated id."""
     settings = get_settings()
-    candidates = [_read(p, "folder") for p in _folders(plugins_dir())]
-    candidates += [_read(p, "package") for p in _packages()]
+    candidates = [read(p, "folder") for p in folders(plugins_dir())]
+    if settings.overlay_dir and settings.plugins_dir:  # plugins placed in the overlay by hand
+        candidates += [read(p, "folder") for p in folders(settings.overlay_dir / "plugins")]
+    candidates += [read(p, "package") for p in _packages()]
     if settings.env == "dev" and settings.plugins_dev:
-        candidates += [_read(p, "dev") for p in _folders(EXAMPLES)]
+        candidates += [read(p, "dev") for p in folders(EXAMPLES)]
     by_id: dict[str, Found] = {}
     for found in candidates:
         by_id.setdefault(found.id, found)

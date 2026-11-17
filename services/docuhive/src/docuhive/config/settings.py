@@ -43,6 +43,7 @@ class CoreSettings(BaseSettings):
     storage_root: Path | None = None
     storage_root_label: str | None = None  # the same folder as the host sees it (display only)
     plugins_dir: Path | None = None  # unset: OVERLAY_DIR/plugins
+    catalogue_dir: Path | None = None  # the plugins shipped with DocuHive; unset: ./plugins-example
     plugins_dev: bool = False  # development only: also load the examples in ./plugins-example
     guest_links: bool = False  # read-only links for an advisor; only useful where they can reach
 
@@ -52,6 +53,7 @@ class CoreSettings(BaseSettings):
         "consume_default_owner",
         "storage_root",
         "plugins_dir",
+        "catalogue_dir",
         mode="before",
     )
     @classmethod

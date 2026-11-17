@@ -103,7 +103,8 @@ def test_api_is_for_administrators_and_requires_the_current_capabilities(client,
     wanted = [c["id"] for c in listed["capabilities"]]
     assert client.post("/api/plugins/fuel/enable", json={"capabilities": wanted}).status_code == 403
     enabled = client.post("/api/plugins/fuel/enable", json={"capabilities": wanted}, headers=CSRF)
-    assert enabled.json()["state"] == "needs_restart"
+    assert enabled.json()["state"] == "on"  # loaded at once, no restart
+    assert "fuel" in runtime.LOADED
     state.record("fuel", error="migrations/001.sql: table exists")  # a start that failed
     assert client.get("/api/plugins").json()[0]["state"] == "problem"
     state.enable("fuel", wanted, actor="test")  # switching on again clears it
@@ -129,8 +130,7 @@ def test_api_is_for_administrators_and_requires_the_current_capabilities(client,
     (plugin / "plugin.yaml").write_text(
         MANIFEST.replace("secrets,", "secrets, ai,").replace("0.1.0", "0.2.0")
     )
-    runtime.reset()
-    runtime.start("api")
+    runtime.sync("api")  # no restart: the old version unloads, the new one waits for approval
     [listed] = client.get("/api/plugins").json()
     assert "fuel" not in runtime.LOADED and listed["state"] == "needs_approval"
     checks = {c["id"]: c for c in client.get("/api/system/setup-status").json()}
@@ -171,3 +171,80 @@ def test_a_sending_action_needs_a_preview(tmp_path):
         install.prepare(registry, "api")
     registry.action("send", outgoing=True, preview=lambda u, p: {"to": []})(lambda u, p: "sent")
     install.prepare(registry, "api")
+
+
+def test_a_process_follows_changes_made_elsewhere_without_a_restart(plugin):
+    import threading
+    import time
+
+    from docuhive.plugins import discovery
+
+    found = discovery.find("fuel")
+    before = state.generation()
+    runtime.sync("worker")
+    assert "fuel" not in runtime.LOADED
+    stopped = threading.Event()
+    runtime.watch("worker", stopped, every=0.05)
+    try:
+        state.enable("fuel", found.manifest.capability_names(), actor="test")  # as the API does
+        assert state.generation() == before + 1
+        for _ in range(100):
+            if "fuel" in runtime.LOADED:
+                break
+            time.sleep(0.05)
+        assert "fuel" in runtime.LOADED
+        state.disable("fuel", actor="test")
+        for _ in range(100):
+            if "fuel" not in runtime.LOADED:
+                break
+            time.sleep(0.05)
+        assert "fuel" not in runtime.LOADED
+    finally:
+        stopped.set()
+
+
+def test_marketplace_install_switch_on_update_and_remove(client, tmp_path, monkeypatch):
+    shelf = tmp_path / "catalogue" / "trips"
+    shelf.mkdir(parents=True)
+    trips = 'id: trips\nname: Trips\nlabels: [Household]\nversion: 0.1.0\nrequires_sdk: ">=1,<2"\n'
+    (shelf / "plugin.yaml").write_text(trips + "capabilities: [documents:read]\n")
+    (shelf / "README.md").write_text("# Trips\n")
+    monkeypatch.setenv("DOCUHIVE_CATALOGUE_DIR", str(shelf.parent))
+    config.reload()
+    login(client, "owner")
+
+    def listed() -> dict:
+        return {e["id"]: e for e in client.get("/api/plugins/catalogue").json()}
+
+    entry = listed()["trips"]
+    assert (entry["state"], entry["labels"]) == ("available", ["Household"])
+    installed = client.post("/api/plugins/catalogue/trips/install", headers=CSRF).json()
+    assert installed["state"] == "off" and "trips" not in runtime.LOADED
+    assert listed()["trips"]["state"] == "installed"
+    again = client.post("/api/plugins/catalogue/trips/install", headers=CSRF)
+    assert again.status_code == 409 and "already installed" in again.json()["error"]["message"]
+
+    on = client.post(
+        "/api/plugins/trips/enable", json={"capabilities": ["documents:read"]}, headers=CSRF
+    )
+    assert on.json()["state"] == "on" and "trips" in runtime.LOADED
+    refused = client.delete("/api/plugins/trips", headers=CSRF)
+    assert refused.status_code == 409 and "Switch it off" in refused.json()["error"]["message"]
+
+    # A newer version in the catalogue: the update keeps the person's custom files.
+    mine = tmp_path / "plugins" / "trips" / "custom" / "notes.txt"
+    mine.write_text("mine")
+    (shelf / "plugin.yaml").write_text(
+        trips.replace("0.1.0", "0.2.0") + "capabilities: [documents:read]\n"
+    )
+    assert listed()["trips"]["state"] == "update"
+    updated = client.post("/api/plugins/trips/update", headers=CSRF).json()
+    assert (updated["version"], updated["state"]) == ("0.2.0", "on")
+    assert runtime.LOADED["trips"].manifest.version == "0.2.0" and mine.read_text() == "mine"
+
+    client.post("/api/plugins/trips/disable", headers=CSRF)
+    assert "trips" not in runtime.LOADED
+    assert client.delete("/api/plugins/trips", headers=CSRF).status_code == 204
+    assert listed()["trips"]["state"] == "available"
+    login(client, "member")
+    assert client.get("/api/plugins/catalogue").status_code == 403

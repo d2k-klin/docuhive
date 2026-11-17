@@ -24,6 +24,11 @@ RUN pip install --no-cache-dir --require-hashes -r /requirements.txt \
 COPY --from=build /wheels/ /wheels/
 RUN pip install --no-cache-dir --no-deps /wheels/*.whl && rm -rf /wheels
 WORKDIR /app
+# The plugin marketplace: the plugins shipped with this version, read-only. Installing one copies
+# it into /srv/plugins (a volume shared by the API and the workers), owned by the app user.
+COPY plugins-example/ /app/catalogue/
+RUN mkdir -p /srv/plugins && chown 1000:1000 /srv/plugins
+ENV DOCUHIVE_CATALOGUE_DIR=/app/catalogue DOCUHIVE_PLUGINS_DIR=/srv/plugins
 USER 1000:1000
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 EXPOSE 8000

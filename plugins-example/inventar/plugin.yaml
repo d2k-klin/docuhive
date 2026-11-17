@@ -1,6 +1,7 @@
 id: inventar
 name: Inventory and warranties
 description: Durable goods from your receipts become a list of what you own, with location, price and warranty end; a contents list and a claim bundle for your insurer on demand.
+labels: [Household, Business, Insurance]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata, documents:create, ai]

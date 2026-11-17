@@ -1,6 +1,7 @@
 id: bank
 name: Bank statements
 description: Reads the statement files your bank lets you download, and matches payments to your invoices and receipts.
+labels: [Household, Business, Money]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata]

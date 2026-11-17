@@ -385,7 +385,7 @@ Run them with `docuhive plugins test my-plugin`.
 3. Calculate amounts with `Decimal`, never with a model, never with floating point.
 4. Send nothing (mail, letters, filings) without a person's click and a preview.
 5. Keep anything the user must keep as a document in the archive.
-6. Work after a restart, after being switched off and on, and when a job runs twice.
+6. Work after a restart, after being switched off and on while DocuHive runs (it is unloaded and loaded again in every process), and when a job runs twice.
 7. Say what went wrong in words a person can act on.
 8. Ship no real documents and no secrets.
 
@@ -393,7 +393,7 @@ Run them with `docuhive plugins test my-plugin`.
 
 | You see | Likely cause | What to do |
 | --- | --- | --- |
-| The plugin is not listed under Settings → Plugins | The folder is not in your plugins folder, or DocuHive was not restarted | `docuhive plugins list` shows where it looks |
+| The plugin is not listed under Settings → Plugins | The folder is not in your plugins folder (or, for the marketplace, not in the catalogue folder) | `docuhive plugins list` shows where it looks |
 | "Needs a newer DocuHive" | `requires_sdk` is newer than your installation | Update DocuHive, or use an older version of the plugin |
 | "Could not start", with an error | `setup` raised | The message is on the Plugins page; `docuhive plugins check` usually finds it first |
 | A page is empty | The data function returned nothing for this user | Check the filter by owner; try as the document's owner |

@@ -1,8 +1,13 @@
-"""Start the enabled plugins in this process, each all-or-nothing, none able to stop the rest."""
+"""Run the enabled plugins in this process, each all-or-nothing, none able to stop the rest.
+
+Every process (API, worker) follows the plugins' state on its own: switching a plugin on, off,
+installing or updating it bumps a counter in the database, and each process re-syncs within
+seconds. No restart is needed."""
 
 import importlib
 import logging
 import sys
+import threading
 import types
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -91,56 +96,127 @@ def load_one(found: discovery.Found, process: Process) -> Loaded:
     return Loaded(found.manifest, registry)
 
 
+_LOCK = threading.RLock()
+_SEEN: dict[str, int] = {}  # process -> the change counter this process last synced to
+
+
+def stop_one(plugin_id: str) -> None:
+    """Unload one plugin from this process: its pages, jobs, listeners and tools disappear."""
+    with _LOCK:
+        loaded = LOADED.pop(plugin_id, None)
+        if loaded is None:
+            return
+        for rollback in ROLLBACK:
+            rollback(loaded.registry)
+        _unimport(plugin_id)
+        log.info("Plugin %s stopped", plugin_id)
+
+
 def start(process: Process) -> None:
-    """Load every enabled, compatible plugin. Safe to call again (does nothing the second time)."""
+    """Load every enabled, compatible plugin and unload the rest. Safe to call again."""
+    sync(process)
+
+
+def sync(process: Process) -> None:  # noqa: C901
     from . import install  # noqa: F401 - registers what plugins add when they start
 
-    if LOADED:
-        return
-    installed = discovery.discover()
-    if not installed:
-        return  # nothing to load: do not touch the database
-    try:
-        enabled = {k: v for k, v in state.states().items() if v.enabled}
-    except SQLAlchemyError:
-        log.warning("Plugins not started: the plugins table is not available (run db upgrade)")
-        return
-    for found in installed:
-        row = enabled.get(found.id)
-        if row is None:
-            continue
-        if not found.loadable:
-            state.record(found.id, error="; ".join(found.problems))
-            continue
-        assert found.manifest is not None
-        missing = set(found.manifest.capability_names()) - set(row.granted)
-        if missing:
-            state.record(
-                found.id,
-                error="Needs your approval: this version asks for " + ", ".join(sorted(missing)),
-            )
-            continue
-        absent = [d for d in found.manifest.depends_on if d not in LOADED]
-        if absent:
-            state.record(found.id, error=f"Needs the plugin '{absent[0]}' switched on")
-            continue
+    with _LOCK:
         try:
-            LOADED[found.id] = load_one(found, process)
-        except Exception as error:
-            log.exception("Plugin %s could not start", found.id)
-            state.record(found.id, error=f"Could not start: {friendly(error)}")
-            continue
-        state.record(found.id, version=found.manifest.version, error=None)
-        log.info("Plugin %s %s started", found.id, found.manifest.version)
+            seen = state.generation()
+            installed = {f.id: f for f in discovery.discover()}
+            if not installed and not LOADED:
+                _SEEN[process] = seen
+                return  # nothing to load: do not touch the plugins table
+            enabled = {k: v for k, v in state.states().items() if v.enabled}
+        except SQLAlchemyError:
+            log.warning("Plugins not started: the plugins table is not available (run db upgrade)")
+            return
+
+        def wanted(plugin_id: str) -> bool:
+            found, row = installed.get(plugin_id), enabled.get(plugin_id)
+            return bool(
+                found
+                and found.loadable
+                and found.manifest
+                and row
+                and not set(found.manifest.capability_names()) - set(row.granted)
+            )
+
+        # Off, removed, no longer approved, or a new version: unload (a new version loads below).
+        for plugin_id in list(LOADED):
+            found = installed.get(plugin_id)
+            if not wanted(plugin_id) or (
+                found
+                and found.manifest
+                and found.manifest.version != LOADED[plugin_id].manifest.version
+            ):
+                stop_one(plugin_id)
+        # A plugin whose dependency went away goes too.
+        while broken := [
+            p for p, x in LOADED.items() if any(d not in LOADED for d in x.manifest.depends_on)
+        ]:
+            for plugin_id in broken:
+                stop_one(plugin_id)
+        # Load in passes, so a plugin that depends on another one starts after it.
+        pending = [f for f in installed.values() if f.id in enabled and f.id not in LOADED]
+        progress = True
+        while pending and progress:
+            progress = False
+            for found in list(pending):
+                row = enabled[found.id]
+                if not found.loadable:
+                    state.record(found.id, error="; ".join(found.problems))
+                    pending.remove(found)
+                    continue
+                assert found.manifest is not None
+                missing = set(found.manifest.capability_names()) - set(row.granted)
+                if missing:
+                    state.record(
+                        found.id,
+                        error="Needs your approval: this version asks for "
+                        + ", ".join(sorted(missing)),
+                    )
+                    pending.remove(found)
+                    continue
+                if any(d not in LOADED for d in found.manifest.depends_on):
+                    continue  # perhaps later in this pass
+                pending.remove(found)
+                progress = True
+                try:
+                    LOADED[found.id] = load_one(found, process)
+                except Exception as error:
+                    log.exception("Plugin %s could not start", found.id)
+                    state.record(found.id, error=f"Could not start: {friendly(error)}")
+                    continue
+                state.record(found.id, version=found.manifest.version, error=None)
+                log.info("Plugin %s %s started", found.id, found.manifest.version)
+        for found in pending:
+            absent = next(d for d in found.manifest.depends_on if d not in LOADED)  # type: ignore[union-attr]
+            state.record(found.id, error=f"Needs the plugin '{absent}' switched on")
+        _SEEN[process] = seen
+
+
+def watch(process: Process, stopped: threading.Event, every: float = 5.0) -> threading.Thread:
+    """Follow changes made by other processes: re-sync when the counter moves."""
+
+    def loop() -> None:
+        while not stopped.wait(every):
+            try:
+                if state.generation() != _SEEN.get(process):
+                    sync(process)
+            except Exception:  # noqa: BLE001 - a hiccup must not end the watcher
+                log.exception("Plugin sync failed; trying again")
+
+    thread = threading.Thread(target=loop, name="plugins-watch", daemon=True)
+    thread.start()
+    return thread
 
 
 def reset() -> None:
     """Tests only: forget what this process loaded."""
     for plugin_id in list(LOADED):
-        for rollback in ROLLBACK:
-            rollback(LOADED[plugin_id].registry)
-        _unimport(plugin_id)
-    LOADED.clear()
+        stop_one(plugin_id)
+    _SEEN.clear()
 
 
 def setup_checks(user: CurrentUser) -> list[SetupCheck]:

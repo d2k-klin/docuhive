@@ -16,10 +16,17 @@ from .routers import ROUTERS
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    import threading
+
+    from docuhive.plugins import runtime
+
     get_settings()
     start_plugins("api")
     start_intelligence()
+    stopped = threading.Event()
+    runtime.watch("api", stopped)  # plugins switched on elsewhere start here within seconds
     yield
+    stopped.set()
 
 
 def create_app() -> FastAPI:

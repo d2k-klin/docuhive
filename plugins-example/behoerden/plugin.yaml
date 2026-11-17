@@ -1,6 +1,7 @@
 id: behoerden
 name: Official letters and ID documents
 description: Letters from authorities with a deadline to answer, soonest first, with an objection letter ready; and when passports and ID cards run out.
+labels: [Household, Business, Germany, Deadlines]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata, documents:create, ai]

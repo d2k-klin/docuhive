@@ -159,6 +159,7 @@ def enabled(monkeypatch, granted: dict[str, list[str]]):
     monkeypatch.setattr(state, "states", lambda: rows)
     monkeypatch.setattr(state, "record", lambda pid, **kw: recorded.setdefault(pid, {}).update(kw))
     monkeypatch.setattr(state, "is_set", lambda pid, key: False)
+    monkeypatch.setattr(state, "generation", lambda: 0)
     return recorded
 
 

@@ -6,6 +6,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- **Plugin marketplace** under Settings → Plugins: every plugin that comes with DocuHive, with labels to filter by (Household, Business, Germany…), what each may do, and **Install**, **Update** and **Remove**. Installing, switching on and off and updating take effect within seconds in the app and the workers, without a restart. The backend image ships the catalogue; installed plugins live in a `plugins` volume.
 - Four new example plugins:
   - **Official letters and ID documents** (`behoerden`): letters from authorities with the deadline to answer (read, or worked out from the letter date with the four-day post rule, weekends and holidays), reminders, and a draft objection (Einspruch or Widerspruch) in your name; passports and ID cards by holder and expiry.
   - **Home and craftsmen** (`handwerk`): labour and material from craftsman invoices, the § 35a tax reduction per year (shown on the tax plugin's household page), warranty on the work, and upkeep tasks with reminders that an invoice marks done.

@@ -1778,6 +1778,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plugins/catalogue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Catalogue */
+        get: operations["list_catalogue_api_plugins_catalogue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugins/catalogue/{plugin_id}/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Install From Catalogue
+         * @description Copy it in; it stays off until switched on with its permissions in view.
+         */
+        post: operations["install_from_catalogue_api_plugins_catalogue__plugin_id__install_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugins/{plugin_id}/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Update From Catalogue
+         * @description The catalogue's newer version, keeping custom/ files. Asking for more keeps it off.
+         */
+        post: operations["update_from_catalogue_api_plugins__plugin_id__update_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugins/{plugin_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove
+         * @description Remove an installed plugin that is off. Its data and settings stay for a reinstall.
+         */
+        delete: operations["remove_api_plugins__plugin_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plugins": {
         parameters: {
             query?: never;
@@ -2299,6 +2376,30 @@ export interface components {
             id: string;
             /** Label */
             label: string;
+        };
+        /**
+         * CatalogueOut
+         * @description One plugin shipped with DocuHive, as the marketplace shows it.
+         */
+        CatalogueOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Labels */
+            labels: string[];
+            /** Version */
+            version: string | null;
+            /** Capabilities */
+            capabilities: components["schemas"]["Capability"][];
+            /** Installed Version */
+            installed_version: string | null;
+            /** State */
+            state: string;
+            /** Message */
+            message: string | null;
         };
         /** Category */
         Category: {
@@ -3099,6 +3200,11 @@ export interface components {
             name: string;
             /** Description */
             description: string;
+            /**
+             * Labels
+             * @default []
+             */
+            labels: string[];
             /** Version */
             version: string | null;
             /** Source */
@@ -7513,6 +7619,117 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Changed"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_catalogue_api_plugins_catalogue_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogueOut"][];
+                };
+            };
+        };
+    };
+    install_from_catalogue_api_plugins_catalogue__plugin_id__install_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PluginOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_from_catalogue_api_plugins__plugin_id__update_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PluginOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_api_plugins__plugin_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

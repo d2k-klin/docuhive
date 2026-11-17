@@ -1,6 +1,7 @@
 id: steuer-de
 name: Tax and bookkeeping (Germany)
 description: Receipts and invoices become bookings, and bookings become the figures for your VAT returns and income-surplus statement. It calculates; it does not give tax advice.
+labels: [Business, Household, Germany, Tax]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata, documents:create, documents:hold, mail:send, ai, users:find]

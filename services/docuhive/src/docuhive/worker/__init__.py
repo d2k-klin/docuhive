@@ -74,6 +74,9 @@ def serve(queues: list[str], concurrency: int) -> None:
     threads.append(threading.Thread(target=_schedule, args=(queues, stopped), daemon=True))
     for thread in threads:
         thread.start()
+    from docuhive.plugins import runtime
+
+    runtime.watch("worker", stopped)  # plugins switched on or off load and unload here too
     stopped.wait()
     deadline = time.monotonic() + 30
     for thread in threads:

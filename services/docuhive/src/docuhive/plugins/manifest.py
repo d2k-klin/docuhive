@@ -93,6 +93,8 @@ class Manifest(BaseModel):
     id: str = Field(pattern=ID)
     name: str
     description: str = ""
+    # Short words to find it by in the marketplace: who it is for, the country, the topic.
+    labels: list[str] = Field(default=[], max_length=6)
     version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
     requires_sdk: str
     depends_on: list[str] = []
@@ -102,6 +104,14 @@ class Manifest(BaseModel):
     snapshot: bool = False
     taxonomy: Contribution = Contribution()
     ai_tasks: list[AiTask] = []
+
+    @field_validator("labels")
+    @classmethod
+    def short_labels(cls, value: list[str]) -> list[str]:
+        for label in value:
+            if not 1 <= len(label) <= 24:
+                raise ValueError(f"label '{label}' must have 1 to 24 characters")
+        return value
 
     @field_validator("capabilities")
     @classmethod

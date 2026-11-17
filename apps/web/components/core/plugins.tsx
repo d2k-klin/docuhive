@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Power, Puzzle, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Power, Puzzle, ShieldCheck, Trash2 } from "lucide-react";
+import { Marketplace } from "@/components/core/marketplace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { checkbox, control } from "@/lib/ui/control";
@@ -52,36 +54,82 @@ const STATE: Record<
   off: { tone: "muted", label: "Off" },
   problem: { tone: "error", label: "Could not start" },
   needs_approval: { tone: "warn", label: "Needs your approval" },
-  needs_restart: { tone: "info", label: "Restart to apply" },
+  needs_restart: { tone: "info", label: "Starting" },
 };
 
-/** Installed plugins: what each may do, switching on and off, and its settings. */
-export function Plugins() {
+/** Settings → Plugins: the installed ones (switch on and off, settings) and the marketplace of
+ * plugins shipped with DocuHive, to install with one click. Changes apply without a restart. */
+export function Plugins({
+  initialTab = "installed",
+}: {
+  initialTab?: "installed" | "marketplace";
+}) {
   const list = useApi<Plugin[]>("/api/plugins");
+  const [tab, setTab] = useState(initialTab);
   const replace = (p: Plugin) =>
     list.setData((all) => all && all.map((x) => (x.id === p.id ? p : x)));
+  const open = (id: string) => {
+    setTab("installed");
+    window.location.hash = id;
+  };
+  const tabs = [
+    {
+      id: "installed",
+      label: `Installed${list.data ? ` (${list.data.length})` : ""}`,
+    },
+    { id: "marketplace", label: "Marketplace" },
+  ] as const;
   return (
     <Page narrow>
       <PageHeader
         title="Plugins"
-        description="Plugins make your documents do a job, such as tax returns or contract reminders. Only an administrator can switch them on."
+        description="Plugins make your documents do a job, such as tax returns or contract reminders. Only an administrator can install them and switch them on."
       />
-      {list.error ? (
-        <ErrorBox error={list.error} onRetry={list.reload} />
-      ) : list.loading && !list.data ? (
-        <Skeleton rows={4} />
-      ) : !list.data?.length ? (
-        <Empty
-          icon={Puzzle}
-          text="No plugins yet. Copy one from the examples with: docuhive plugins add plugins-example/<name>, then restart DocuHive."
-        />
-      ) : (
-        <div className="space-y-4">
-          {list.data.map((p) => (
-            <PluginCard key={p.id} plugin={p} onChange={replace} />
-          ))}
-        </div>
-      )}
+      <div role="tablist" aria-label="Plugins" className="mb-4 flex gap-2">
+        {tabs.map((t) => (
+          <Button
+            key={t.id}
+            role="tab"
+            id={`tab-${t.id}`}
+            aria-selected={tab === t.id}
+            aria-controls={`panel-${t.id}`}
+            variant={tab === t.id ? "secondary" : "ghost"}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </Button>
+        ))}
+      </div>
+      <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+        {tab === "marketplace" ? (
+          <Marketplace onInstalled={list.reload} onOpen={open} />
+        ) : list.error ? (
+          <ErrorBox error={list.error} onRetry={list.reload} />
+        ) : list.loading && !list.data ? (
+          <Skeleton rows={4} />
+        ) : !list.data?.length ? (
+          <Empty
+            icon={Puzzle}
+            text="No plugins installed yet."
+            action={
+              <Button onClick={() => setTab("marketplace")}>
+                Browse the marketplace
+              </Button>
+            }
+          />
+        ) : (
+          <div className="space-y-4">
+            {list.data.map((p) => (
+              <PluginCard
+                key={p.id}
+                plugin={p}
+                onChange={replace}
+                onRemoved={list.reload}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </Page>
   );
 }
@@ -89,14 +137,29 @@ export function Plugins() {
 function PluginCard({
   plugin: p,
   onChange,
+  onRemoved,
 }: {
   plugin: Plugin;
   onChange: (p: Plugin) => void;
+  onRemoved: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
   const state = STATE[p.state];
+  const router = useRouter();
+  async function remove() {
+    setBusy(true);
+    setError(null);
+    try {
+      await api(`/api/plugins/${p.id}`, { method: "DELETE" });
+      onRemoved();
+      router.refresh();
+    } catch (e) {
+      setError(e as ApiError);
+      setBusy(false);
+    }
+  }
   async function call(action: "enable" | "disable") {
     setBusy(true);
     setError(null);
@@ -111,6 +174,7 @@ function PluginCard({
         }),
       );
       setConfirming(false);
+      router.refresh(); // its pages appear in, or leave, the sidebar
     } catch (e) {
       setError(e as ApiError);
     } finally {
@@ -214,6 +278,22 @@ function PluginCard({
                   {p.state === "needs_approval"
                     ? "Review and approve"
                     : "Switch on"}
+                </Button>
+              )}
+              {!p.enabled && p.source === "folder" && (
+                <Button
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Remove ${p.name}? Its documents, data and settings stay, and come back if you install it again.`,
+                      )
+                    )
+                      void remove();
+                  }}
+                >
+                  <Trash2 aria-hidden="true" /> Remove
                 </Button>
               )}
             </div>

@@ -1,6 +1,7 @@
 id: vertraege
 name: Contracts and cancellations
 description: Your contracts in one list with cost, term and the last day for notice, and a cancellation letter one click away.
+labels: [Household, Business, Contracts]
 version: 0.1.0
 requires_sdk: ">=1,<2"
 capabilities: [documents:read, documents:write-metadata, documents:create, documents:hold, mail:send, ai]

@@ -33,21 +33,16 @@ They are examples in the full sense: complete enough to use every day, and writt
 
 ## Use a plugin
 
-1. **Add it.** Copy the plugin's folder into your plugins folder:
+1. **Find it.** In the app, open **Settings → Plugins → Marketplace**. Every plugin that comes with DocuHive is there, with what it does and labels such as *Household*, *Business* or *Germany* to filter by.
+2. **Install it.** Press **Install**. You see what the plugin is allowed to do (read documents, create documents, use AI, reach an address); choose **Install and switch on**, or **Install only** to switch it on later under **Installed**. Only an administrator can.
+3. **Use it.** It starts within seconds, without a restart. Its pages appear in the sidebar.
+4. **Finish its setup.** A plugin that needs something from you (your tax number, your bank's name) adds a step to the **Set up your archive** card on the dashboard, and its settings are under **Installed**.
 
-   ```bash
-   docuhive plugins add plugins-example/bank
-   ```
+When a newer version comes with a DocuHive update, the marketplace offers **Update**; your own files in its `custom/` folder are kept. If the new version asks to do more, it waits for your approval.
 
-   Your plugins folder is `plugins/` inside your private overlay (`DOCUHIVE_OVERLAY_DIR`), next to your own categories and prompts. Nothing in it is ever part of the public repository.
+From the command line, the same works with `docuhive plugins add <folder>`, `update`, `enable` and `disable`. A plugin you write yourself can also be placed in the `plugins/` folder of your private overlay.
 
-2. **Restart DocuHive** so it sees the new folder: `make up PROD_ENV=.env.production`.
-
-3. **Switch it on.** In the app, open **Settings → Plugins**. The plugin is listed with what it is allowed to do (read documents, create documents, use AI, reach the internet). Read that list, then switch it on. Only an administrator can.
-
-4. **Finish its setup.** A plugin that needs something from you (your tax number, your bank's name) adds a step to the **Set up your archive** card on the dashboard.
-
-To stop using a plugin, switch it off on the same page. Its screens and jobs disappear; its documents and its data stay, and come back if you switch it on again.
+To stop using a plugin, switch it off under **Installed**. Its screens and jobs disappear at once; its documents and its data stay, and come back if you switch it on again. A plugin that is off can be removed; installing it again brings its data back.
 
 ## Make a plugin yours
 
