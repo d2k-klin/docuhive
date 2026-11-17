@@ -18,6 +18,8 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Fixed
 
+- With plugins switched on, new documents waited behind every plugin's work; the worker now takes the document pipeline's jobs first.
+
 - XRechnung invoices now pass the official validator's rules that the first version missed: the business process, the buyer's electronic address, the delivery address for EU supplies, and the date type in a credit note's reference. Issuing an XRechnung invoice needs the customer's mail address.
 - The last administrator who can sign in can no longer be demoted or disabled.
 - A draft made from a recurring invoice now has its service period, so it can be issued as made.

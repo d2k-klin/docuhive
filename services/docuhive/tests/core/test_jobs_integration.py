@@ -55,6 +55,14 @@ def test_concurrent_dedupe_and_exactly_one_claim(postgres):
     assert len([job for job in claimed if job]) == 1
 
 
+def test_core_jobs_are_claimed_before_older_plugin_jobs(postgres):
+    earlier = datetime.now(UTC) - timedelta(minutes=5)
+    enqueue("plugin:steuer-de:booking", {}, queue="ai", run_after=earlier)
+    enqueue("classify", {}, queue="ai")
+    assert claim(["ai"]).kind == "classify"
+    assert claim(["ai"]).kind == "plugin:steuer-de:booking"
+
+
 @pytest.mark.parametrize(
     "error,attempts,status",
     [

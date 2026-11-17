@@ -33,7 +33,10 @@ def claim(queues: list[str]) -> Job | None:
             .where(
                 Job.status == "pending", Job.queue.in_(queues), Job.run_after <= datetime.now(UTC)
             )
-            .order_by(Job.run_after, Job.id)
+            # Core work first: plugins listen to every document, and their jobs must never
+            # hold back the pipeline that a person is waiting on.
+            # ponytail: one flag, not priorities; add a priority column if plugins need tiers.
+            .order_by(Job.kind.startswith("plugin:"), Job.run_after, Job.id)
             .limit(1)
             .with_for_update(skip_locked=True)
         )
