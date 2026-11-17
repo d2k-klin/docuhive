@@ -50,10 +50,12 @@ x-backend: &backend
       target: /srv/overlay
       read_only: true
       bind: {create_host_path: false}
-    # Plugins installed from Settings → Plugins → Marketplace; shared by the API and the workers.
-    - type: volume
-      source: plugins
+    # Plugins installed from Settings → Plugins → Marketplace, with your custom/ files; shared by
+    # the API and the workers, and on the host so the nightly backup includes it.
+    - type: bind
+      source: ${DOCUHIVE_PLUGINS_HOST_DIR:-/srv/docuhive/plugins}
       target: /srv/plugins
+      bind: {create_host_path: true}
   networks: [backend, outbound]
 services:
   postgres:
@@ -150,8 +152,6 @@ services:
     networks: [backend, entry]
     depends_on:
       api: {condition: service_healthy}
-volumes:
-  plugins: {}
 networks:
   backend: {internal: true}
   outbound: {}

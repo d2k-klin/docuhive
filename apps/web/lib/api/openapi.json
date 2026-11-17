@@ -440,6 +440,89 @@
         }
       }
     },
+    "/api/system/backup/options": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Backup Settings",
+        "description": "What is backed up and when; where it goes and the password stay on the host.",
+        "operationId": "backup_settings_api_system_backup_options_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupSettings"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Save Backup Settings",
+        "operationId": "save_backup_settings_api_system_backup_options_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackupOptions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupSettings"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/system/backup/run": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Backup Now",
+        "description": "Ask the host's backup job to run now; it starts within seconds where its path unit is\ninstalled, otherwise at its next check (every 15 minutes).",
+        "operationId": "backup_now_api_system_backup_run_post",
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupSettings"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/system/setup-status": {
       "get": {
         "tags": [
@@ -7302,6 +7385,152 @@
         ],
         "title": "BackfillIn"
       },
+      "BackupOptions": {
+        "properties": {
+          "time": {
+            "type": "string",
+            "title": "Time",
+            "default": "03:00"
+          },
+          "days": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Days",
+            "default": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "keep": {
+            "$ref": "#/components/schemas/Keep",
+            "default": {
+              "daily": 7,
+              "weekly": 8,
+              "monthly": 24,
+              "dumps": 14
+            }
+          },
+          "check_percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Check Percent",
+            "default": 5
+          },
+          "include": {
+            "$ref": "#/components/schemas/Include",
+            "default": {
+              "staging": true,
+              "plugins": true,
+              "linked_folders": false
+            }
+          },
+          "linked_paths": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Linked Paths",
+            "default": []
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          }
+        },
+        "type": "object",
+        "title": "BackupOptions"
+      },
+      "BackupRequest": {
+        "properties": {
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At"
+          },
+          "by": {
+            "type": "string",
+            "title": "By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requested_at",
+          "by"
+        ],
+        "title": "BackupRequest"
+      },
+      "BackupSettings": {
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/BackupOptions"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BackupStatus"
+          },
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BackupRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next_run": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Run"
+          },
+          "allowed_age_hours": {
+            "type": "integer",
+            "title": "Allowed Age Hours"
+          }
+        },
+        "type": "object",
+        "required": [
+          "options",
+          "status",
+          "request",
+          "next_run",
+          "allowed_age_hours"
+        ],
+        "title": "BackupSettings"
+      },
       "BackupStatus": {
         "properties": {
           "at": {
@@ -7342,6 +7571,45 @@
             "type": "boolean",
             "title": "Stale",
             "default": true
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/TargetResult"
+            },
+            "type": "array",
+            "title": "Targets",
+            "default": []
+          },
+          "included": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Included",
+            "default": []
+          },
+          "running_since": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Running Since"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
           }
         },
         "type": "object",
@@ -9256,6 +9524,27 @@
         ],
         "title": "ImapIn"
       },
+      "Include": {
+        "properties": {
+          "staging": {
+            "type": "boolean",
+            "title": "Staging",
+            "default": true
+          },
+          "plugins": {
+            "type": "boolean",
+            "title": "Plugins",
+            "default": true
+          },
+          "linked_folders": {
+            "type": "boolean",
+            "title": "Linked Folders",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "Include"
+      },
       "IngestResult": {
         "properties": {
           "document_id": {
@@ -9277,6 +9566,40 @@
           "status"
         ],
         "title": "IngestResult"
+      },
+      "Keep": {
+        "properties": {
+          "daily": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Daily",
+            "default": 7
+          },
+          "weekly": {
+            "type": "integer",
+            "maximum": 520.0,
+            "minimum": 0.0,
+            "title": "Weekly",
+            "default": 8
+          },
+          "monthly": {
+            "type": "integer",
+            "maximum": 240.0,
+            "minimum": 0.0,
+            "title": "Monthly",
+            "default": 24
+          },
+          "dumps": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Dumps",
+            "default": 14
+          }
+        },
+        "type": "object",
+        "title": "Keep"
       },
       "KnowledgeBaseInput": {
         "properties": {
@@ -11171,6 +11494,24 @@
           "total_bytes"
         ],
         "title": "StorageInfo"
+      },
+      "TargetResult": {
+        "properties": {
+          "target": {
+            "type": "integer",
+            "title": "Target"
+          },
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "target"
+        ],
+        "title": "TargetResult"
       },
       "Taxonomy": {
         "properties": {

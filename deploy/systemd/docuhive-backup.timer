@@ -1,10 +1,12 @@
 [Unit]
-Description=Nightly DocuHive backup
+Description=Check whether a DocuHive backup is due (schedule set in the app)
 
 [Timer]
-OnCalendar=*-*-* 03:00:00
+# Every quarter of an hour the job asks: is a backup due by the schedule chosen under
+# Storage health → Backup, or was "Back up now" pressed? Usually the answer is no.
+OnCalendar=*:0/15
 Persistent=true
-RandomizedDelaySec=5m
+RandomizedDelaySec=30
 Unit=docuhive-backup.service
 
 [Install]

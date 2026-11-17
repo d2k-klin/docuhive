@@ -3,7 +3,7 @@
 import importlib.util
 import json
 import subprocess
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -163,3 +163,92 @@ def test_snapshot_verifier_refuses_empty_or_changed_document_bytes(tmp_path):
     (restored / "2026/synthetic/original.pdf").write_bytes(b"changed")
     with pytest.raises(ValueError, match="differ"):
         verify(source, restored)
+
+
+def test_options_from_the_app_are_checked_one_by_one(tmp_path):
+    (tmp_path / "_system").mkdir()
+    assert backup.options(tmp_path) == backup.DEFAULTS  # no file: the old behaviour
+    (tmp_path / "_system/backup.json").write_text(
+        json.dumps(
+            {
+                "time": "25:99",  # wrong: keeps 03:00
+                "days": [6],
+                "keep": {"daily": 30, "weekly": -1, "monthly": True, "dumps": 3},
+                "check_percent": 10,
+                "include": {"staging": False, "plugins": "yes", "linked_folders": True},
+                "linked_paths": ["/srv/storage/papers", 7],
+            }
+        )
+    )
+    chosen = backup.options(tmp_path)
+    assert chosen["time"] == "03:00" and chosen["days"] == [6]
+    assert chosen["keep"] == {"daily": 30, "weekly": 8, "monthly": 24, "dumps": 3}
+    assert chosen["check_percent"] == 10
+    assert chosen["include"] == {"staging": False, "plugins": True, "linked_folders": True}
+    assert chosen["linked_paths"] == ["/srv/storage/papers"]
+
+
+def test_due_follows_the_schedule_catches_up_and_obeys_a_request():
+    sundays = backup.DEFAULTS | {"time": "03:00", "days": [6]}
+    sunday = datetime(2026, 11, 15, 3, 10).astimezone()  # host time
+    assert backup.due(sunday, sundays, {}, requested=False)  # never ran
+    ran = {"at": sunday.isoformat()}
+    assert not backup.due(sunday + timedelta(minutes=15), sundays, ran, requested=False)
+    assert not backup.due(sunday + timedelta(days=3), sundays, ran, requested=False)
+    # The host was off on Sunday: Monday morning it catches up.
+    last_week = {"at": (sunday - timedelta(days=7)).isoformat()}
+    assert backup.due(sunday + timedelta(days=1), sundays, last_week, requested=False)
+    assert backup.due(sunday + timedelta(days=3), sundays, ran, requested=True)
+    before = sunday.replace(hour=2, minute=50)
+    assert not backup.due(before, sundays, last_week, requested=False)
+
+
+def test_options_shape_the_run_and_extras_stay_inside_their_folders(
+    environment, monkeypatch, tmp_path
+):
+    vault, staging, _ = environment
+    plugins = tmp_path / "plugins"
+    plugins.mkdir()
+    storage = tmp_path / "storage"
+    (storage / "papers").mkdir(parents=True)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.setenv("DOCUHIVE_PLUGINS_HOST_DIR", str(plugins))
+    monkeypatch.setenv("DOCUHIVE_STORAGE_ROOT_HOST_DIR", str(storage))
+    (vault / "_system/backup.json").write_text(
+        json.dumps(
+            {
+                "keep": {"daily": 3, "weekly": 2, "monthly": 1, "dumps": 2},
+                "check_percent": 0,
+                "include": {"staging": False, "plugins": True, "linked_folders": True},
+                "linked_paths": [str(storage / "papers"), str(elsewhere), str(vault)],
+            }
+        )
+    )
+    (vault / "_system/backup-request.json").write_text("{}")
+    for number in range(5):
+        (vault / f"_system/db/docuhive-2026010{number}.dump").write_bytes(b"old")
+    calls = []
+    monkeypatch.setattr(backup, "command", runner(calls))
+    result = backup.backup(datetime(2026, 11, 1, tzinfo=UTC))
+    assert result["ok"] and result["included"] == ["vault", "database", "plugins", "linked:1"]
+    [restic] = [c for c in calls if "backup" in c and "restic" in c][:1]
+    assert str(plugins) in restic and str(storage / "papers") in restic
+    assert str(staging) not in restic and str(elsewhere) not in restic
+    forget = next(c for c in calls if "forget" in c)
+    assert forget[forget.index("--keep-daily") + 1 :][:5] == [
+        "3",
+        "--keep-weekly",
+        "2",
+        "--keep-monthly",
+        "1",
+    ]
+    assert not any("check" in c for c in calls)  # checking switched off
+    assert len(list((vault / "_system/db").glob("*.dump"))) == 2
+    assert not (vault / "_system/backup-request.json").exists()
+    status = json.loads((vault / "_system/backup-status.json").read_text())
+    assert "running_since" not in status and status["last_prune"]
+    # A week has not passed: no second prune.
+    calls.clear()
+    backup.backup(datetime(2026, 11, 3, tzinfo=UTC))
+    assert not any("forget" in c for c in calls)

@@ -1,0 +1,9 @@
+[Unit]
+Description=Start a DocuHive backup at once when "Back up now" is pressed in the app
+
+[Path]
+PathChanged=/srv/docuhive/vault/_system/backup-request.json
+Unit=docuhive-backup.service
+
+[Install]
+WantedBy=paths.target

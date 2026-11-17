@@ -168,6 +168,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/system/backup/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Backup Settings
+         * @description What is backed up and when; where it goes and the password stay on the host.
+         */
+        get: operations["backup_settings_api_system_backup_options_get"];
+        /** Save Backup Settings */
+        put: operations["save_backup_settings_api_system_backup_options_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/system/backup/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Backup Now
+         * @description Ask the host's backup job to run now; it starts within seconds where its path unit is
+         *     installed, otherwise at its next check (every 15 minutes).
+         */
+        post: operations["backup_now_api_system_backup_run_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/system/setup-status": {
         parameters: {
             query?: never;
@@ -2396,6 +2438,78 @@ export interface components {
              */
             date_to: string;
         };
+        /** BackupOptions */
+        BackupOptions: {
+            /**
+             * Time
+             * @default 03:00
+             */
+            time: string;
+            /**
+             * Days
+             * @default [
+             *       0,
+             *       1,
+             *       2,
+             *       3,
+             *       4,
+             *       5,
+             *       6
+             *     ]
+             */
+            days: number[];
+            /**
+             * @default {
+             *       "daily": 7,
+             *       "weekly": 8,
+             *       "monthly": 24,
+             *       "dumps": 14
+             *     }
+             */
+            keep: components["schemas"]["Keep"];
+            /**
+             * Check Percent
+             * @default 5
+             */
+            check_percent: number;
+            /**
+             * @default {
+             *       "staging": true,
+             *       "plugins": true,
+             *       "linked_folders": false
+             *     }
+             */
+            include: components["schemas"]["Include"];
+            /**
+             * Linked Paths
+             * @default []
+             */
+            linked_paths: string[];
+            /** Updated At */
+            updated_at?: string | null;
+            /** Updated By */
+            updated_by?: string | null;
+        };
+        /** BackupRequest */
+        BackupRequest: {
+            /**
+             * Requested At
+             * Format: date-time
+             */
+            requested_at: string;
+            /** By */
+            by: string;
+        };
+        /** BackupSettings */
+        BackupSettings: {
+            options: components["schemas"]["BackupOptions"];
+            status: components["schemas"]["BackupStatus"];
+            request: components["schemas"]["BackupRequest"] | null;
+            /** Next Run */
+            next_run: string | null;
+            /** Allowed Age Hours */
+            allowed_age_hours: number;
+        };
         /** BackupStatus */
         BackupStatus: {
             /** At */
@@ -2417,6 +2531,20 @@ export interface components {
              * @default true
              */
             stale: boolean;
+            /**
+             * Targets
+             * @default []
+             */
+            targets: components["schemas"]["TargetResult"][];
+            /**
+             * Included
+             * @default []
+             */
+            included: string[];
+            /** Running Since */
+            running_since?: string | null;
+            /** Error */
+            error?: string | null;
         };
         /** Bank */
         Bank: {
@@ -3109,6 +3237,24 @@ export interface components {
              */
             default_shared: boolean;
         };
+        /** Include */
+        Include: {
+            /**
+             * Staging
+             * @default true
+             */
+            staging: boolean;
+            /**
+             * Plugins
+             * @default true
+             */
+            plugins: boolean;
+            /**
+             * Linked Folders
+             * @default false
+             */
+            linked_folders: boolean;
+        };
         /** IngestResult */
         IngestResult: {
             /** Document Id */
@@ -3118,6 +3264,29 @@ export interface components {
              * @enum {string}
              */
             status: "staged" | "duplicate";
+        };
+        /** Keep */
+        Keep: {
+            /**
+             * Daily
+             * @default 7
+             */
+            daily: number;
+            /**
+             * Weekly
+             * @default 8
+             */
+            weekly: number;
+            /**
+             * Monthly
+             * @default 24
+             */
+            monthly: number;
+            /**
+             * Dumps
+             * @default 14
+             */
+            dumps: number;
         };
         /** KnowledgeBaseInput */
         KnowledgeBaseInput: {
@@ -3818,6 +3987,16 @@ export interface components {
             /** Total Bytes */
             total_bytes: number | null;
         };
+        /** TargetResult */
+        TargetResult: {
+            /** Target */
+            target: number;
+            /**
+             * Ok
+             * @default false
+             */
+            ok: boolean;
+        };
         /** Taxonomy */
         Taxonomy: {
             /** Version */
@@ -4278,6 +4457,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BackupStatus"];
+                };
+            };
+        };
+    };
+    backup_settings_api_system_backup_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupSettings"];
+                };
+            };
+        };
+    };
+    save_backup_settings_api_system_backup_options_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BackupOptions"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    backup_now_api_system_backup_run_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupSettings"];
                 };
             };
         };

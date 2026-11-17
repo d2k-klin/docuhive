@@ -60,6 +60,7 @@ def add(owner_id: int, relative: str, label: str, shared: bool) -> int:
         db.flush()
         folder_id = folder.id
     queue_scan(folder_id)
+    _backup_list_changed()
     return folder_id
 
 
@@ -67,6 +68,15 @@ def remove(folder_id: int) -> None:
     """Stop following a folder. Its documents stay in the archive, pointing at their files."""
     with session() as db:
         db.execute(delete(LinkedFolder).where(LinkedFolder.id == folder_id))
+    _backup_list_changed()
+
+
+def _backup_list_changed() -> None:
+    from docuhive.vault import backup
+    from docuhive.vault.availability import available
+
+    if available():
+        backup.refresh_linked()  # the backup's list of linked folders follows
 
 
 def queue_scan(folder_id: int) -> None:

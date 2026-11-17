@@ -16,7 +16,7 @@ Put the checkout in `/opt/docuhive`. Run host tasks as a dedicated `docuhive` us
 1000) with access to the Docker socket. Create the SSD directories with the correct owners:
 
 ```sh
-sudo install -d -o 1000 -g 1000 -m 700 /srv/docuhive/staging /srv/docuhive/overlay /srv/docuhive/backup /var/cache/docuhive
+sudo install -d -o 1000 -g 1000 -m 700 /srv/docuhive/staging /srv/docuhive/overlay /srv/docuhive/backup /srv/docuhive/plugins /var/cache/docuhive
 sudo install -d -o 999 -g 999 -m 700 /srv/docuhive/pg
 ```
 
@@ -105,6 +105,8 @@ DOCUHIVE_VAULT_HOST_DIR=/srv/docuhive/vault
 DOCUHIVE_STAGING_HOST_DIR=/srv/docuhive/staging
 DOCUHIVE_VAULT_ID=<registered-id-from-_system/VAULT_ID>
 DOCUHIVE_BACKUP_STATE_DIR=/srv/docuhive/backup
+DOCUHIVE_PLUGINS_HOST_DIR=/srv/docuhive/plugins
+DOCUHIVE_STORAGE_ROOT_HOST_DIR=/srv/docuhive/storage
 RESTIC_REPOSITORIES="/mnt/usb/restic b2:bucket:docuhive"
 RESTIC_PASSWORD_FILE=/etc/docuhive/restic-password
 RESTIC_CACHE_DIR=/var/cache/docuhive
@@ -112,17 +114,34 @@ RESTIC_CACHE_DIR=/var/cache/docuhive
 
 Add the remote target's credentials through its documented environment variables in that
 same private file. Install the units in `deploy/systemd/`, adjust paths if necessary, run
-`systemctl daemon-reload`, then enable `docuhive-backup.timer`. Its 03:00 schedule uses the
-host timezone, has a short random delay and catches a missed run after boot. Mount the USB
-target before use; add its path to the service's `RequiresMountsFor` and `ReadWritePaths`.
+`systemctl daemon-reload`, then enable `docuhive-backup.timer` and `docuhive-backup.path`.
+Mount the USB target before use; add its path to the service's `RequiresMountsFor` and
+`ReadWritePaths`.
+
+**Choosing in the app.** Administrators set the rest under **Storage health → Backup**, saved
+to `_system/backup.json` in the vault, where this job reads it:
+
+| Option | Default |
+| --- | --- |
+| Days and time (host timezone) | every day, 03:00 |
+| Keep daily / weekly / monthly snapshots | 7 / 8 / 24 |
+| Keep database dumps | 14 |
+| Verify stored data, every 28 days | 5 % (0 switches it off) |
+| Include files waiting to be read (staging) | on |
+| Include installed plugins and your `custom/` files (`DOCUHIVE_PLUGINS_HOST_DIR`) | on |
+| Include linked folders (only inside `DOCUHIVE_STORAGE_ROOT_HOST_DIR`) | off |
+
+The timer asks every 15 minutes whether a backup is due; a backup missed while the host was off
+runs at the next check. **Back up now** in the app starts one at once through the path unit.
+Where backups go (`RESTIC_REPOSITORIES`) and the password never leave this file: the app shows
+targets as *Target 1*, *Target 2* with whether they succeeded, never their addresses.
 
 The script locks on SSD, checks the vault ID, stops running API/workers, creates and validates
 a custom-format database dump, and backs up the vault **and SSD staging** to each target.
 Writers are paused during backup to keep DB/file state consistent; capture keeps its local
 queue during that window. Writers are restarted on failure too. The generated library is
-excluded. Fourteen database dumps are kept. On Sundays, restic keeps 7 daily, 8 weekly and
-24 monthly snapshots and prunes older backup data. On the first of the month it checks 5%
-of stored data. Originals and staged files are never pruned by this script.
+excluded. Old snapshots are pruned once a week and stored data is verified every 28 days, by
+the numbers chosen in the app. Originals and staged files are never pruned by this script.
 
 Run the service once with `systemctl start docuhive-backup.service`, then inspect its journal
 and `_system/backup-status.json`. Repository addresses, credentials and raw errors are omitted

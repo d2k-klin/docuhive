@@ -6,6 +6,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- **Backup settings in the app** (Storage health → Backup): days and time, how many daily, weekly and monthly backups and database copies to keep, how much to verify, and whether to include files waiting to be read, plugins with your `custom/` files, and linked folders. **Back up now** starts one at once. The page shows the last success, the next run, a backup in progress, what was included and each target's result. Where backups go and the password stay on the server. The host timer now checks every 15 minutes and catches up after the host was off; a new `docuhive-backup.path` unit reacts to **Back up now**. Installed plugins live in `/srv/docuhive/plugins` on the host (`DOCUHIVE_PLUGINS_HOST_DIR`) so backups include them.
 - **Linked folders** (Settings, administrators): DocuHive reads and analyses the files in a folder on your NAS where they are, without moving, renaming or changing them. New files are picked up every ten minutes or on **Read now**, files already in the archive are recognised, and moved or deleted files are listed as missing while their searchable copy stays.
 - **On your phone**: a QR code with your home address that opens Capture; it warns when the address cannot work from a phone.
 - Where a document came from is recorded in more detail (who uploaded it and from which device, the scanner subfolder, a linked folder and path, the file's own date), shown on the document's page as **Where it came from** and written to its `meta.json`.

@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 from collections.abc import AsyncIterator
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -20,6 +21,7 @@ from docuhive.contracts import CurrentUser, SetupCheck
 from docuhive.db import session
 from docuhive.db.models import AuditLog, Document, Job
 from docuhive.jobs import enqueue
+from docuhive.vault import backup as backup_options
 from docuhive.vault import health as vault_health
 from docuhive.vault import storage
 from docuhive.vault.availability import available
@@ -258,6 +260,69 @@ def storage_choose(user: Admin, body: ChooseStorage) -> StorageInfo:
 @router.get("/backup", response_model=BackupStatus)
 def backup_report(user: Admin) -> BackupStatus:
     return backup_status()
+
+
+class BackupSettings(BaseModel):
+    options: backup_options.BackupOptions
+    status: BackupStatus
+    request: backup_options.BackupRequest | None
+    next_run: datetime | None
+    allowed_age_hours: int
+
+
+def _backup_settings() -> BackupSettings:
+    chosen = backup_options.options()
+    return BackupSettings(
+        options=chosen,
+        status=backup_status(),
+        request=backup_options.pending(),
+        next_run=backup_options.next_run(chosen),
+        allowed_age_hours=int(backup_options.allowed_age(chosen).total_seconds() // 3600),
+    )
+
+
+def _vault_writable() -> None:
+    if not available():
+        raise HTTPException(
+            409,
+            {
+                "code": "vault_unavailable",
+                "message": "The vault cannot be reached, so the backup settings cannot be saved.",
+                "details": {},
+            },
+        )
+
+
+@router.get("/backup/options", response_model=BackupSettings)
+def backup_settings(user: Admin) -> BackupSettings:
+    """What is backed up and when; where it goes and the password stay on the host."""
+    return _backup_settings()
+
+
+@router.put("/backup/options", response_model=BackupSettings)
+def save_backup_settings(body: backup_options.BackupOptions, user: Admin) -> BackupSettings:
+    _vault_writable()
+    backup_options.save(body, user.username)
+    with session() as db:
+        db.add(
+            AuditLog(
+                actor=f"user:{user.id}",
+                action="backup.options",
+                after=body.model_dump(
+                    mode="json", exclude={"linked_paths", "updated_at", "updated_by"}
+                ),
+            )
+        )
+    return _backup_settings()
+
+
+@router.post("/backup/run", response_model=BackupSettings, status_code=202)
+def backup_now(user: Admin) -> BackupSettings:
+    """Ask the host's backup job to run now; it starts within seconds where its path unit is
+    installed, otherwise at its next check (every 15 minutes)."""
+    _vault_writable()
+    backup_options.request(user.username)
+    return _backup_settings()
 
 
 @router.get("/setup-status", response_model=list[SetupCheck])

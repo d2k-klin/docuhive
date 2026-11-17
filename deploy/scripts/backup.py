@@ -1,4 +1,10 @@
-"""Quiesced database + vault + staging backups. Run on the Linux Docker host."""
+"""Quiesced database + vault + staging backups. Run on the Linux Docker host.
+
+What to back up, when, and how long to keep it come from `_system/backup.json`, which
+administrators edit in the app (Storage health → Backup). Where backups go and the password stay
+in backup.env on this host. `--when-due` (the timer) runs only when the schedule or a "back up
+now" request says so.
+"""
 
 import fcntl
 import json
@@ -6,12 +12,112 @@ import os
 import shlex
 import stat
 import subprocess
+import sys
 import tempfile
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WRITERS = {"api", "worker", "worker-ocr"}
+DEFAULTS: dict = {
+    "time": "03:00",
+    "days": [0, 1, 2, 3, 4, 5, 6],
+    "keep": {"daily": 7, "weekly": 8, "monthly": 24, "dumps": 14},
+    "check_percent": 5,
+    "include": {"staging": True, "plugins": True, "linked_folders": False},
+    "linked_paths": [],
+}
+LIMITS = {"daily": (1, 365), "weekly": (0, 520), "monthly": (0, 240), "dumps": (1, 365)}
+
+
+def options(vault: Path) -> dict:
+    """The app's choices, each checked; anything missing or wrong keeps its default, so a bad
+    file can never stop the backup."""
+    try:
+        chosen = json.loads((vault / "_system" / "backup.json").read_text())
+        if not isinstance(chosen, dict):
+            chosen = {}
+    except (OSError, ValueError):
+        chosen = {}
+    out = json.loads(json.dumps(DEFAULTS))
+    try:
+        time.fromisoformat(str(chosen.get("time")))
+        out["time"] = str(chosen["time"])
+    except ValueError:
+        pass
+    days = chosen.get("days")
+    if isinstance(days, list) and days and all(d in range(7) for d in days):
+        out["days"] = sorted(set(days))
+    for key, (low, high) in LIMITS.items():
+        value = (chosen.get("keep") or {}).get(key)
+        if isinstance(value, int) and not isinstance(value, bool) and low <= value <= high:
+            out["keep"][key] = value
+    percent = chosen.get("check_percent")
+    if isinstance(percent, int) and not isinstance(percent, bool) and 0 <= percent <= 100:
+        out["check_percent"] = percent
+    for key in out["include"]:
+        value = (chosen.get("include") or {}).get(key)
+        if isinstance(value, bool):
+            out["include"][key] = value
+    paths = chosen.get("linked_paths")
+    if isinstance(paths, list):
+        out["linked_paths"] = [p for p in paths if isinstance(p, str)]
+    return out
+
+
+def parse(value: object) -> datetime | None:
+    try:
+        found = datetime.fromisoformat(str(value))
+    except ValueError:
+        return None
+    return found if found.tzinfo else None
+
+
+def due(now: datetime, chosen: dict, status: dict, requested: bool) -> bool:
+    """A request, or a scheduled start that has passed with no attempt since (also after the
+    host was off at that time)."""
+    if requested:
+        return True
+    local = now.astimezone()
+    at = time.fromisoformat(chosen["time"])
+    starts = [
+        datetime.combine((local - timedelta(days=back)).date(), at, tzinfo=local.tzinfo)
+        for back in range(8)
+    ]
+    passed = [s for s in starts if s <= local and s.weekday() in chosen["days"]]
+    if not passed:
+        return False
+    attempted = parse(status.get("at"))
+    return attempted is None or attempted < max(passed)
+
+
+def extra_sources(vault: Path, staging: Path, chosen: dict) -> tuple[list[Path], list[str]]:
+    """Plugins and linked folders, each only from where it is allowed to be."""
+    sources: list[Path] = []
+    included: list[str] = []
+    plugins = os.environ.get("DOCUHIVE_PLUGINS_HOST_DIR")
+    if chosen["include"]["plugins"] and plugins and Path(plugins).is_dir():
+        sources.append(Path(plugins).resolve())
+        included.append("plugins")
+    storage = os.environ.get("DOCUHIVE_STORAGE_ROOT_HOST_DIR")
+    if chosen["include"]["linked_folders"] and storage:
+        allowed = Path(storage).resolve()
+        linked = []
+        for raw in chosen["linked_paths"]:
+            path = Path(raw)
+            if not path.is_absolute() or path.is_symlink() or not path.is_dir():
+                continue
+            path = path.resolve()
+            # Only folders inside the storage folder, never the vault or staging themselves.
+            if not path.is_relative_to(allowed) or any(
+                path.is_relative_to(p) or p.is_relative_to(path) for p in (vault, staging)
+            ):
+                continue
+            linked.append(path)
+        sources += linked
+        if linked:
+            included.append(f"linked:{len(linked)}")
+    return sources, included
 
 
 def command(args: list[str], **kwargs: object) -> subprocess.CompletedProcess:
@@ -78,13 +184,24 @@ def backup(now: datetime | None = None) -> dict:
             previous = {}
     except (OSError, ValueError):
         previous = {}
+    chosen = options(vault)
+    (vault / "_system" / "backup-request.json").unlink(missing_ok=True)
+    sources = [vault] + ([staging] if chosen["include"]["staging"] else [])
+    included = ["vault", "database"] + (["staging"] if chosen["include"]["staging"] else [])
+    extra, more = extra_sources(vault, staging, chosen)
+    sources += extra
+    included += more
     result = {
         "at": now.isoformat(),
         "ok": False,
         "last_success": previous.get("last_success"),
+        "last_prune": previous.get("last_prune"),
+        "last_check": previous.get("last_check"),
         "targets": [],
+        "included": included,
         "error": None,
     }
+    atomic_json(status_path, previous | {"running_since": now.isoformat()})
     running = (
         command([*compose, "ps", "--status", "running", "--services"], stdout=subprocess.PIPE)
         .stdout.decode()
@@ -142,12 +259,13 @@ def backup(now: datetime | None = None) -> dict:
                     "docuhive",
                     "--exclude",
                     str(vault / "library"),
-                    str(vault),
-                    str(staging),
+                    *[str(p) for p in sources],
                 ],
                 stdout=subprocess.DEVNULL,
             )
-            if now.weekday() == 6:
+            last_prune = parse(previous.get("last_prune"))
+            if last_prune is None or now - last_prune >= timedelta(days=7):
+                result["last_prune"] = now.isoformat()
                 command(
                     [
                         *args,
@@ -155,20 +273,27 @@ def backup(now: datetime | None = None) -> dict:
                         "--tag",
                         "docuhive",
                         "--keep-daily",
-                        "7",
+                        str(chosen["keep"]["daily"]),
                         "--keep-weekly",
-                        "8",
+                        str(chosen["keep"]["weekly"]),
                         "--keep-monthly",
-                        "24",
+                        str(chosen["keep"]["monthly"]),
                         "--prune",
                     ],
                     stdout=subprocess.DEVNULL,
                 )
-            if now.day == 1:
-                command([*args, "check", "--read-data-subset=5%"], stdout=subprocess.DEVNULL)
+            last_check = parse(previous.get("last_check"))
+            if chosen["check_percent"] and (
+                last_check is None or now - last_check >= timedelta(days=28)
+            ):
+                result["last_check"] = now.isoformat()
+                command(
+                    [*args, "check", f"--read-data-subset={chosen['check_percent']}%"],
+                    stdout=subprocess.DEVNULL,
+                )
             target["ok"] = True
         # Only generated dumps are retained; originals and staging are never pruned here.
-        for old in sorted(dumps.glob("docuhive-*.dump"), reverse=True)[14:]:
+        for old in sorted(dumps.glob("docuhive-*.dump"), reverse=True)[chosen["keep"]["dumps"] :]:
             old.unlink()
         result.update(ok=True, last_success=now.isoformat())
     except (OSError, ValueError, subprocess.SubprocessError):
@@ -192,6 +317,15 @@ def main() -> None:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise SystemExit("A backup is already running") from None
+        if "--when-due" in sys.argv[1:]:
+            vault = Path(os.environ["DOCUHIVE_VAULT_HOST_DIR"]).resolve()
+            try:
+                status = json.loads((vault / "_system" / "backup-status.json").read_text())
+            except (OSError, ValueError):
+                status = {}
+            requested = (vault / "_system" / "backup-request.json").is_file()
+            if not due(datetime.now(UTC), options(vault), status, requested):
+                return  # not yet: the timer asks again in a quarter of an hour
         try:
             result = backup()
         except ValueError as error:  # a refusal (wrong or missing vault), not a crash
