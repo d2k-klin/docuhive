@@ -1,0 +1,11 @@
+title: Craftsman work
+for: { document_types: [craftsman_invoice] }
+blocks:
+  - type: table
+    source: document_work
+    columns:
+      - { field: kind, label: Kind }
+      - { field: labour, label: Labour, format: money }
+      - { field: share, label: Counts for tax, format: money }
+      - { field: warranty_until, label: Warranty until, format: date }
+    empty: Labour and material are not read yet.

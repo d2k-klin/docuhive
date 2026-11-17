@@ -1,0 +1,29 @@
+title: { en: Official letters, de: Behördenpost }
+description: Letters from authorities that still need an answer, soonest first. DocuHive reminds you 14, 7 and 2 days before each deadline.
+nav: { label: { en: Official letters, de: Behördenpost }, icon: landmark, order: 30 }
+blocks:
+  - type: text
+    text: "Deadlines the letter only states as a period (\"within one month\") are worked out from its date: four days for the post, then the period, moved past weekends and nationwide holidays. Check it against the letter; correct it on the document if yours differs. This is not legal advice."
+  - type: table
+    title: To answer
+    source: open_notices
+    columns:
+      - { field: title, label: Letter, link: { page: notice, params: { id: id } } }
+      - { field: from, label: From }
+      - { field: kind, label: Kind }
+      - { field: respond_by, label: Answer by, format: date }
+      - { field: state, label: State, format: badge, tones: { Overdue: error, This week: warn, Open: info, No date: muted } }
+      - { field: amount_due, label: To pay, format: money }
+    row_actions:
+      - { label: Done, action: answered }
+    empty: No letters waiting for an answer. Official letters you upload or receive by mail appear here.
+  - type: table
+    title: Answered
+    source: answered_notices
+    columns:
+      - { field: title, label: Letter, link: { page: notice, params: { id: id } } }
+      - { field: from, label: From }
+      - { field: notice_date, label: Dated, format: date }
+    row_actions:
+      - { label: Open again, action: reopen }
+    empty: Nothing answered yet.

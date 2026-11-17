@@ -1,0 +1,10 @@
+title: Deadline
+for: { document_types: [official_notice] }
+blocks:
+  - type: table
+    source: document_notice
+    columns:
+      - { field: respond_by, label: Answer by, format: date, link: { page: notice, params: { id: id } } }
+      - { field: state, label: State, format: badge }
+      - { field: kind, label: Kind }
+    empty: No deadline found on this letter.

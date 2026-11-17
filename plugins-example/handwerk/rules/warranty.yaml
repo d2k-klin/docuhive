@@ -1,0 +1,7 @@
+# How long you can claim defects of the work, from the day it was done or accepted
+# (§ 634a BGB): five years for work on a building (roof, windows, heating installed, renovation),
+# two years for other work (a repair, servicing, cleaning).
+years_by_kind:
+  building: 5
+  craftsman: 2
+  household: 0   # services such as cleaning or gardening: nothing to claim later

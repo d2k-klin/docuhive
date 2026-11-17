@@ -65,7 +65,9 @@ capabilities:                  # shown to the administrator before switching on
   - documents:hold             # make a document unchangeable (an issued invoice)
   - ai                         # ask a model, through DocuHive's privacy rules
   - mail:send                  # send mail when a person asks it to
+  - documents:import           # bring in files from another archive, read like uploads
   - network: ["api.example.org"]   # the only hosts it may reach
+  # - network: ["setting:url"]     # or: the one host the administrator enters in setting `url`
 
 taxonomy: {}                   # section 3
 settings: []                   # section 10
@@ -311,6 +313,8 @@ documents.hold(doc_id, "Sent to tenant", until=retention.until("letter", 2026))
 - **Locking** (`documents:hold`): `documents.hold(id, reason, fields=None, until=None)` makes the whole document, or only the listed fields (`"title"`, `"facts.amount_total"`, `"facts"`), unchangeable for everyone until the date or until an administrator lifts it. Use `retention.until("booking_document" | "books" | "letter" | "tax_filing", year)` for the legal keeping periods instead of counting years yourself.
 - **Identities**: `profiles.list(user)` and `profiles.get(user, id)` give the name, address, tax numbers and bank account the person entered under Settings → Identities. A setting of type `profile` lets the person pick one.
 - **Mail** (`mail:send`): `mail.send(user, profile_id, to, subject, body_text, attachments=[doc_ids])` sends as that identity. It works only inside a page action the person pressed (register it with `outgoing=True` and a `preview`, so the page shows what will be sent first), never from a job or a listener. The sent mail is stored as a document and it and its attachments are locked.
+- **Importing** (`documents:import`): `documents.import_file(user, content, filename=..., title=..., tags=[...], correspondent=..., document_date=..., analyse=True)` adds a file from another archive as if the person uploaded it: stored, read and, with `analyse`, read by the AI. The values you pass are the person's own, so the AI never overwrites them. Returns `(document_id, "staged" | "duplicate")`. Only for an import the person started.
+- **The internet** (`network`): `http.client(registry)` is an httpx client that reaches only the declared hosts; catch `http.HTTPError` when the other side is down. A server whose address only the user knows (on their home network) is declared as `network: ["setting:url"]`: the host of the address in that setting, matched exactly.
 - **People** (`users:find`): `users.find(username)` gives the id of an active person, or `None`; `users.names(ids)` gives user names for ids. Nothing else about a person is shared. Use it to let someone share a record (a book, a list) with another person by name.
 - **Guest links**: `guest_links.create(user, label, document_ids, days)` gives a read-only link for someone without an account, such as a tax advisor, for at most 30 days. Also only from a page action; the installation must have guest links switched on.
 

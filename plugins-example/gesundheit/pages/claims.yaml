@@ -1,0 +1,55 @@
+title: { en: Health claims, de: Arztrechnungen }
+description: Medical bills, whether they went to your insurer, and what came back. Health documents are only ever read by a local AI model.
+nav: { label: { en: Health claims, de: Arztrechnungen }, icon: heart-pulse, order: 44 }
+blocks:
+  - type: summary
+    source: summary
+  - type: table
+    title: Bills
+    source: claims
+    select: true
+    actions:
+      - { label: Submitted, action: submitted, primary: true }
+      - { label: Keep as my own cost, action: not_claimed }
+    columns:
+      - { field: title, label: Bill, link: { document: document_id } }
+      - { field: from, label: From }
+      - { field: patient, label: For }
+      - { field: treatment_date, label: Date, format: date }
+      - { field: billed, label: Amount, format: money, total: true }
+      - { field: state_label, label: State, format: badge, tones: { To submit: warn, Submitted: info, Paid back: ok, Not claimed: muted } }
+      - { field: reimbursed, label: Paid back, format: money, total: true }
+      - { field: own_share, label: Your share, format: money, total: true }
+    filters:
+      - { field: year, type: year, label: Year }
+      - { field: state_label, type: text, label: State }
+    row_actions:
+      - { label: Open again, action: reopen, when: submitted_on }
+    empty: No medical bills yet. Upload a bill from a doctor, dentist or pharmacy and it appears here to submit.
+  - type: form
+    title: Paid back, entered by hand
+    help: When a statement could not be read, enter what came back for one bill.
+    show_if: claim_options
+    fields:
+      - { name: claim, type: choice, label: Bill, options: claim_options, required: true }
+      - { name: amount, type: money, label: Paid back, required: true }
+    action: paid_back
+    submit: Save
+  - type: table
+    title: Lines from statements that matched no bill
+    source: unmatched
+    show_if: unmatched
+    columns:
+      - { field: bill_number, label: Bill number }
+      - { field: treatment_date, label: Date, format: date }
+      - { field: billed, label: Billed, format: money }
+      - { field: reimbursed, label: Paid back, format: money }
+    empty: Every line matched a bill.
+  - type: form
+    title: Match a line to a bill
+    show_if: unmatched
+    fields:
+      - { name: line, type: choice, label: Line, options: line_options, required: true }
+      - { name: claim, type: choice, label: Bill, options: claim_options, required: true }
+    action: match_line
+    submit: Match

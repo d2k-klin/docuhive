@@ -1,0 +1,36 @@
+title: { en: Official letter, de: Bescheid }
+params: [id]
+blocks:
+  - type: detail
+    source: notice
+    fields:
+      - { field: title, label: Letter }
+      - { field: from, label: From }
+      - { field: kind, label: Kind }
+      - { field: reference, label: Reference }
+      - { field: notice_date, label: Dated, format: date }
+      - { field: respond_by, label: Answer by, format: date }
+      - { field: state, label: State, format: badge }
+      - { field: amount_due, label: To pay, format: money }
+  - type: text
+    text: "Wrong date or kind? Open the document and correct the value there; this page follows."
+  - type: form
+    title: Write an objection
+    help: A draft letter in your archive, linked to this notice. Nothing is sent. Check it, sign it and post it before the deadline, or send it through the authority's portal (ELSTER for tax).
+    show_if: can_object
+    initial: notice
+    fields:
+      - { name: profile_id, type: choice, label: From (your identity), options: profile_options, required: true, help: "Add one under Settings → Identities." }
+      - { name: authority_address, type: textarea, label: Authority's address, required: true }
+      - { name: reasons, type: textarea, label: Why the notice is wrong, help: "Leave empty to give the reasons later; the objection still keeps the deadline." }
+      - { name: suspend, type: boolean, label: Ask not to collect the amount until the objection is decided }
+    action: objection
+    submit: Write the objection
+  - type: actions
+    show_if: is_open
+    actions:
+      - { label: Mark as answered, action: answered, primary: true }
+  - type: actions
+    show_if: is_answered
+    actions:
+      - { label: Open again, action: reopen }

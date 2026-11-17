@@ -1,0 +1,12 @@
+# Regular upkeep you can add with one click. `every_months` is a starting point; change it per
+# task on the Upkeep page. A craftsman invoice the AI recognises as one of these (by `id`) marks
+# the task as done on the day of the work.
+tasks:
+  - { id: heating_service, label: Heating service, every_months: 12 }
+  - { id: chimney_sweep, label: Chimney sweep, every_months: 12 }
+  - { id: smoke_detectors, label: Test the smoke detectors, every_months: 12 }
+  - { id: gutters, label: Clean the gutters, every_months: 12 }
+  - { id: heat_pump_service, label: Heat pump or air conditioning service, every_months: 12 }
+  - { id: water_heater, label: Descale the water heater, every_months: 24 }
+  - { id: roof_check, label: Roof check, every_months: 60 }
+  - { id: gas_check, label: Gas pipe check, every_months: 144 }

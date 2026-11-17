@@ -1,0 +1,15 @@
+# How the answer deadline of an official letter is worked out when the letter only states a
+# period. A letter sent by post counts as delivered this many days after its date (since 2025:
+# four days, § 122 (2) AO and § 41 (2) VwVfG; before: three). A deadline ending on a weekend or a
+# nationwide public holiday moves to the next working day (§ 108 (3) AO, § 193 BGB).
+# State holidays are not included: the computed date may then be a day early, which is safe.
+delivery_days: 4
+
+# Kinds of notices: the label shown, and the name of the objection in the letter.
+kinds:
+  - { id: tax, label: Tax assessment, remedy: Einspruch }
+  - { id: fine, label: Fine, remedy: Einspruch }
+  - { id: social, label: Pension, health or benefits, remedy: Widerspruch }
+  - { id: other_authority, label: Other authority, remedy: Widerspruch }
+  - { id: reminder, label: Payment reminder, remedy: null }
+  - { id: other, label: Other, remedy: null }

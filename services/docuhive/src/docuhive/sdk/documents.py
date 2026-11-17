@@ -196,39 +196,18 @@ def create(
     It is stored, converted and made searchable like an upload, but not classified: you say
     what it is. Private unless `shared`. The same bytes again return the existing document's
     id. `derived_from` links it to the documents it was made from, both ways."""
-    import re
-    import tempfile
-    from pathlib import Path
-
-    from docuhive import ingest
-    from docuhive.contracts import IngestRequest, SourceInfo, SourceKind
-
     registry = current()
     registry.require("documents:create")
     for source in derived_from:
         core.get_for_user(source, user)  # only from documents this person may see
-    safe = re.sub(r"[^\w.\- ]+", "_", Path(filename).name).strip() or "document.pdf"
-    folder = Path(tempfile.mkdtemp(dir=ingest.incoming_dir()))
-    path = folder / safe
-    path.write_bytes(content)
-    try:
-        result = ingest.submit(
-            [path],
-            IngestRequest(
-                owner_id=user.id,
-                shared=shared,
-                source=SourceInfo(
-                    kind=SourceKind.plugin,
-                    original_filename=safe,
-                    generator=registry.id,
-                    derived_from=list(derived_from),
-                ),
-                hints={"plugin": registry.id, "skip_ai": "1"},
-            ),
-        )
-    finally:
-        path.unlink(missing_ok=True)
-        folder.rmdir()
+    result = _submit(
+        user,
+        content,
+        filename,
+        shared=shared,
+        derived_from=list(derived_from),
+        hints={"plugin": registry.id, "skip_ai": "1"},
+    )
     if result.status == "staged":  # describing what it created is part of creating it
         _describe(
             registry.id,
@@ -242,3 +221,74 @@ def create(
             correspondent=correspondent,
         )
     return result.document_id
+
+
+def _submit(
+    user: CurrentUser,
+    content: bytes,
+    filename: str,
+    *,
+    shared: bool,
+    derived_from: list[str],
+    hints: dict[str, str],
+) -> Any:
+    import re
+    import tempfile
+    from pathlib import Path
+
+    from docuhive import ingest
+    from docuhive.contracts import IngestRequest, SourceInfo, SourceKind
+
+    safe = re.sub(r"[^\w.\- ]+", "_", Path(filename).name).strip() or "document.pdf"
+    folder = Path(tempfile.mkdtemp(dir=ingest.incoming_dir()))
+    path = folder / safe
+    path.write_bytes(content)
+    try:
+        return ingest.submit(
+            [path],
+            IngestRequest(
+                owner_id=user.id,
+                shared=shared,
+                source=SourceInfo(
+                    kind=SourceKind.plugin,
+                    original_filename=safe,
+                    generator=current().id,
+                    derived_from=derived_from,
+                ),
+                hints=hints,
+            ),
+        )
+    finally:
+        path.unlink(missing_ok=True)
+        folder.rmdir()
+
+
+def import_file(
+    user: CurrentUser,
+    content: bytes,
+    *,
+    filename: str,
+    title: str | None = None,
+    tags: list[str] | tuple[str, ...] = (),
+    correspondent: str | None = None,
+    document_date: date | None = None,
+    shared: bool = False,
+    analyse: bool = True,
+) -> tuple[str, str]:
+    """Add a file from another archive as if `user` uploaded it: stored, OCRed, indexed and,
+    with `analyse`, read by the AI like any upload. The values given are the person's own (they
+    set them in the other archive), so the AI never overwrites them. Only for an import the
+    person started. Returns (document id, "staged" or "duplicate")."""
+    registry = current()
+    registry.require("documents:import")
+    hints = {"plugin": registry.id} | ({} if analyse else {"skip_ai": "1"})
+    result = _submit(user, content, filename, shared=shared, derived_from=[], hints=hints)
+    if result.status == "staged":
+        patch = MetadataPatch(
+            title=" ".join((title or "").split())[:120] or None,
+            correspondent=correspondent or None,
+            document_date=document_date,
+            tags_add=[t.strip()[:64] for t in tags if t.strip()],
+        )
+        core.apply_metadata(result.document_id, patch, actor=f"user:{user.id}")
+    return result.document_id, result.status

@@ -1027,6 +1027,53 @@ def setup(registry: Registry) -> None:  # noqa: C901 - one plugin, many small pa
         year = int(params.get("year") or date.today().year)
         return services.get("vermieter-de.rental_income_for")(user, year)
 
+    @registry.data("home_35a")
+    def home_35a(user: User, params: dict) -> list[dict]:
+        """With the home and craftsmen plugin: the § 35a reduction for the household's return."""
+        if not services.available("handwerk.year_35a"):
+            return []
+        year = int(params.get("year") or date.today().year)
+        return [
+            {
+                "label": r["label"],
+                "labour": {"value": r["labour"], "currency": "EUR"},
+                "reduction": {"value": r["reduction"], "currency": "EUR"},
+            }
+            for r in services.get("handwerk.year_35a")(user, year)
+            if r["labour"]
+        ]
+
+    @registry.data("health_costs")
+    def health_costs(user: User, params: dict) -> list[dict]:
+        """With the health claims plugin: what the household paid itself for health in a year."""
+        if not services.available("gesundheit.own_share"):
+            return []
+        year = int(params.get("year") or date.today().year)
+        got = services.get("gesundheit.own_share")(user, year)
+        if not got["billed"]:
+            return []
+        out = [
+            {
+                "label": f"Your own share {year}",
+                "value": {"value": got["own_share"], "currency": "EUR"},
+                "format": "money",
+            },
+            {
+                "label": "Billed",
+                "value": {"value": got["billed"], "currency": "EUR"},
+                "format": "money",
+            },
+        ]
+        if got["still_open"]:
+            out.append(
+                {
+                    "label": "Bills still waiting for money",
+                    "value": got["still_open"],
+                    "format": "number",
+                }
+            )
+        return out
+
     @registry.data("rules_rows")
     def rules_rows(user: User, params: dict) -> list[dict]:
         book = book_of(user, params)

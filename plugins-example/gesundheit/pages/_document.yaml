@@ -1,0 +1,10 @@
+title: Health claim
+for: { document_types: [medical_bill] }
+blocks:
+  - type: table
+    source: document_claim
+    columns:
+      - { field: state_label, label: State, format: badge }
+      - { field: submitted_on, label: Submitted, format: date }
+      - { field: reimbursed, label: Paid back, format: money }
+    empty: Not a claim yet.

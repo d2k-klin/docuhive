@@ -1,0 +1,34 @@
+id: paperless-import
+name: Import from Paperless-ngx
+description: Brings the documents of a Paperless-ngx archive into DocuHive with their titles, dates, correspondents and tags, and reads them like your own uploads.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+snapshot: true
+capabilities:
+  - documents:import
+  - secrets
+  - network: ["setting:url"]
+
+settings:
+  - key: url
+    type: string
+    label: Paperless address
+    help: "The address you open Paperless at, for example http://192.168.1.20:8000."
+    required: true
+  - key: token
+    type: secret
+    label: Paperless API token
+    help: "In Paperless: your profile (top right), then API Auth Token. It reads everything that account can see."
+    required: true
+  - key: analyse
+    type: boolean
+    label: Let DocuHive's AI read amounts, dates and deadlines from imported documents
+    default: true
+  - key: type_as_tag
+    type: boolean
+    label: Keep Paperless document types as tags
+    default: true
+
+setup_checks:
+  - { id: url, title: Paperless address, when_missing: url }
+  - { id: token, title: Paperless API token, when_missing: token }

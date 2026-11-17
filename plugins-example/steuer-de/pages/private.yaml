@@ -24,3 +24,18 @@ blocks:
       - { field: passed_on, label: Costs passed on, format: money }
       - { field: borne, label: Costs you bore, format: money }
     empty: Nothing listed. With the landlord plugin on, your properties appear here.
+  - type: table
+    title: Work in your home (§ 35a)
+    help: From the home and craftsmen plugin. Labour from invoices you paid by transfer, and the estimated reduction of your income tax.
+    source: home_35a
+    show_if: home_35a
+    columns:
+      - { field: label, label: Kind }
+      - { field: labour, label: Labour that counts, format: money }
+      - { field: reduction, label: Reduction, format: money, total: true }
+    empty: No craftsman invoices in this year.
+  - type: summary
+    title: Health costs (außergewöhnliche Belastungen)
+    help: From the health claims plugin. Bills of the year minus what your insurers paid back. Whether they reduce your tax depends on your income; the tax office works that out.
+    source: health_costs
+    show_if: health_costs

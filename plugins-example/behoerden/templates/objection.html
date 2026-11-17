@@ -1,0 +1,24 @@
+{#- An objection to an official notice: Einspruch (tax, fines) or Widerspruch (other authorities).
+    A draft: the person checks it, signs it and posts it, or sends it through the authority's
+    portal. Change the wording by putting a file of the same name in custom/. -#}
+{% extends "_letter.html" %}
+{% block subject %}{{ remedy }} gegen den Bescheid{% if notice_date %} vom {{ notice_date }}{% endif %}{% if reference %} – {{ reference }}{% endif %}{% endblock %}
+{% block body %}
+<p>Sehr geehrte Damen und Herren,</p>
+<p>gegen den oben genannten Bescheid lege ich hiermit {{ remedy }} ein.</p>
+{% if tax_number and kind == "tax" %}<p>Steuernummer: {{ tax_number }}</p>{% endif %}
+{% if reasons %}
+<p>Begründung:</p>
+<p>{{ reasons }}</p>
+{% else %}
+<p>Die Begründung reiche ich nach.</p>
+{% endif %}
+{% if suspend and kind == "tax" %}
+<p>Zugleich beantrage ich, die Vollziehung des Bescheids bis zur Entscheidung über den Einspruch auszusetzen (§ 361 AO).</p>
+{% elif suspend and kind != "fine" %}
+<p>Zugleich beantrage ich, die Vollziehung des Bescheids bis zur Entscheidung über den Widerspruch auszusetzen.</p>
+{% endif %}
+<p>Bitte bestätigen Sie mir den Eingang dieses Schreibens.</p>
+<p>Mit freundlichen Grüßen</p>
+<p style="margin-top: 18mm">{{ name }}</p>
+{% endblock %}

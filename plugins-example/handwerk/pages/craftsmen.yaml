@@ -1,0 +1,31 @@
+title: { en: Craftsmen, de: Handwerker }
+description: Invoices for work in your home, the labour you can claim on your income tax, and how long the work is under warranty. This is not tax advice.
+nav: { label: { en: Craftsmen, de: Handwerker }, icon: house, order: 42 }
+blocks:
+  - type: table
+    title: Off your income tax (§ 35a, estimate)
+    help: A share of the labour, up to a cap per year. Material and cash payments do not count. The year you paid counts; with the bank plugin, the day the money left your account.
+    source: reduction
+    columns:
+      - { field: label, label: Kind }
+      - { field: labour, label: Labour that counts, format: money }
+      - { field: reduction, label: Reduction, format: money, total: true }
+      - { field: cap, label: Cap, format: money }
+    filters:
+      - { field: year, type: year, label: Year }
+    empty: No rules for this year yet. Add them in rules/35a.yaml.
+  - type: table
+    title: Invoices
+    source: invoices
+    columns:
+      - { field: title, label: Invoice, link: document }
+      - { field: from, label: From }
+      - { field: paid_on, label: Paid, format: date }
+      - { field: kind_label, label: Kind, format: badge }
+      - { field: labour, label: Labour, format: money, total: true }
+      - { field: share, label: Counts for tax, format: money }
+      - { field: warranty_until, label: Warranty until, format: date }
+      - { field: note, label: Note }
+    filters:
+      - { field: year, type: year, label: Year }
+    empty: No craftsman invoices in this year. Upload one; labour and material are read from it, and you can correct them on the document.

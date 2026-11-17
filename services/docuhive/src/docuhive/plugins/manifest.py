@@ -5,7 +5,14 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 from docuhive.sdk.version import __version__ as SDK_VERSION
 from docuhive.taxonomy import Contribution
@@ -15,6 +22,7 @@ CAPABILITIES = {
     "documents:read": "Read the documents the current user may see",
     "documents:write-metadata": "Change titles, categories, tags and values of documents",
     "documents:create": "Add documents it generates to the archive",
+    "documents:import": "Add documents from another system, analysed like your uploads",
     "documents:hold": "Make documents unchangeable, for example an issued invoice",
     "ai": "Ask an AI model, within your privacy settings and budgets",
     "mail:send": "Send mail when a person asks it to",
@@ -39,6 +47,12 @@ class Network(BaseModel):
     @classmethod
     def hosts(cls, value: list[str]) -> list[str]:
         for host in value:
+            # `setting:<key>`: the one host in that setting, which only an administrator sets
+            # (a server on the home network, such as an old archive to import from).
+            if host.startswith("setting:"):
+                if not re.fullmatch(r"setting:[a-z][a-z0-9_]{0,40}", host):
+                    raise ValueError(f"'{host}' names no setting, such as setting:url")
+                continue
             if not re.fullmatch(r"(\*\.)?[A-Za-z0-9.-]+(:\d+)?", host):
                 raise ValueError(f"'{host}' is not a host name, such as api.example.org")
         return value
@@ -96,6 +110,14 @@ class Manifest(BaseModel):
             if isinstance(item, str) and item not in CAPABILITIES:
                 raise ValueError(f"unknown capability '{item}'; use one of {sorted(CAPABILITIES)}")
         return value
+
+    @model_validator(mode="after")
+    def settings_exist(self) -> "Manifest":
+        keys = {f.key for f in self.settings}
+        for host in self.hosts():
+            if host.startswith("setting:") and host.removeprefix("setting:") not in keys:
+                raise ValueError(f"network {host}: there is no setting with that key")
+        return self
 
     @field_validator("requires_sdk")
     @classmethod

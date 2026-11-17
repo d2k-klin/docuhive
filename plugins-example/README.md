@@ -2,18 +2,19 @@
 
 > **Status: available** in DocuHive 0.9. The example plugins' own pages say what each does today and what is still planned.
 
-**Overview.** DocuHive keeps your documents. A plugin makes them do a job: prepare your VAT return, match payments to invoices, remind you to cancel a contract. This folder holds five example plugins you can use as they are, change to fit you, or copy as the start of your own.
+**Overview.** DocuHive keeps your documents. A plugin makes them do a job: prepare your VAT return, match payments to invoices, remind you to cancel a contract. This folder holds ten example plugins you can use as they are, change to fit you, or copy as the start of your own.
 
 ## Who plugins are for
 
 | You are | Plugins that fit |
 | --- | --- |
-| A household | [Contracts](vertraege/README.md), [Bank](bank/README.md), [Inventory](inventar/README.md), the private part of [Tax (Germany)](steuer-de/README.md) |
+| A household | [Official letters and ID documents](behoerden/README.md), [Contracts](vertraege/README.md), [Bank](bank/README.md), [Inventory](inventar/README.md), [Home and craftsmen](handwerk/README.md), [Health claims](gesundheit/README.md), the private part of [Tax (Germany)](steuer-de/README.md) |
 | Self-employed | [Tax (Germany)](steuer-de/README.md), [Bank](bank/README.md), [Contracts](vertraege/README.md) |
 | A small company | [Tax (Germany)](steuer-de/README.md) for invoices, receipts and VAT, with the hand-over to your tax advisor; [Bank](bank/README.md); [Inventory](inventar/README.md) |
-| A private landlord | [Landlord (Germany)](vermieter-de/README.md), [Bank](bank/README.md) |
+| A private landlord | [Landlord (Germany)](vermieter-de/README.md), [Bank](bank/README.md), [Home and craftsmen](handwerk/README.md) |
+| Coming from Paperless-ngx | [Import from Paperless-ngx](paperless-import/README.md) |
 
-## The five examples
+## The examples
 
 | Folder | What it does | Works without the others |
 | --- | --- | --- |
@@ -22,6 +23,10 @@
 | [`vertraege/`](vertraege/README.md) | Every contract with its cost and its notice date, and a cancellation letter ready to send | Yes; better with `bank` |
 | [`vermieter-de/`](vermieter-de/README.md) | Rent ledger and the yearly service-charge statement for each tenant | Yes; better with `bank` |
 | [`inventar/`](inventar/README.md) | Your receipts become an inventory with warranties and a list for your insurer | Yes |
+| [`behoerden/`](behoerden/README.md) | Official letters with a deadline to answer, an objection letter ready, and when ID documents run out | Yes |
+| [`handwerk/`](handwerk/README.md) | Craftsman invoices: the labour you can deduct (§ 35a), warranty on the work, and upkeep reminders | Yes; better with `bank` and `steuer-de` |
+| [`gesundheit/`](gesundheit/README.md) | Medical bills to submit, the insurer's statement matched to them, your own share for the tax return | Yes; better with `steuer-de` |
+| [`paperless-import/`](paperless-import/README.md) | Brings a Paperless-ngx archive into DocuHive with its titles, dates, correspondents and tags | Yes |
 | [`schule/`](schule/README.md) | Letters from school that need an answer: the smallest example, to read first | Yes |
 
 They are examples in the full sense: complete enough to use every day, and written to be read and changed.

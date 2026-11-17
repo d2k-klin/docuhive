@@ -1,0 +1,24 @@
+id: handwerk
+name: Home and craftsmen
+description: Craftsman invoices with the labour share you can deduct from your income tax and how long the work is under warranty, and reminders for the regular upkeep of your home.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+capabilities: [documents:read, documents:write-metadata, ai]
+snapshot: true
+
+taxonomy:
+  document_types:
+    - id: craftsman_invoice
+      label: Craftsman invoice
+      description: An invoice for work done in or on a home by a trade or service company (plumber, electrician, painter, roofer, chimney sweep, cleaning, gardening, repairs), usually listing labour and material.
+      facts:
+        - { name: amount_total, type: money }
+        - { name: labour_cost, type: money }
+        - { name: material_cost, type: money }
+        - { name: work_date, type: date }
+        - { name: service_kind, type: string }
+        - { name: payment, type: string }
+        - { name: warranty_until, type: date, remind_days_before: [60] }
+
+ai_tasks:
+  - { prompt: labour, like: extract }

@@ -1,0 +1,34 @@
+id: gesundheit
+name: Health claims
+description: Doctor, dentist and pharmacy bills and what your health insurer paid back; reminders for bills not submitted or not reimbursed, and your own share for the tax return.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+capabilities: [documents:read, documents:write-metadata, ai]
+snapshot: true
+
+taxonomy:
+  document_types:
+    - id: medical_bill
+      label: Medical bill
+      description: A bill from a doctor, dentist, hospital, therapist, pharmacy or optician for a treatment or medicine (Arztrechnung, Liquidation, Rezeptquittung).
+      facts:
+        - { name: amount_total, type: money }
+        - { name: treatment_date, type: date }
+        - { name: patient, type: string }
+        - { name: bill_number, type: string }
+    - id: reimbursement_notice
+      label: Reimbursement notice
+      description: A statement from a health insurer, supplementary insurance or Beihilfe office about bills it reimburses (Leistungsabrechnung, Erstattungsmitteilung, Beihilfebescheid).
+      facts:
+        - { name: amount_reimbursed, type: money }
+        - { name: notice_date, type: date }
+
+ai_tasks:
+  - { prompt: reimbursement, like: extract }
+
+settings:
+  - key: remind_after_days
+    type: number
+    label: Remind after how many days
+    help: A bill not submitted, or submitted and not reimbursed, after this many days shows up in your reminders.
+    default: 30

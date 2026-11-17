@@ -6,6 +6,12 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 
 ### Added
 
+- Four new example plugins:
+  - **Official letters and ID documents** (`behoerden`): letters from authorities with the deadline to answer (read, or worked out from the letter date with the four-day post rule, weekends and holidays), reminders, and a draft objection (Einspruch or Widerspruch) in your name; passports and ID cards by holder and expiry.
+  - **Home and craftsmen** (`handwerk`): labour and material from craftsman invoices, the § 35a tax reduction per year (shown on the tax plugin's household page), warranty on the work, and upkeep tasks with reminders that an invoice marks done.
+  - **Health claims** (`gesundheit`): medical bills to submit, reminders, the insurer's statement matched to the bills, and your own share for the tax return.
+  - **Import from Paperless-ngx** (`paperless-import`): every document with its title, date, correspondent and tags, read like an upload; stoppable, resumable, never imports a file twice.
+- Plugin SDK: `documents.import_file` (capability `documents:import`), network access to the one address an administrator enters in a setting (`network: ["setting:url"]`), and `http.HTTPError`.
 - Before a plugin sends anything by mail or makes a link, its page shows exactly what will go out (recipient, subject, text, attachments) with **Send now** and **Cancel**.
 - Plugin pages show only the parts that apply: an issued invoice no longer offers "Issue" or "Delete draft".
 - Landlords: rent and advance changes from a date, used by the rent ledger and the statement; a reminder letter for outstanding rent.

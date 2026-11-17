@@ -1,0 +1,25 @@
+title: { en: Upkeep, de: Wartung }
+description: Regular work on your home and when it is due. DocuHive reminds you two weeks before and on the day; an invoice for the work marks it done.
+nav: { label: { en: Upkeep, de: Wartung }, icon: calendar, order: 43 }
+blocks:
+  - type: table
+    source: tasks
+    columns:
+      - { field: name, label: Task }
+      - { field: every, label: How often }
+      - { field: last_done, label: Last done, format: date }
+      - { field: next_due, label: Next, format: date }
+      - { field: state, label: State, format: badge, tones: { Due: warn, Soon: info, Later: muted } }
+    row_actions:
+      - { label: Done today, action: task_done }
+      - { label: Remove, action: remove_task, confirm: "Remove this task and its reminders?" }
+    empty: No upkeep tasks yet. Add the usual ones below.
+  - type: form
+    title: Add a task
+    fields:
+      - { name: preset, type: choice, label: Task, options: preset_options }
+      - { name: name, type: text, label: Or your own, help: "For example: service the garage door." }
+      - { name: every_months, type: number, label: Every how many months, min: 1, max: 240, help: "Leave empty for the usual interval of the task above." }
+      - { name: last_done, type: date, label: Last done, help: "Leave empty if you do not know: it is then due now." }
+    action: add_task
+    submit: Add

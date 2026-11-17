@@ -1,0 +1,11 @@
+# Tax reduction for work in your home (§ 35a EStG): a share of the labour cost, including the VAT
+# on it, comes off your income tax, up to a cap per year and per kind. Material does not count,
+# and neither does an invoice paid in cash. The year you paid counts, not the invoice date.
+# Check each year's figures; your tax advisor decides what applies to you.
+years:
+  2025:
+    craftsman: { rate: 20, cap: 1200, label: Craftsman services (Handwerkerleistungen) }
+    household: { rate: 20, cap: 4000, label: Household services (haushaltsnahe Dienstleistungen) }
+  2026:
+    craftsman: { rate: 20, cap: 1200, label: Craftsman services (Handwerkerleistungen) }
+    household: { rate: 20, cap: 4000, label: Household services (haushaltsnahe Dienstleistungen) }

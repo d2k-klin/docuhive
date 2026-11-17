@@ -79,7 +79,7 @@ Open <http://localhost:3000> and sign in with the account you just created. The 
 | [Installation guide](docs/setup/installation.md) | From an empty Linux host to a signed-in archive, step by step |
 | [Local network](docs/setup/local-network.md) / [Remote access](docs/setup/remote-access.md) | The easy option for home use, and the advanced one for reaching it from anywhere |
 | [User guide](docs/user-guide.md) | Adding, finding, correcting and asking about documents, day to day |
-| [Plugins](plugins-example/README.md) / [Building plugins](plugins-example/BUILDING.md) | The five example plugins, how to switch them on and make them yours, and how to write your own |
+| [Plugins](plugins-example/README.md) / [Building plugins](plugins-example/BUILDING.md) | The example plugins, how to switch them on and make them yours, and how to write your own |
 | [Features](docs/FEATURES.md) | Every feature in one sentence, and what works today |
 | [AI providers](docs/setup/ai-providers.md) | Local (Ollama) and cloud models, which model does what, privacy and budgets |
 | [Email accounts](docs/setup/mail-accounts.md) | Connecting Gmail, Outlook and IMAP; importing old mail |

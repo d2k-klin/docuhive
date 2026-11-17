@@ -9,7 +9,7 @@ from docuhive.auth import require_admin
 from docuhive.config import get_setting, set_setting
 from docuhive.contracts import CurrentUser
 from docuhive.plugins import discovery, runtime, state
-from docuhive.plugins.manifest import CAPABILITIES
+from docuhive.plugins.manifest import CAPABILITIES, Manifest
 
 router = APIRouter(prefix="/api/plugins", tags=["plugins"])
 Admin = Annotated[CurrentUser, Depends(require_admin)]
@@ -48,7 +48,11 @@ class EnableIn(BaseModel):
     capabilities: list[str]
 
 
-def _label(cap: str) -> str:
+def _label(cap: str, manifest: Manifest | None = None) -> str:
+    if cap.startswith("network:setting:"):
+        key = cap.removeprefix("network:setting:")
+        field = next((f for f in (manifest.settings if manifest else []) if f.key == key), None)
+        return f"Reach the address you enter in its settings ({field.label if field else key})"
     if cap.startswith("network:"):
         return f"Reach the internet address {cap.removeprefix('network:')}"
     return CAPABILITIES.get(cap, cap)
@@ -82,7 +86,7 @@ def _out(found: discovery.Found, rows: dict) -> PluginOut:
         running=running,
         state=status,
         message=message,
-        capabilities=[Capability(id=c, label=_label(c)) for c in caps],
+        capabilities=[Capability(id=c, label=_label(c, manifest)) for c in caps],
         settings=[f.model_dump() for f in manifest.settings] if manifest else [],
         values=state.public_values(manifest) if manifest else {},
         in_ask=(found.id not in (get_setting(NOT_IN_ASK) or []))

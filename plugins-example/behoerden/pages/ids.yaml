@@ -1,0 +1,12 @@
+title: { en: ID documents, de: Ausweise }
+description: Passports, ID cards, driving licences and residence permits, by when they run out. DocuHive reminds you six and two months before.
+nav: { label: { en: ID documents, de: Ausweise }, icon: shield, order: 31 }
+blocks:
+  - type: table
+    source: id_documents
+    columns:
+      - { field: title, label: Document, link: document }
+      - { field: holder, label: Whose }
+      - { field: expiry_date, label: Valid until, format: date }
+      - { field: state, label: State, format: badge, tones: { Expired: error, Renew soon: warn, Valid: ok, No date: muted } }
+    empty: No ID documents yet. Upload a scan or photo of a passport or ID card; set whose it is on the document.

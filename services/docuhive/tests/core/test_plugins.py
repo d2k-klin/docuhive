@@ -223,6 +223,27 @@ def test_http_reaches_declared_hosts_only():
     assert not http.allowed("192.168.1.21", patterns)
 
 
+def test_a_host_from_a_setting_must_name_a_declared_setting(tmp_path):
+    from docuhive.api.plugins import _label
+
+    good = basic(
+        "importer",
+        'capabilities: [network: ["setting:url"]]\n'
+        "settings: [{ key: url, type: string, label: Paperless address }]\n",
+    )
+    manifest = load(write(tmp_path / "importer", good))
+    assert manifest.hosts() == ["setting:url"]
+    assert _label("network:setting:url", manifest) == (
+        "Reach the address you enter in its settings (Paperless address)"
+    )
+    for wrong, problem in (
+        ('capabilities: [network: ["setting:url"]]\n', "no setting with that key"),
+        ('capabilities: [network: ["setting:URL!"]]\n', "names no setting"),
+    ):
+        with pytest.raises(ManifestError, match=problem):
+            load(write(tmp_path / "bad" / "importer", basic("importer", wrong)))
+
+
 def test_cli_add_update_new_keep_custom_files(plugins_dir, tmp_path, monkeypatch, capsys):
     source = write(tmp_path / "src" / "demo", basic("demo"), {"templates/a.md": "v1"})
     (source / "custom").mkdir()

@@ -1,0 +1,27 @@
+id: behoerden
+name: Official letters and ID documents
+description: Letters from authorities with a deadline to answer, soonest first, with an objection letter ready; and when passports and ID cards run out.
+version: 0.1.0
+requires_sdk: ">=1,<2"
+capabilities: [documents:read, documents:write-metadata, documents:create, ai]
+
+taxonomy:
+  document_types:
+    - id: official_notice
+      label: Official notice
+      description: A letter from an authority, a court, a tax office, a pension or health insurer or a public body that decides something or asks for an answer by a date (Bescheid, Anhörung, Bußgeldbescheid, Mahnung).
+      facts:
+        - { name: notice_date, type: date }
+        - { name: respond_by, type: date, remind_days_before: [14, 7, 2] }
+        - { name: reference, type: string }
+        - { name: notice_kind, type: string }
+        - { name: amount_due, type: money }
+        - { name: authority_address, type: string }
+    # Whose document it is; the expiry date and its reminders are DocuHive's own.
+    - id: id-document
+      label: ID document
+      facts:
+        - { name: holder, type: string }
+
+ai_tasks:
+  - { prompt: deadline, like: extract }
