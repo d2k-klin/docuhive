@@ -74,6 +74,15 @@ def edit_user(user_id: int, body: UserPatch, user: Admin) -> None:
         row = db.scalar(select(User).where(User.id == user_id).with_for_update())
         if row is None:
             raise HTTPException(404, "User not found")
+        losing_admin = row.role == "admin" and (
+            (body.role and body.role != "admin") or body.disabled
+        )
+        if losing_admin and not db.scalar(
+            select(User.id).where(
+                User.role == "admin", User.id != row.id, ~User.pw_hash.startswith("!")
+            )
+        ):
+            raise HTTPException(409, "Keep at least one administrator who can sign in")
         if body.role:
             row.role = body.role
         if body.password:

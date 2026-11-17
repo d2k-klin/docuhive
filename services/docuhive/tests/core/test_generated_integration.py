@@ -81,6 +81,8 @@ def test_a_generated_letter(archive):
         json={"username": "alice", "password": "a synthetic test password"},
         headers=CSRF,
     )
-    assert client.get(f"/api/documents/{contract}").json()["used_in"] == [letter]
+    detail = client.get(f"/api/documents/{contract}").json()
+    assert detail["used_in"] == [letter]
+    assert detail["related_titles"] == {letter: "Letter to the landlord"}
     with pytest.raises(documents.NotFound):  # not from a document bob cannot see
         write(bob, {"pdf": pdf("Other"), "from": [letter]})

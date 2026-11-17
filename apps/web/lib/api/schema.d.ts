@@ -1931,6 +1931,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/plugin-pages/{plugin}/{name}/blocks/{index}/shown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Block Shown
+         * @description Whether a block with `show_if` is shown for these parameters (an invoice still a draft).
+         */
+        get: operations["block_shown_api_plugin_pages__plugin___name__blocks__index__shown_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/plugin-pages/{plugin}/{name}/actions/{action}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Action
+         * @description Exactly what an outgoing action would send, for the person to check first.
+         */
+        post: operations["preview_action_api_plugin_pages__plugin___name__actions__action__preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/plugin-pages/{plugin}/{name}/actions/{action}": {
         parameters: {
             query?: never;
@@ -2481,6 +2521,13 @@ export interface components {
              * @default []
              */
             used_in: string[];
+            /**
+             * Related Titles
+             * @default {}
+             */
+            related_titles: {
+                [key: string]: string;
+            };
         };
         /** DocumentEdit */
         DocumentEdit: {
@@ -7691,6 +7738,80 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    block_shown_api_plugin_pages__plugin___name__blocks__index__shown_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin: string;
+                name: string;
+                index: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_action_api_plugin_pages__plugin___name__actions__action__preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plugin: string;
+                name: string;
+                action: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

@@ -47,7 +47,7 @@ jobs:
           docker run --rm -v "$PWD/tmp:/k" -w /k eclipse-temurin:21-jre sh -c \
             'java -jar validator.jar -s rules/scenarios.xml -r rules -o report einvoices/xrechnung-*.xml' \
             | tee tmp/validator.log
-          if grep -qiE "rejected|not acceptable|error" tmp/validator.log; then exit 1; fi
+          grep -qE "Rejected: +0\b" tmp/validator.log  # the validator's own summary line
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

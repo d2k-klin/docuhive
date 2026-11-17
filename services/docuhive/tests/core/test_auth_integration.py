@@ -128,6 +128,28 @@ def test_calendar_token_opens_only_the_feed(client):
         assert mixed.status_code == 422, scopes
 
 
+def test_the_last_administrator_cannot_be_demoted_or_disabled(client):
+    login(client)
+    owner_id = client.get("/api/auth/me").json()["id"]
+    for change in ({"role": "member"}, {"disabled": True}):
+        refused = client.patch(f"/api/users/{owner_id}", json=change, headers=CSRF)
+        assert refused.status_code == 409, change
+    second = client.post(
+        "/api/users",
+        json={"username": "second", "password": PASSWORD, "role": "admin"},
+        headers=CSRF,
+    ).json()["id"]
+    assert (
+        client.patch(f"/api/users/{owner_id}", json={"role": "member"}, headers=CSRF).status_code
+        == 204
+    )
+    login(client, "second")
+    assert (
+        client.patch(f"/api/users/{second}", json={"disabled": True}, headers=CSRF).status_code
+        == 409
+    )
+
+
 def test_admin_users_and_password_revokes_old_credentials(client):
     login(client)
     response = client.post(

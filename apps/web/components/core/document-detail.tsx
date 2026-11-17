@@ -539,8 +539,16 @@ export function DocumentDetailView({
                     <dd>The {d.source.generator} plugin</dd>
                   </div>
                 )}
-                <Related label="Made from" ids={d.source.derived_from ?? []} />
-                <Related label="Used in" ids={d.used_in ?? []} />
+                <Related
+                  label="Made from"
+                  ids={d.source.derived_from ?? []}
+                  titles={d.related_titles ?? {}}
+                />
+                <Related
+                  label="Used in"
+                  ids={d.used_in ?? []}
+                  titles={d.related_titles ?? {}}
+                />
               </dl>
             )}
           </Card>
@@ -613,19 +621,29 @@ export function DocumentDetailView({
 }
 
 /** Links to documents this one was made from, or that were made from it. */
-function Related({ label, ids }: { label: string; ids: string[] }) {
+function Related({
+  label,
+  ids,
+  titles,
+}: {
+  label: string;
+  ids: string[];
+  titles: Record<string, string>;
+}) {
+  // Only documents this person may see are listed.
+  ids = ids.filter((other) => other in titles);
   if (!ids.length) return null;
   return (
     <div>
       <dt className="text-sm text-text-muted">{label}</dt>
       <dd className="flex flex-wrap gap-x-3">
-        {ids.map((other, index) => (
+        {ids.map((other) => (
           <Link
             key={other}
             href={`/documents/${other}`}
             className="text-primary hover:underline"
           >
-            Document {index + 1}
+            {titles[other]}
           </Link>
         ))}
       </dd>

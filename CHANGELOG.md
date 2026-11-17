@@ -11,10 +11,13 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Landlords: rent and advance changes from a date, used by the rent ledger and the statement; a reminder letter for outstanding rent.
 - Contracts: with the bank plugin, regular payments that have no contract are listed, to add as a contract or dismiss.
 - Tax: the yearly VAT return with the advance returns already paid and what is left; each period lists the bookings behind its figures. Business equipment from the inventory and rental income from the landlord plugin appear in the tax plugin when those are on.
+- **Settings → Users** for administrators: add people, change their role, disable or enable them, and choose which categories bookkeepers may see.
+- A document's "Related" list shows the related documents' titles.
 
 ### Fixed
 
 - XRechnung invoices now pass the official validator's rules that the first version missed: the business process, the buyer's electronic address, the delivery address for EU supplies, and the date type in a credit note's reference. Issuing an XRechnung invoice needs the customer's mail address.
+- The last administrator who can sign in can no longer be demoted or disabled.
 
 ## [0.9.0] - 2026-11-16
 

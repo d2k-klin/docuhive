@@ -6063,6 +6063,140 @@
         }
       }
     },
+    "/api/plugin-pages/{plugin}/{name}/blocks/{index}/shown": {
+      "get": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Block Shown",
+        "description": "Whether a block with `show_if` is shown for these parameters (an invoice still a draft).",
+        "operationId": "block_shown_api_plugin_pages__plugin___name__blocks__index__shown_get",
+        "parameters": [
+          {
+            "name": "plugin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "index",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Index"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Block Shown Api Plugin Pages  Plugin   Name  Blocks  Index  Shown Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/plugin-pages/{plugin}/{name}/actions/{action}/preview": {
+      "post": {
+        "tags": [
+          "plugin pages"
+        ],
+        "summary": "Preview Action",
+        "description": "Exactly what an outgoing action would send, for the person to check first.",
+        "operationId": "preview_action_api_plugin_pages__plugin___name__actions__action__preview_post",
+        "parameters": [
+          {
+            "name": "plugin",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Plugin"
+            }
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Action"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/plugin-pages/{plugin}/{name}/actions/{action}": {
       "post": {
         "tags": [
@@ -7512,6 +7646,14 @@
             "type": "array",
             "title": "Used In",
             "default": []
+          },
+          "related_titles": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Related Titles",
+            "default": {}
           }
         },
         "type": "object",

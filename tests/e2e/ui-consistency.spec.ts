@@ -13,6 +13,7 @@ const routes = [
   "/settings/notifications",
   "/settings/plugins",
   "/settings/identities",
+  "/settings/users",
   "/plugins/steuer-de/books",
   "/plugins/steuer-de/inbox",
   "/plugins/steuer-de/entries",

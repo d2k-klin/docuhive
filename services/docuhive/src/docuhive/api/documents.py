@@ -55,6 +55,7 @@ class DocumentDetail(DocumentView):
     files: list[Literal["original", "archive", "thumb"]]
     holds: list[Hold] = []  # active ones: the document page shows a lock and why
     used_in: list[str] = []  # documents made from this one (a letter it was attached to)
+    related_titles: dict[str, str] = {}  # titles of derived_from and used_in this user may see
 
 
 class LiftHold(BaseModel):
@@ -130,6 +131,19 @@ def detail(view: DocumentView, user: CurrentUser | None = None) -> DocumentDetai
             if user is not None and session.get_bind().dialect.name == "postgresql"
             else []
         )
+        others = [*view.source.derived_from, *used_in]
+        titles = (
+            {
+                doc_id: title or "Untitled document"
+                for doc_id, title in session.execute(
+                    select(Document.id, Document.title).where(
+                        Document.id.in_(others), auth.visible_docs(user)
+                    )
+                )
+            }
+            if user is not None and others
+            else {}
+        )
     files: list[Literal["original", "archive", "thumb"]] = []
     if vault_path:
         folder = vault.root() / vault_path
@@ -143,6 +157,7 @@ def detail(view: DocumentView, user: CurrentUser | None = None) -> DocumentDetai
         files=files,
         holds=active,
         used_in=used_in,
+        related_titles=titles,
     )
 
 
