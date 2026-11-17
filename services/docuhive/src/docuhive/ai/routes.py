@@ -2,6 +2,7 @@
 
 import time
 from datetime import UTC, datetime
+from typing import Any
 
 import httpx
 from fastapi import APIRouter, Query
@@ -12,7 +13,7 @@ from docuhive.ai import budgets, coretables, routing
 from docuhive.ai.http import User, fail
 from docuhive.ai.models import AIRun
 from docuhive.ai.progress import document_status
-from docuhive.ai.router import parse_route
+from docuhive.ai.router import LIKE, parse_route
 from docuhive.ai.settings import get_ai_settings
 from docuhive.contracts import CurrentUser, SetupCheck
 
@@ -83,12 +84,28 @@ def providers(user: User) -> list[dict]:
 @router.get("/routing")
 def effective_routing(user: User) -> dict:
     cfg = routing.load()
-    tasks = {}
+    tasks: dict[str, dict[str, Any]] = {}
     for task, t in cfg.tasks.items():
         routes = [parse_route(r, cfg) for r in [t.route, *t.fallback]]
         tasks[task] = {
             "routes": [{"route": str(r), "local": r.local} for r in routes],
             "apply": t.apply.model_dump() if task in ("classify", "extract") else None,
+        }
+    from docuhive.plugins.runtime import LOADED
+
+    # Running plugins' tasks: routing.yaml may name them, otherwise they borrow a core route.
+    for task, like in sorted(LIKE.items()):
+        plugin_id = task.split(".", 1)[0]
+        own = cfg.tasks.get(task)
+        borrowed = own or cfg.tasks.get(like)
+        if borrowed is None or plugin_id not in LOADED:
+            continue
+        routes = [parse_route(r, cfg) for r in [borrowed.route, *borrowed.fallback]]
+        tasks[task] = {
+            "routes": [{"route": str(r), "local": r.local} for r in routes],
+            "apply": None,
+            "plugin": LOADED[plugin_id].manifest.name,
+            "like": None if own else like,
         }
     return {
         "tasks": tasks,

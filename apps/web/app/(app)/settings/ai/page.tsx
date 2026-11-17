@@ -15,11 +15,12 @@ import {
 } from "@/components/intel/common";
 
 type Provider = { name: string; kind: string; enabled: boolean; local: boolean; experimental: boolean; reachable: boolean; note: string };
-type Routing = { tasks: Record<string, { routes: { route: string; local: boolean }[]; apply: { auto: boolean; threshold: number } | null }>; privacy: { local_only: boolean; restricted_tags: string[] }; ai_enabled: boolean };
+type Routing = { tasks: Record<string, { routes: { route: string; local: boolean }[]; apply: { auto: boolean; threshold: number } | null; plugin?: string; like?: string | null }>; privacy: { local_only: boolean; restricted_tags: string[] }; ai_enabled: boolean };
 type Usage = { month: string; providers: { provider: string; runs: number; tokens_in: number; tokens_out: number; cost_usd: number; budget_usd: number | null; pct_used: number | null }[]; privacy: { local_runs: number; cloud_runs: number; restricted_runs: number; skipped_documents: number } };
 type Run = { id: number; at: string; task: string; document_id: string | null; provider: string; model: string; local: boolean; status: string; latency_ms: number | null };
 
 const TASK = { triage: "Email triage", classify: "Classify", extract: "Extract facts", embed: "Semantic index", chat: "Ask", analyse: "Analyses" } as Record<string, string>;
+const sentence = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const LEARN = [
   ["01", "Strands basics", "strands-basics"], ["02", "Structured output", "structured-output"],
   ["03", "Model providers", "model-providers"], ["04", "The agent harness", "agent-harness"],
@@ -68,7 +69,16 @@ export default function AISettingsPage() {
               <tbody>
                 {Object.entries(routing.data.tasks).map(([task, t]) => (
                   <tr key={task} className="border-b border-border last:border-0">
-                    <td className="py-2 pr-3 font-medium">{TASK[task] ?? task}</td>
+                    <td className="py-2 pr-3 font-medium">
+                      {t.plugin ? (
+                        <>
+                          {sentence(task.split(".").slice(1).join(".").replaceAll("-", " "))}
+                          <span className="block text-xs font-normal text-text-muted">
+                            {t.plugin} · {t.like ? `uses the ${TASK[t.like] ?? t.like} route` : "own route"}
+                          </span>
+                        </>
+                      ) : (TASK[task] ?? task)}
+                    </td>
                     <td className="py-2">
                       <div className="flex flex-wrap gap-1">
                         {t.routes.map((r, i) => (

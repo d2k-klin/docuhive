@@ -16,6 +16,7 @@ Changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and SemV
 - Vocabulary marks categories and document types that a plugin added ("From steuer-de") instead of calling them custom.
 - Tax invoices: **Correct this invoice** issues the cancelling credit note and opens a corrected copy in one step; saved items to add to a draft; a reminder when a recurring invoice has made a new draft.
 - Tax books can be shared by user name with a bookkeeper (keeps the books; only the owner issues invoices) or someone who only looks. Plugins can look up people by user name with the new `users:find` capability; nothing else about a person is shared.
+- **Settings → AI** lists each running plugin's AI tasks with the route they use (their own from `routing.yaml`, or the core task's route they borrow).
 
 ### Fixed
 

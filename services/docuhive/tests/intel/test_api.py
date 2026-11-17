@@ -100,6 +100,23 @@ def test_routing_providers_setup_status(client):
     assert client.get("/api/sources/setup-status").json()[0]["id"] == "mail.key"
 
 
+def test_routing_lists_running_plugins_tasks(client, monkeypatch):
+    from types import SimpleNamespace
+
+    from docuhive.ai import router
+    from docuhive.plugins import runtime
+
+    monkeypatch.setitem(router.LIKE, "fuel.receipt", "classify")
+    monkeypatch.setitem(router.LIKE, "gone.task", "extract")  # not running: left out
+    loaded = SimpleNamespace(manifest=SimpleNamespace(name="Fuel log"))
+    monkeypatch.setitem(runtime.LOADED, "fuel", loaded)
+    tasks = client.get("/api/ai/routing").json()["tasks"]
+    assert tasks["fuel.receipt"]["plugin"] == "Fuel log"
+    assert tasks["fuel.receipt"]["like"] == "classify"
+    assert tasks["fuel.receipt"]["routes"] == tasks["classify"]["routes"]
+    assert "gone.task" not in tasks and "plugin" not in tasks["classify"]
+
+
 def test_mailbox_login_problems_in_plain_words():
     import imaplib
     import socket
