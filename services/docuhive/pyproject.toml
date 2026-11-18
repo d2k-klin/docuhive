@@ -33,7 +33,7 @@ dependencies = [
 ai = ["strands-agents[ollama,anthropic,openai,litellm]>=1.64.0,<2"]
 mail = []  # ponytail: OAuth + Gmail/Graph via httpx (core dep), IMAP via stdlib
 ocr = [
-  "ocrmypdf>=17.13.0,<18", "pypdfium2>=4.30", "pikepdf>=9", "img2pdf>=0.6",
+  "ocrmypdf>=17.13.0,<18", "pypdfium2>=5.15.2", "pikepdf>=9", "img2pdf>=0.6",
   "pillow>=11", "pillow-heif>=0.21", "filetype>=1.2",
 ]
 
